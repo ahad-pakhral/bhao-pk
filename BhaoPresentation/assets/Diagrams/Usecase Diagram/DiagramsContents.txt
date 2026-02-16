@@ -1,0 +1,15 @@
+Use Case Diagram: System Overview
+
+User Actor: Represents the main person interacting with the system. Can access almost all features.
+
+Admin Actor: A specialized user who logs in to access the "View Dashboard Stats" feature.
+
+Shared Authentication: Both User and Admin connect to the "Login" use case.
+
+User Features: The diagram maps out the core user journey:
+
+Search & Browse: "Search Products", "Filter & Sort Results", "View Recommendations".
+
+Analysis: "View Product Details", "View Price History".
+
+Actions: "Set Price Alert", "Manage Wishlist", "Sign Up".

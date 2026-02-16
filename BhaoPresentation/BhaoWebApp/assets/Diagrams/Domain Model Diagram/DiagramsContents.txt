@@ -1,0 +1,7 @@
+ScraperBot Class: Represents the backend automation engine responsible for fetching data.
+
+Attributes: Stores configuration details like botID and the execution schedule.
+
+Operations: The executeJob() method triggers the crawling and parsing process.
+
+Relationship: Has a Dependency link to StoreListing (dashed arrow), indicating it creates or updates listings based on the data it finds.

@@ -1,0 +1,11 @@
+USER Entity: Stores account details (Email, Password). Connects to ALERT via a "Sets" relationship (One User sets Many Alerts).
+
+ALERT Entity: Stores notification criteria (Target_Price). Links USER to PRODUCT via a "Has" relationship.
+
+PRODUCT Entity: The central item definition (Title, Category). Connects to STORE_LISTING via a "Represented_By" relationship.
+
+STORE Entity: Represents vendors like Daraz (Store_Name, Base_URL). Connects to STORE_LISTING via an "Offers" relationship.
+
+STORE_LISTING Entity: A specific offer (Price, Product_URL) linking a PRODUCT to a STORE.
+
+PRICE_HISTORY Entity: Logs historical price changes (Recorded_Price, Date) for each STORE_LISTING.

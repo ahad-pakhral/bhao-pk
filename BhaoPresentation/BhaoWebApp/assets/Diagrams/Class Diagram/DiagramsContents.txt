@@ -1,0 +1,47 @@
+Class Diagram: Bhao.pk System Structure
+
+User Class: Represents the registered users of the system.
+
+Attributes: Stores essential data like userID, email, and passwordHash.
+
+Operations: Includes methods for authentication (login) and account creation (register).
+
+Relationships: Has a Composition link to Alert (User owns the Alert).
+
+Product Class: The central entity representing a generic item (e.g., "iPhone 13").
+
+Attributes: Contains title, category, and a baseImage.
+
+Operations: Has logic to calculate the getLowestPrice() across all vendors.
+
+Relationships:
+
+Linked to Alert (Product is the subject of an Alert).
+
+Has a Composition link to StoreListing (Product owns its Listings).
+
+Store Class: Represents external vendors like Daraz or PriceOye.
+
+Attributes: Stores identity info like storeID, name, and baseURL.
+
+Relationships: Has an Aggregation link to StoreListing (Store contains Listings).
+
+StoreListing Class: A specific instance of a product at a specific store.
+
+Attributes: Holds the specific price, vendorUrl, and stock status for that single offer.
+
+Operations: Includes updatePrice() to modify the cost when data changes.
+
+Role: Acts as the bridge between a generic Product and a specific Store.
+
+Alert Class: A notification trigger set by a user.
+
+Attributes: Stores the targetPrice and status (isActive).
+
+Operations: The checkPrice() method compares current market prices against the target.
+
+ScraperBot Class: The backend automation tool.
+
+Operations: executeJob() triggers the crawling process.
+
+Relationship: Has a Dependency on StoreListing, as it creates and updates these listings based on external data.

@@ -1,0 +1,9 @@
+Client Layer (Frontend): Consists of the user-facing interfaces: the React Frontend website and a future Mobile App.
+
+UI Layer: The entry point for requests, handling authentication and routing traffic via the API Gateway.
+
+Business Logic Layer: The core engine containing the Scraping Manager (collects data), Search Engine (processes queries), and Alert System. It connects to external vendors.
+
+Database Layer: Manages data storage and retrieval using DAO (Data Access Objects) and a Query Builder to talk to the database.
+
+Data Storage: A centralized PostgreSQL Database storing all user, product, and pricing information.

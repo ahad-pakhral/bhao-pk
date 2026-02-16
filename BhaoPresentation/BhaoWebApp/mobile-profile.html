@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BHAO.pk - Mobile Profile</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #app-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            background: #111;
+        }
+
+        .mobile-screen {
+            width: 100%;
+            max-width: 480px;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Reset specific styles for standalone page */
+        .mobile-screen {
+            border-radius: 0;
+        }
+
+        .device-frame {
+            padding: 0;
+            border: none;
+            background: transparent;
+            box-shadow: none;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Navigation Bar Styles */
+        .bottom-nav {
+            height: 60px;
+            background: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid #333;
+            flex-shrink: 0;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 100%;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .nav-item.active {
+            color: var(--accent-primary);
+        }
+
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 4px;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app-container">
+        <div class="device-frame">
+            <div class="mobile-screen">
+                <div
+                    style="padding: 20px; background: #111; border-bottom: 1px solid #222; display: flex; align-items: center; justify-content: space-between;">
+                    <span style="font-family: var(--font-display); font-weight: 800; font-size: 16px;">My Profile</span>
+                    <a href="javascript:void(0)" class="clickable"
+                        style="color: #666; font-size: 20px; padding: 4px; text-decoration: none;">⚙️</a>
+                </div>
+
+                <div style="flex: 1; overflow-y: auto; padding: 20px;">
+                    <!-- User Info -->
+                    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+                        <div
+                            style="width: 60px; height: 60px; background: #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                            👤</div>
+                        <div>
+                            <div style="font-weight: 700; font-size: 18px;">John Doe</div>
+                            <div style="font-size: 12px; color: #666;">john.doe@example.com</div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Stats -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
+                        <div
+                            style="background: #111; padding: 16px; border-radius: 12px; border: 1px solid #333; text-align: center;">
+                            <div
+                                style="font-family: var(--font-mono); font-size: 24px; font-weight: 700; color: var(--accent-primary);">
+                                <span class="price-currency">Rs.</span> 45<span class="price-decimal">k</span>
+                            </div>
+                            <div style="font-size: 11px; color: #666; margin-top: 4px;">Total Savings</div>
+                        </div>
+                        <div
+                            style="background: #111; padding: 16px; border-radius: 12px; border: 1px solid #333; text-align: center;">
+                            <div
+                                style="font-family: var(--font-mono); font-size: 24px; font-weight: 700; color: var(--accent-secondary);">
+                                12</div>
+                            <div style="font-size: 11px; color: #666; margin-top: 4px;">Active Alerts</div>
+                        </div>
+                    </div>
+
+                    <!-- Menu Links -->
+                    <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
+                        <a href="mobile-wishlist.html"
+                            style="padding: 16px; background: #111; border-radius: 12px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center; text-decoration: none;">
+                            <span style="font-size: 14px;">Wishlist</span>
+                            <span style="color: #666;">→</span>
+                        </a>
+                        <a href="mobile-alerts.html"
+                            style="padding: 16px; background: #111; border-radius: 12px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center; text-decoration: none;">
+                            <span style="font-size: 14px;">Price Alerts</span>
+                            <span style="color: #666;">→</span>
+                        </a>
+                        <a href="mobile-settings.html"
+                            style="padding: 16px; background: #111; border-radius: 12px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center; text-decoration: none;">
+                            <span style="font-size: 14px;">Settings</span>
+                            <span style="color: #666;">→</span>
+                        </a>
+                    </div>
+                    <div
+                        style="font-size: 12px; color: #666; text-transform: uppercase; margin-bottom: 12px; font-family: var(--font-mono);">
+                        RECENT ACTIVITY</div>
+                    <div
+                        style="background: #111; border: 1px solid #333; border-radius: 12px; padding: 12px; margin-bottom: 12px;">
+                        <div style="font-size: 14px; margin-bottom: 4px;">MacBook Air M2</div>
+                        <div style="font-size: 11px; color: #666;">Price drop detected</div>
+                        <span class="badge badge-primary"
+                            style="font-size: 9px; margin-top: 8px; display: inline-block;">Drop -5%</span>
+                    </div>
+                </div>
+
+                <!-- Bottom Navigation -->
+                <div class="bottom-nav">
+                    <a href="mobile-home.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        </svg>
+                    </a>
+                    <a href="mobile-search.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </a>
+                    <a href="mobile-profile.html" class="nav-item active">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

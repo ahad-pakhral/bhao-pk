@@ -1,0 +1,41 @@
+Database Schema: Bhao.pk
+
+Users Table: Stores account information (user_id, email, password) for registered users.
+
+Relationship: Connected to the Alerts table via user_id (One User sets Many Alerts).
+
+Alerts Table: Manages user-created price notifications.
+
+Columns: alert_id (PK), target_price, and Foreign Keys linking to Users and Products.
+
+Relationship: Links specific users to specific products they want to track.
+
+Products Table: The central catalog of unique items.
+
+Columns: product_id (PK), title, category.
+
+Relationships:
+
+Linked to Alerts (One Product has Many Alerts).
+
+Linked to Store_Listings (One Product has Many Listings across different stores).
+
+Stores Table: Defines the external vendors (e.g., Daraz, Telemart).
+
+Columns: store_id (PK), name, url.
+
+Relationship: Linked to Store_Listings (One Store offers Many Listings).
+
+Store_Listings Table: Represents a specific product offer from a specific store.
+
+Columns: listing_id (PK), current_price, url.
+
+Role: Acts as the bridge between Products and Stores.
+
+Relationship: Connected to Price_History (One Listing has Many History records).
+
+Price_History Table: Logs price changes over time for analytics.
+
+Columns: history_id (PK), price, date.
+
+Relationship: Linked to Store_Listings to track the price evolution of that specific offer.

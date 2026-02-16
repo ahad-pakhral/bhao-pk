@@ -1,0 +1,2032 @@
+        /* The "Data Terminal" Pair - Industrial & Raw */
+        @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --bg-core: #050505;
+            --bg-surface: #0F0F0F;
+            --bg-surface-hover: #1a1a1a;
+            --bg-surface-active: #222222;
+
+            --border-light: #333333;
+            --border-focus: #555555;
+
+            --accent-primary: #CCFF00;
+            /* Hyper Lime */
+            --accent-secondary: #5D3FD3;
+            /* Deep Iris */
+            --accent-alert: #FF3366;
+            /* Radical Red */
+            --accent-success: #00FF88;
+
+            --text-main: #FFFFFF;
+            --text-secondary: #AAAAAA;
+            --text-muted: #666666;
+
+            --font-display: 'Archivo', sans-serif;
+            /* Headlines - ExtraBold/Black for authority */
+            --font-body: 'JetBrains Mono', monospace;
+            /* Body/Data - Precise, verified */
+            --font-mono: 'JetBrains Mono', monospace;
+
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background-color: #020202;
+            /* Darker black for cosmic effect */
+            color: var(--text-main);
+            font-family: var(--font-body);
+            /* JetBrains Mono for body */
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #app-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        /* Animated Cosmic Background (The Green Black Hole) */
+        .cosmic-background {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        /* Starfield texture */
+        .cosmic-starfield {
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(white 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.3;
+        }
+
+        /* Deep Outer Glow (Ambient) */
+        .cosmic-outer-glow {
+            position: absolute;
+            top: 18%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1000px;
+            height: 600px;
+            max-width: 140vw;
+            max-height: 800px;
+            background: radial-gradient(circle at top, rgba(204, 255, 0, 0.1) 0%, rgba(204, 255, 0, 0.05) 50%, transparent 100%);
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.6;
+        }
+
+        /* The Accretion Disk (Faint Ring) */
+        .cosmic-accretion {
+            position: absolute;
+            top: calc(18% + 10%);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            height: 80%;
+            max-width: 90vw;
+            max-height: 80vh;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            box-shadow: 0 -10px 100px rgba(204, 255, 0, 0.1);
+        }
+
+        /* The Bright Horizon Arch - creates intense curved line */
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                opacity: 0.6;
+                transform: translateX(-50%) scale(1);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: translateX(-50%) scale(1.02);
+            }
+        }
+
+        .cosmic-horizon {
+            position: fixed;
+            top: calc(18% + 20%);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70%;
+            height: 400px;
+            max-width: 70vw;
+            border-top: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+            box-shadow: 0 -4px 60px rgba(204, 255, 0, 0.6);
+            filter: blur(1px);
+            animation: pulse-glow 4s ease-in-out infinite;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* The Core Intense Ring */
+        .cosmic-core {
+            position: fixed;
+            top: calc(18% + 20%);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 400px;
+            max-width: 60vw;
+            border-top: 6px solid var(--accent-primary);
+            border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+            filter: blur(8px);
+            opacity: 0.8;
+            mix-blend-mode: screen;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Center Void Gradient - masking bottom to look like horizon */
+        .cosmic-void {
+            position: fixed;
+            top: calc(18% + 25%);
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent 0%, rgba(2, 2, 2, 0.8) 30%, #020202 100%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Noise texture overlay - animated film grain */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.03) 0px, transparent 1px, transparent 2px, rgba(255, 255, 255, 0.03) 3px),
+                repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0px, transparent 1px, transparent 2px, rgba(255, 255, 255, 0.03) 3px);
+            background-size: 200% 200%;
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 9999;
+            animation: noise 0.3s steps(8) infinite;
+        }
+
+        @keyframes noise {
+
+            0%,
+            100% {
+                background-position: 0% 0%;
+            }
+
+            25% {
+                background-position: 100% 0%;
+            }
+
+            50% {
+                background-position: 100% 100%;
+            }
+
+            75% {
+                background-position: 0% 100%;
+            }
+        }
+
+        /* Disable noise when muted or on low-end devices */
+        body.no-noise::before {
+            display: none;
+        }
+
+        /* Search Bar Animated Glow */
+        .search-bar-group {
+            position: relative;
+        }
+
+        .search-bar-group::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 12px;
+            background: linear-gradient(to right, rgba(204, 255, 0, 0.4), rgba(255, 255, 255, 0.1));
+            opacity: 0.5;
+            filter: blur(4px);
+            transition: opacity 0.5s ease;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .search-bar-group:hover::before {
+            opacity: 1;
+        }
+
+        .search-bar-group:has(input:focus)::before {
+            opacity: 1;
+        }
+
+        .search-bar-group>div {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Load-in animation - slideFadeBlur */
+        @keyframes slideFadeBlur {
+            0% {
+                opacity: 0;
+                transform: translateY(30px) scale(0.98);
+                filter: blur(10px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
+        }
+
+        .animate-entry {
+            animation: slideFadeBlur 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .delay-100 {
+            animation-delay: 100ms;
+        }
+
+        .delay-200 {
+            animation-delay: 200ms;
+        }
+
+        .delay-300 {
+            animation-delay: 300ms;
+        }
+
+        .delay-500 {
+            animation-delay: 500ms;
+        }
+
+        .delay-700 {
+            animation-delay: 700ms;
+        }
+
+        /* Custom crosshair cursor for web views */
+        main.web-view,
+        main.web-view * {
+            cursor: crosshair;
+        }
+
+        /* Reset cursor for interactive elements in web view */
+        main.web-view button,
+        main.web-view a,
+        main.web-view input,
+        main.web-view textarea,
+        main.web-view .clickable,
+        main.web-view [data-nav] {
+            cursor: pointer;
+        }
+
+        main.web-view input[type="text"],
+        main.web-view input[type="email"],
+        main.web-view input[type="password"],
+        main.web-view textarea {
+            cursor: text;
+        }
+
+        /* --- SIDEBAR --- */
+        aside {
+            width: 260px;
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            z-index: 10;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+            /* Sidebar is visible by default */
+        }
+
+        /* Hide sidebar when toggled */
+        aside.hidden {
+            transform: translateX(-100%);
+        }
+
+        /* Main menu toggle button */
+        .main-menu-toggle {
+            position: fixed;
+            left: 260px;
+            /* Default position when sidebar is visible */
+            top: 20px;
+            width: 32px;
+            height: 32px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-left: none;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 102;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            font-family: var(--font-mono);
+            font-size: 12px;
+        }
+
+        .main-menu-toggle:hover {
+            background: var(--bg-surface-hover);
+            color: var(--text-main);
+        }
+
+        /* Position toggle button based on sidebar state */
+        aside.hidden~.main-menu-toggle {
+            left: 0;
+        }
+
+        aside:not(.hidden)~.main-menu-toggle {
+            left: 260px;
+        }
+
+        /* Prevent toggle buttons from overlapping - adjust view-info-toggle position based on main menu and panel state */
+        /* Default: when main menu visible and info panel visible */
+        aside:not(.hidden)~.main-menu-toggle~main .view-info-panel:not(.hidden)+.view-info-toggle {
+            left: 320px;
+            top: 20px;
+        }
+
+        /* When main menu hidden and info panel visible */
+        aside.hidden~.main-menu-toggle~main .view-info-panel:not(.hidden)+.view-info-toggle {
+            left: 0;
+            top: 20px;
+        }
+
+        /* When info panel hidden - always at left 0, adjust top based on main menu state */
+        .view-info-panel.hidden+.view-info-toggle {
+            left: 0 !important;
+        }
+
+        /* When main menu visible and info panel hidden - move view-info-toggle down to avoid overlap */
+        aside:not(.hidden)~.main-menu-toggle~main .view-info-panel.hidden+.view-info-toggle {
+            top: 60px;
+        }
+
+        /* When main menu hidden and info panel hidden - view-info-toggle at top */
+        aside.hidden~.main-menu-toggle~main .view-info-panel.hidden+.view-info-toggle {
+            top: 20px;
+        }
+
+        /* Scrollable nav area */
+        nav {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 8px;
+            margin-right: -8px;
+        }
+
+        /* Hide scrollbar but keep functionality */
+        nav::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        nav::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        nav::-webkit-scrollbar-thumb {
+            background: var(--border-light);
+            border-radius: 3px;
+        }
+
+        nav::-webkit-scrollbar-thumb:hover {
+            background: #444;
+        }
+
+        .brand {
+            font-family: var(--font-display);
+            font-weight: 900;
+            /* Black weight for maximum authority */
+            font-size: 24px;
+            color: var(--accent-primary);
+            margin-bottom: 40px;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            /* Match character spacing in "BHAO.PK" - tight and consistent */
+        }
+
+        .brand img {
+            height: 40px;
+            width: auto;
+            flex-shrink: 0;
+        }
+
+
+        nav button {
+            background: transparent;
+            border: none;
+            width: 100%;
+            padding: 12px 16px;
+            text-align: left;
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            /* JetBrains Mono for body */
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        nav button:hover {
+            background: var(--bg-surface-hover);
+            color: var(--text-main);
+        }
+
+        nav button.active {
+            background: var(--bg-surface-active);
+            color: var(--text-main);
+            font-weight: 500;
+            border-left: 3px solid var(--accent-primary);
+        }
+
+        nav .section-title {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin: 24px 0 8px 12px;
+            letter-spacing: 2px;
+            /* Increased from 1px for better breathing room */
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 0;
+            transition: color 0.2s;
+        }
+
+        nav .section-title:hover {
+            color: var(--text-secondary);
+        }
+
+        nav .section-title::after {
+            content: '▼';
+            font-size: 8px;
+            transition: transform 0.3s;
+            opacity: 0.5;
+        }
+
+        nav .section-title.collapsed::after {
+            transform: rotate(-90deg);
+        }
+
+        nav .section-group {
+            overflow: hidden;
+            transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, margin-bottom 0.3s ease;
+            max-height: 500px;
+            /* Large enough for content */
+            opacity: 1;
+            margin-bottom: 0;
+        }
+
+        nav .section-group.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin-bottom: 0;
+        }
+
+        /* --- MAIN CONTENT AREA --- */
+        main {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            transition: margin-left 0.3s ease, width 0.3s ease;
+        }
+
+        /* When sidebar is hidden, main content expands to use full width by shifting left */
+        /* BUT for web views, we want different behavior - main should NOT expand, only info panel moves */
+        aside.hidden~main:not(.web-view) {
+            margin-left: -260px;
+            /* Shift left to fill the space freed by sidebar */
+            width: calc(100% + 260px);
+            /* Expand to use the freed space */
+        }
+
+        /* For web views: when sidebar is hidden, main should shift but NOT expand */
+        /* The showcase inside will be constrained to 1100px and centered */
+        aside.hidden~main.web-view {
+            margin-left: -260px;
+            /* Shift left to fill space freed by sidebar */
+            width: calc(100% + 260px);
+            /* Expand to fill space, but showcase inside is constrained */
+            justify-content: center;
+            /* Center the showcase area */
+            align-items: flex-start;
+            /* Align to top */
+        }
+
+        /* When sidebar is visible, main has normal flex behavior */
+        aside:not(.hidden)~main {
+            margin-left: 0;
+            flex: 1;
+            width: auto;
+        }
+
+        /* For web views: showcase should always have fixed max-width and be centered */
+        /* Default: when menu is visible, showcase takes full available width */
+        aside:not(.hidden)~main.web-view .showcase-area {
+            margin-left: 0;
+            margin-right: 0;
+            max-width: none;
+            width: 100%;
+            flex: 1;
+        }
+
+        /* For web views: when menu is closed and info panel is closed, showcase expands to fill space */
+        aside.hidden~main.web-view .view-info-panel.hidden~.showcase-area {
+            margin-left: auto !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: none !important;
+            flex: 1 !important;
+        }
+
+        /* For web views: when menu is closed and info panel is active, showcase expands to fill remaining space */
+        aside.hidden~main.web-view .view-info-panel:not(.hidden)~.showcase-area {
+            margin-left: 320px !important;
+            /* Only panel width offset */
+            width: auto !important;
+            min-width: 0 !important;
+            max-width: none !important;
+            flex: 1 !important;
+        }
+
+        /* For web views: when menu is closed and info panel is active, only info panel moves to take freed space */
+        aside.hidden~main.web-view .view-info-panel:not(.hidden) {
+            left: 0 !important;
+            /* Move to left edge */
+            transform: translateX(0) !important;
+            transition: left 0.3s ease, transform 0.3s ease;
+        }
+
+        /* For web views: when menu is visible and info panel is active, info panel stays at left 0 */
+        aside:not(.hidden)~main.web-view .view-info-panel:not(.hidden) {
+            left: 0 !important;
+            transition: left 0.3s ease, transform 0.3s ease;
+        }
+
+        /* --- VIEWS --- */
+        .view-section {
+            display: none;
+            min-height: calc(100vh - 80px);
+            height: 100%;
+            /* Allow expansion */
+            /* Account for padding */
+            flex-direction: column;
+            justify-content: center;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Web views should take full width for browser frame */
+        main.web-view .view-section {
+            max-width: none;
+        }
+
+        .view-section.active {
+            display: flex;
+            animation: slideFadeBlur 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        /* For views with content that should not be centered vertically */
+        .view-section:has(.component-grid),
+        .view-section:has(.browser-frame),
+        .view-section:has(.device-frame) {
+            justify-content: flex-start;
+        }
+
+        /* Interactive Price History Chart with Crosshair */
+        .price-chart {
+            position: relative;
+            height: 60px;
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+            cursor: crosshair;
+        }
+
+        .price-chart-bar {
+            flex: 1;
+            background: #333;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .price-chart-bar:hover {
+            background: var(--accent-primary);
+            opacity: 0.8;
+        }
+
+        /* Crosshair overlay for price chart */
+        .price-chart-crosshair {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: var(--accent-primary);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .price-chart:hover .price-chart-crosshair {
+            opacity: 1;
+        }
+
+        .price-chart-tooltip {
+            position: absolute;
+            background: var(--bg-surface);
+            border: 1px solid var(--accent-primary);
+            padding: 6px 10px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--accent-primary);
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(-100%);
+            white-space: nowrap;
+            z-index: 10;
+        }
+
+        /* BHAO Meter - Semi-circle Gauge */
+        .bhao-meter {
+            position: relative;
+            width: 120px;
+            height: 60px;
+        }
+
+        .bhao-meter-gauge {
+            width: 120px;
+            height: 60px;
+            border: 3px solid var(--border-light);
+            border-bottom: none;
+            border-radius: 120px 120px 0 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bhao-meter-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 0%;
+            background: linear-gradient(to top, var(--accent-alert) 0%, #FFBD2E 50%, var(--accent-primary) 100%);
+            transition: height 0.5s ease;
+        }
+
+        .bhao-meter-needle {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 2px;
+            height: 50px;
+            background: var(--text-main);
+            transform-origin: bottom center;
+            transform: translateX(-50%) rotate(0deg);
+            transition: transform 0.5s ease;
+        }
+
+        /* Terminal Boot Sequence Loading */
+        .terminal-loader {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--accent-primary);
+            padding: 20px;
+            background: var(--bg-core);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            min-height: 100px;
+        }
+
+        .terminal-line {
+            margin-bottom: 4px;
+            opacity: 0;
+            animation: terminalType 0.5s ease forwards;
+        }
+
+        .terminal-line::before {
+            content: '> ';
+            color: var(--accent-primary);
+        }
+
+        @keyframes terminalType {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .terminal-line:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .terminal-line:nth-child(2) {
+            animation-delay: 0.3s;
+        }
+
+        .terminal-line:nth-child(3) {
+            animation-delay: 0.5s;
+        }
+
+        .terminal-line:nth-child(4) {
+            animation-delay: 0.7s;
+        }
+
+        /* Command line style search dropdown */
+        .search-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+        }
+
+
+
+        /* Sound toggle button */
+        .sound-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10000;
+            transition: all 0.2s ease;
+            font-size: 18px;
+        }
+
+        .sound-toggle:hover {
+            background: var(--bg-surface-hover);
+            border-color: var(--accent-primary);
+        }
+
+        .sound-toggle.muted {
+            opacity: 0.5;
+        }
+
+        .search-dropdown.active {
+            display: block;
+        }
+
+        .search-result-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-light);
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .search-result-item:hover {
+            background: var(--bg-surface-hover);
+        }
+
+        .search-result-name {
+            font-family: var(--font-display);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .search-result-sku {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        header.page-header {
+            margin-bottom: 60px;
+            border-bottom: 1px solid var(--border-light);
+            padding-bottom: 20px;
+        }
+
+        h2 {
+            font-family: var(--font-display);
+            font-size: 32px;
+            margin: 0 0 10px 0;
+            font-weight: 800;
+            /* ExtraBold for headlines */
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 16px;
+            max-width: 600px;
+            line-height: 1.5;
+            font-family: var(--font-body);
+        }
+
+        /* --- COMPONENT GRID --- */
+        .component-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        .component-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 24px;
+            position: relative;
+        }
+
+        .component-card::before {
+            content: attr(data-label);
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--bg-core);
+            padding: 0 8px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* --- ATOMS DISPLAY --- */
+        .row {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .label {
+            width: 80px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* BUTTONS */
+        .btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Increased letter-spacing for uppercase mono labels */
+        .btn[style*="font-family: var(--font-mono)"],
+        button[style*="font-family: var(--font-mono)"],
+        .badge,
+        nav button {
+            letter-spacing: 1.2px !important;
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: #000;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Cursor snapping - magnetic buttons */
+        .btn,
+        .clickable,
+        button,
+        [data-nav] {
+            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
+        }
+
+        .btn-snap-active {
+            transform: translate(var(--snap-x, 0), var(--snap-y, 0)) scale(1.02);
+        }
+
+        /* Glitch hover effect with chromatic aberration */
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(204, 255, 0, 0.3);
+            animation: glitch 0.3s ease;
+        }
+
+        @keyframes glitch {
+
+            0%,
+            100% {
+                filter: hue-rotate(0deg);
+                transform: translateY(-2px) translateX(0);
+            }
+
+            20% {
+                filter: hue-rotate(5deg);
+                transform: translateY(-2px) translateX(-1px);
+            }
+
+            40% {
+                filter: hue-rotate(-5deg);
+                transform: translateY(-2px) translateX(1px);
+            }
+
+            60% {
+                filter: hue-rotate(3deg);
+                transform: translateY(-2px) translateX(-0.5px);
+            }
+
+            80% {
+                filter: hue-rotate(-3deg);
+                transform: translateY(-2px) translateX(0.5px);
+            }
+        }
+
+        /* Chromatic aberration effect using text-shadow - removed ::before as it conflicts with button content */
+        .btn-primary:hover {
+            text-shadow:
+                1px 0 0 rgba(255, 0, 0, 0.3),
+                -1px 0 0 rgba(0, 0, 255, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+            opacity: 0.8;
+        }
+
+        .btn-primary:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            animation: none;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border-light);
+            color: var(--text-main);
+            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s, background 0.2s;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s;
+        }
+
+        .btn-ghost:hover {
+            color: var(--accent-primary);
+        }
+
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+        }
+
+        /* INPUTS */
+        .input-group {
+            position: relative;
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 16px;
+        }
+
+        /* Input group hover effect with gradient blur */
+        .input-group::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 12px;
+            background: linear-gradient(to right, rgba(204, 255, 0, 0.3), rgba(255, 255, 255, 0.1));
+            opacity: 0;
+            filter: blur(4px);
+            transition: opacity 0.5s ease;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .input-group:hover::before {
+            opacity: 0.5;
+        }
+
+        .input-group:has(.input-field:focus)::before {
+            opacity: 1;
+        }
+
+        .input-field {
+            width: 100%;
+            background: var(--bg-core);
+            border: 1px solid var(--border-light);
+            padding: 14px 16px;
+            border-radius: 10px;
+            color: var(--text-main);
+            font-family: var(--font-body);
+            /* JetBrains Mono for body */
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            z-index: 1;
+        }
+
+        .input-field:hover {
+            border-color: var(--border-focus);
+            background: var(--bg-surface);
+        }
+
+        .input-field:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px rgba(204, 255, 0, 0.2), 0 0 20px rgba(204, 255, 0, 0.1);
+            background: var(--bg-surface);
+            transform: translateY(-1px);
+        }
+
+        .input-field:active {
+            transform: translateY(0);
+        }
+
+        .input-field::placeholder {
+            color: #444;
+            transition: color 0.2s;
+        }
+
+        .input-field:focus::placeholder {
+            color: #666;
+        }
+
+        .input-label {
+            position: absolute;
+            left: 12px;
+            top: -8px;
+            background: var(--bg-surface);
+            padding: 0 6px;
+            font-size: 11px;
+            color: var(--text-muted);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 2;
+        }
+
+        .input-group:has(.input-field:focus) .input-label,
+        .input-group:has(.input-field:hover) .input-label {
+            color: var(--accent-primary);
+        }
+
+        .input-group.error .input-field {
+            border-color: var(--accent-alert);
+        }
+
+        .input-group.error .input-label {
+            color: var(--accent-alert);
+        }
+
+        .helper-text {
+            font-size: 11px;
+            margin-top: 4px;
+            color: var(--text-muted);
+            margin-left: 4px;
+        }
+
+        /* CARDS */
+        .product-card {
+            width: 240px;
+            background: var(--bg-surface);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border-light);
+            transition: all 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-primary);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .pc-img {
+            height: 180px;
+            background: #222;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #444;
+        }
+
+        .pc-content {
+            padding: 16px;
+        }
+
+        .pc-tag {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: var(--accent-primary);
+            color: #000;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            font-size: 10px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .pc-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-family: var(--font-display);
+        }
+
+        .pc-price {
+            color: var(--accent-primary);
+            font-family: var(--font-mono);
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Price hierarchy helper class - wrap currency and decimals in spans */
+        .price-currency {
+            font-size: 0.65em;
+            opacity: 0.7;
+            font-weight: 500;
+        }
+
+        .price-decimal {
+            font-size: 0.65em;
+            opacity: 0.7;
+            font-weight: 500;
+        }
+
+        .pc-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* TOASTS & BADGES */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-family: var(--font-mono);
+            border: 1px solid transparent;
+            letter-spacing: 1.5px;
+        }
+
+        .badge-primary {
+            background: rgba(204, 255, 0, 0.1);
+            color: var(--accent-primary);
+            border-color: rgba(204, 255, 0, 0.2);
+        }
+
+        .badge-secondary {
+            background: rgba(93, 63, 211, 0.1);
+            color: var(--accent-secondary);
+            border-color: rgba(93, 63, 211, 0.2);
+        }
+
+        .badge-alert {
+            background: rgba(255, 51, 102, 0.1);
+            color: var(--accent-alert);
+            border-color: rgba(255, 51, 102, 0.2);
+        }
+
+        .toast {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--bg-surface-active);
+            border-left: 3px solid var(--accent-primary);
+            padding: 16px;
+            border-radius: 8px;
+            width: fit-content;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            margin-bottom: 10px;
+        }
+
+        .toast-content h4 {
+            margin: 0 0 2px 0;
+            font-size: 14px;
+        }
+
+        .toast-content p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* MOCKUP CONTAINERS */
+        .device-frame {
+            background: #000;
+            border: 4px solid #333;
+            border-radius: 30px;
+            padding: 10px;
+            display: inline-block;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .browser-frame {
+            border: 1px solid #333;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mobile-screen {
+            width: 320px;
+            height: 650px;
+            background: #0a0a0a;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Hide scrollbars in mobile screens - apply to all children and descendants */
+        .mobile-screen,
+        .mobile-screen *,
+        .mobile-screen *::before,
+        .mobile-screen *::after {
+            scrollbar-width: none !important;
+            /* Firefox */
+            -ms-overflow-style: none !important;
+            /* IE and Edge */
+        }
+
+        .mobile-screen::-webkit-scrollbar,
+        .mobile-screen *::-webkit-scrollbar {
+            display: none !important;
+            /* Chrome, Safari, Opera */
+            width: 0 !important;
+            height: 0 !important;
+            background: transparent !important;
+        }
+
+        /* Ensure mobile content is still scrollable */
+        .mobile-screen [style*="overflow-y: auto"],
+        .mobile-screen [style*="overflow-x: auto"] {
+            -webkit-overflow-scrolling: touch;
+            /* Smooth scrolling on iOS */
+        }
+
+        .browser-frame {
+            background: #1a1a1a;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #333;
+            width: 100%;
+            height: 100%;
+            /* Remove fixed height */
+            flex: 1;
+            /* Allow expansion */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .browser-header {
+            padding: 10px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #444;
+        }
+
+        .dot.red {
+            background: #ff5f56;
+        }
+
+        .dot.yellow {
+            background: #ffbd2e;
+        }
+
+        .dot.green {
+            background: #27c93f;
+        }
+
+        .browser-content {
+            flex: 1;
+            background: #0a0a0a;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* Responsive Scaling for Low Resolution Screens */
+        @media (max-height: 800px) {
+            #app-container {
+                zoom: 0.8;
+                width: 125vw;
+                /* Compensate for zoom */
+                height: 125vh;
+                /* Compensate for zoom */
+            }
+
+            /* Adjust fixed elements that might be affected by zoom */
+            .main-menu-toggle {
+                top: 15px;
+            }
+
+            /* Modal is now outside app-container, so standard sizing works */
+            .diagram-modal {
+                width: 100vw;
+                height: 100vh;
+            }
+        }
+
+        /* --- UTILITIES --- */
+        .code-snippet {
+            font-family: var(--font-mono);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #888;
+            margin-top: 12px;
+            border: 1px solid #222;
+        }
+
+        /* Interactive elements in showcase */
+        .clickable {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .clickable:hover {
+            opacity: 0.8;
+            transform: translateY(-1px);
+        }
+
+        .clickable-product:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Product image styling */
+        .product-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: linear-gradient(135deg, #222 0%, #333 100%);
+        }
+
+        /* Filter animations */
+        .product-item {
+            animation: slideIn 0.4s ease-out;
+            transition: all 0.3s ease;
+        }
+
+        .product-item.filtered-out {
+            animation: slideOut 0.3s ease-in forwards;
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes slideOut {
+            to {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+        }
+
+        /* Bottom menu icons - simple SVG icons */
+        .bottom-menu-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 8px 12px;
+            border-radius: 8px;
+            color: var(--text-muted);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bottom-menu-item::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            margin-left: -6px;
+            /* Half of width (12px) to center perfectly */
+            width: 12px;
+            height: 2px;
+            background: var(--accent-primary);
+            border-radius: 2px 2px 0 0;
+            transform: scaleX(0);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: center;
+        }
+
+        .bottom-menu-item:hover {
+            background: var(--bg-surface-hover);
+            color: var(--text-secondary);
+        }
+
+        .bottom-menu-item.active {
+            color: var(--text-muted);
+        }
+
+        .bottom-menu-item.active::before {
+            transform: scaleX(1);
+        }
+
+        .bottom-menu-icon {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .bottom-menu-item.active .bottom-menu-icon {
+            color: var(--text-muted);
+            stroke: var(--text-muted);
+            transform: scale(1.1);
+        }
+
+        .bottom-menu-item:not(.active) .bottom-menu-icon {
+            transform: scale(1);
+        }
+
+        .bottom-menu-item:hover .bottom-menu-icon {
+            color: var(--text-secondary);
+            stroke: var(--text-secondary);
+        }
+
+        .bottom-menu-label {
+            font-size: 10px;
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .bottom-menu-item.active .bottom-menu-label {
+            color: var(--text-muted);
+        }
+
+        /* Search icon styling */
+        .search-icon {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+        }
+
+        .search-icon:hover {
+            color: var(--text-secondary);
+            stroke: var(--text-secondary);
+        }
+
+        /* Custom checkbox styling to match theme */
+        input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border-light);
+            border-radius: 4px;
+            background: var(--bg-surface);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        input[type="checkbox"]:hover {
+            border-color: var(--text-secondary);
+            background: var(--bg-surface-hover);
+        }
+
+        input[type="checkbox"]:checked {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+
+        input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #000;
+            font-size: 12px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+        }
+
+        input[type="checkbox"]:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px rgba(204, 255, 0, 0.1);
+        }
+
+        /* Simple SVG icon components */
+        .icon-svg {
+            display: inline-block;
+            width: 1em;
+            height: 1em;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* Web navigation bar */
+        .web-nav {
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-light);
+            padding: 12px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            /* Standard z-index for web nav */
+            min-height: 60px;
+            gap: 20px;
+        }
+
+        .web-nav>div:first-child {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .web-nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            transition: opacity 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .web-nav-logo:hover {
+            opacity: 0.8;
+        }
+
+        .web-nav-links {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            flex: 1;
+            justify-content: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .web-nav-link {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-muted);
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid transparent;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        .web-nav-link:hover {
+            color: var(--text-secondary);
+            background: var(--bg-surface-hover);
+        }
+
+        .web-nav-link::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            margin-left: -10px;
+            /* Half of width (20px) to center perfectly */
+            width: 20px;
+            height: 2px;
+            background: var(--accent-primary);
+            border-radius: 2px 2px 0 0;
+            transform: scaleX(0);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: center;
+        }
+
+        .web-nav-link.active {
+            color: var(--text-muted);
+        }
+
+        .web-nav-link.active::before {
+            transform: scaleX(1);
+        }
+
+        .web-nav-user {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .web-nav-icon {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .web-nav-link.active .web-nav-icon {
+            stroke: var(--text-muted);
+            color: var(--text-muted);
+        }
+
+        .web-nav-link:hover .web-nav-icon {
+            stroke: var(--text-secondary);
+            color: var(--text-secondary);
+        }
+
+        /* View info panel - shifts with main content when sidebar toggles */
+        .view-info-panel {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 320px;
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border-light);
+            padding: 40px 32px;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, left 0.3s ease;
+        }
+
+        /* On non-web views, when info panel is active, move showcase content instead of overlay */
+        main:not(.web-view) .view-info-panel:not(.hidden)~.showcase-area {
+            margin-left: 320px;
+            transition: margin-left 0.3s ease;
+        }
+
+        /* When sidebar is hidden on non-web views, main shifts left -260px.
+           We need to adjust info panel and showcase area to stay on screen. */
+        aside.hidden~main:not(.web-view) .view-info-panel:not(.hidden) {
+            left: 0 !important;
+            /* Move to left edge */
+        }
+
+        aside.hidden~main:not(.web-view) .view-info-panel:not(.hidden)~.showcase-area {
+            margin-left: 320px !important;
+            /* Only panel width offset */
+        }
+
+        /* Reset when info panel is hidden on non-web views */
+        main:not(.web-view) .view-info-panel.hidden~.showcase-area {
+            margin-left: 0;
+            transition: margin-left 0.3s ease;
+        }
+
+
+        /* On web views, keep overlay behavior - web nav will have higher z-index */
+
+        /* Custom scrollbar for view info panel */
+        .view-info-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .view-info-panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .view-info-panel::-webkit-scrollbar-thumb {
+            background: var(--border-light);
+            border-radius: 3px;
+        }
+
+        .view-info-panel::-webkit-scrollbar-thumb:hover {
+            background: #444;
+        }
+
+        .view-info-panel h3 {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: 900;
+            margin: 0 0 8px 0;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+        }
+
+        .view-info-panel .view-subtitle {
+            font-family: var(--font-body);
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .view-info-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .view-info-list li {
+            font-family: var(--font-body);
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            padding-left: 20px;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        .view-info-list li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: var(--accent-primary);
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        /* Toggle button to show/hide panel */
+        .view-info-toggle {
+            position: absolute;
+            left: 320px;
+            /* Default position - will be adjusted by CSS based on main menu state */
+            top: 20px;
+            width: 32px;
+            height: 32px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-left: none;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 101;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            font-family: var(--font-mono);
+            font-size: 12px;
+        }
+
+        .view-info-toggle:hover {
+            background: var(--bg-surface-hover);
+            color: var(--text-main);
+        }
+
+        /* Hide panel when toggled */
+        .view-info-panel.hidden {
+            transform: translateX(-100%);
+        }
+
+        /* When view-info-panel is hidden, move toggle to left edge */
+        .view-info-panel.hidden+.view-info-toggle {
+            left: 0 !important;
+            /* Override other positioning rules when panel is hidden */
+        }
+
+        /* When view-info-panel is visible and main menu is visible, position at 320px */
+        aside:not(.hidden)~.main-menu-toggle~main .view-info-panel:not(.hidden)+.view-info-toggle {
+            left: 320px;
+        }
+
+        /* When view-info-panel is visible and main menu is hidden, position at 0 */
+        aside.hidden~.main-menu-toggle~main .view-info-panel:not(.hidden)+.view-info-toggle {
+            left: 0;
+        }
+
+
+        /* Showcase area - takes full width now */
+        .showcase-area {
+            flex: 1;
+            overflow-y: auto;
+            height: 100%;
+            padding: 40px;
+            scroll-behavior: smooth;
+            width: 100%;
+            max-width: none;
+            /* Full width for scrollbar positioning */
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .browser-content {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+            padding: 40px;
+            scroll-behavior: smooth;
+            width: 100%;
+            transition: margin-left 0.3s ease, margin-right 0.3s ease, max-width 0.3s ease, width 0.3s ease, flex 0.3s ease, min-width 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+
+        /* Hide page header in showcase */
+        .showcase-area .page-header {
+            display: none;
+        }
+
+        /* View title above showcase */
+        .view-title {
+            font-family: var(--font-display);
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-light);
+            letter-spacing: -0.3px;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .btn-table-action {
+            background: transparent;
+            border: 1px solid var(--accent-primary);
+            color: var(--accent-primary);
+            padding: 6px 12px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            cursor: pointer;
+            border-radius: 4px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-table-action:hover {
+            background: var(--accent-primary);
+            color: var(--bg-core);
+            box-shadow: 0 0 10px rgba(204, 255, 0, 0.3);
+        }
+
+/* Interactive Price History Chart with Crosshair */
+.price-chart {
+    position: relative;
+    /* height set inline */
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    cursor: crosshair;
+}
+
+.price-chart-bar {
+    flex: 1;
+    background: #333;
+    border-radius: 2px 2px 0 0;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.price-chart-bar:hover {
+    background: var(--accent-primary) !important;
+    opacity: 1;
+    transform: scaleY(1.1);
+    transform-origin: bottom;
+}
+
+.price-chart-crosshair {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--accent-primary);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.price-chart:hover .price-chart-crosshair {
+    opacity: 1;
+}
+
+.price-chart-tooltip {
+    position: absolute;
+    background: var(--bg-surface);
+    border: 1px solid var(--accent-primary);
+    padding: 6px 10px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent-primary);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-100%);
+    white-space: nowrap;
+    z-index: 10;
+}

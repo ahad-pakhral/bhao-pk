@@ -1,0 +1,157 @@
+These descriptions explain the internal object interactions (User -> Browser -> Server -> Database).
+
+SequenceDiagram1SearchProducts.png
+
+User Action: The user enters keywords (e.g., "iPhone 13") into the Web Browser.
+
+Browser Request: The browser sends a getSearchResults(query) message to the Bhao.pk Server.
+
+Database Query: The server asks the Database to selectProducts(query) based on the keywords.
+
+Data Return: The Database returns a list of matching products to the Server.
+
+Processing: The Server performs an internal aggregateVendorData() step to group listings.
+
+Response: The Server sends the aggregated JSON data back to the Web Browser.
+
+UI Update: The Browser renders the product grid for the user.
+
+SequenceDiagram2FilterAndSort.png
+
+User Action: The user selects a filter (e.g., "Price: Low to High") in the Web Browser.
+
+Browser Request: The browser requests filtered data from the Server via requestFilteredData(sortCriteria).
+
+Database Query: The Server queries the Database using queryWithSort(orderBy="price ASC").
+
+Data Return: The Database returns the sorted product list to the Server.
+
+Response: The Server passes the updated data back to the Web Browser.
+
+UI Update: The Browser updates the view to show the sorted results.
+
+SequenceDiagram3ViewProductDetails.png
+
+User Action: The user clicks on a specific product ID in the Web Browser.
+
+Browser Request: The browser calls fetchDetails(id) on the Server.
+
+Database Query: The Server requests full product info via getProductInfo(id).
+
+Data Return: The Database returns the product details and associated store listings.
+
+Response: The Server sends the complete page data to the Browser.
+
+UI Update: The Browser displays the Product Page with the comparison table.
+
+SequenceDiagram4PriceHistory.png
+
+User Action: The user loads the product page (or clicks the history tab).
+
+Browser Request: The browser requests history via getHistory(productId).
+
+Database Query: The Server asks the Database to selectPriceLogs(productId).
+
+Data Return: The Database returns a list of historical price logs.
+
+Response: The Server formats and sends the graph data to the Browser.
+
+UI Update: The Browser renders the price history graph.
+
+SequenceDiagram5SetPriceAlert.png
+
+User Action: The user submits a target price alert via the Web Browser.
+
+Server Logic: The Browser sends a createAlert request. The Server first checks the User's token with the Database.
+
+Validation: The Database returns whether the user is valid.
+
+Alternate Flow (Valid): If valid, the Server instructs the Database to insertAlert(). The Database confirms success, and the Server confirms to the Browser.
+
+Alternate Flow (Invalid): If invalid, the Server returns an error message.
+
+UI Update: The Browser displays a success toast or error message to the user.
+
+SequenceDiagram6Recommendations.png
+
+User Action: The user loads the homepage in the Web Browser.
+
+Browser Request: The browser requests recommendations for the logged-in userId.
+
+Persona Lookup: The Server asks the Database for the getUserPersona(userId).
+
+Data Return (Persona): The Database returns the user's preferred categories.
+
+Product Lookup: The Server requests products matching those categories via getProductsByCat.
+
+Data Return (Products): The Database returns the list of recommended products.
+
+Response: The Server sends the recommendation JSON to the Browser.
+
+UI Update: The Browser displays the "Recommended for You" section.
+
+SequenceDiagram7AddToWishlist.png
+
+User Action: The user clicks the heart icon for a product.
+
+Browser Request: The browser sends an addToWishlist request to the Server.
+
+Check Existence: The Server asks the Database checkItemExists to see if it's already there.
+
+Data Return: The Database returns false (item not present).
+
+Insertion: The Server instructs the Database to insertWishlistItem.
+
+Confirmation: The Database confirms the insertion.
+
+Response: The Server sends the updated icon state to the Browser.
+
+UI Update: The Browser fills the heart icon to indicate success.
+
+SequenceDiagram8SignUp.png
+
+User Action: The user enters details and submits the sign-up form.
+
+Browser Request: The browser sends submitSignUpRequest to the Server.
+
+Uniqueness Check: The Server checks checkEmailUnique with the Database.
+
+Data Return: The Database confirms the email is unique (isUnique = true).
+
+Creation: The Server instructs the Database to saveUser with the hashed password.
+
+Confirmation: The Database returns the new userId.
+
+Response: The Server sends a success status message to the Browser.
+
+UI Update: The Browser displays a success message to the user.
+
+SequenceDiagram9Login.png
+
+User Action: The user enters credentials and clicks login.
+
+Browser Request: The browser sends submitLoginRequest to the Server.
+
+User Lookup: The Server requests getUserByEmail from the Database.
+
+Data Return: The Database returns the user data and stored password hash.
+
+Logic (Alt Block): The Server compares the password hash.
+
+If Match: The Server returns an authToken and redirect URL. The Browser redirects the user to the Dashboard.
+
+If No Match: The Server returns an error message. The Browser displays "Invalid credentials".
+
+SequenceDiagram10AdminDasboard.png
+
+Admin Action: The Admin opens the dashboard view.
+
+UI Request: The Dashboard UI calls fetchStats() on the Server.
+
+Count Products: The Server asks the Database to countProducts(), and the Database returns the count.
+
+Count Users: The Server asks the Database to countUsers(), and the Database returns the count.
+
+Response: The Server packages these stats and sends statsData to the Dashboard UI.
+
+UI Update: The Dashboard UI renders the charts and counters for the Admin.

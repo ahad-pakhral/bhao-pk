@@ -1,0 +1,81 @@
+ssd1SearchProducts.png
+
+User Action: The user enters a search term (e.g., "iPhone 13") into the search bar.
+
+System Request: A message enterSearchQuery("iPhone 13") is sent to the System.
+
+System Response: The System processes the query and returns a List of Products to be displayed to the user.
+
+ssd2FilterAndSort.png
+
+User Action: The user selects filter criteria (e.g., "Daraz") and a sorting order (e.g., "Price Low to High").
+
+System Request: A message applyFilter("Daraz", "Price Low to High") is sent to the System.
+
+System Response: The System filters and reorders the results, returning a Filtered Product List.
+
+ssd3ViewProductDetails.png
+
+User Action: The user clicks on a specific product card (e.g., "iPhone 13").
+
+System Request: A message selectProduct("iPhone 13") is sent to the System.
+
+System Response: The System retrieves and returns the full Product Details & Vendor Comparison Table.
+
+ssd4ViewPriceHistory.png
+
+User Action: The user navigates to the price history section of a product page.
+
+System Request: A message requestPriceHistory("iPhone 13") is sent to the System.
+
+System Response: The System fetches historical data points and returns Price History Graph Data.
+
+ssd5SetPriceAlert.png
+
+User Action: The user clicks the "Set Alert" button.
+
+System Response: The System presents an Alert Input Form.
+
+User Action: The user enters a desired price (e.g., 150,000) and submits it via submitTargetPrice(150000).
+
+System Response: The System saves the alert and returns an Alert Created Confirmation.
+
+ssd6Recommendations.png
+
+User Action: The user visits the homepage.
+
+System Request: A message visitHomePage() is automatically sent to the System.
+
+System Response: The System analyzes the user's profile/history and returns a Recommended Products List.
+
+ssd7ManageWishlist.png
+
+User Action: The user clicks the "Heart" icon on a product (e.g., "iPhone 13").
+
+System Request: A message clickAddToWishlist("iPhone 13") is sent to the System.
+
+System Response: The System saves the item and returns an Updated Filled Heart Icon to update the UI.
+
+ssd8SignUp.png
+
+User Action: The user fills in the registration form and submits it via submitRegistration("email", "password").
+
+System Request: The credentials are sent to the System for validation and creation.
+
+System Response: The System creates the account and returns a Success Message.
+
+ssd9Login.png
+
+User Action: The user enters credentials and sends submitLogin("email", "password").
+
+System Logic: An alt frame shows two possible outcomes.
+
+Valid Case: If credentials are correct, the System returns the User Dashboard.
+
+Invalid Case: If credentials fail, the System returns an Error Message.
+
+ssd10AdminStats.png
+
+Admin Action: The admin logs in and sends a requestDashboard() message.
+
+System Response: The System aggregates data from the database and returns Statistics Charts & User Counts.

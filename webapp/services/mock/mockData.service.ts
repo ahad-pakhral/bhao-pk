@@ -11,7 +11,37 @@ import {
   ForgotPasswordResponse,
 } from '../../types/api';
 import { TRENDING_PRODUCTS, SEARCH_RESULTS, RECENTLY_VIEWED } from '../../constants/dummyData';
-import { ProductWithListings, Alert, WishlistItem, PriceHistory } from '../../types/models';
+import { ProductWithListings, Alert, WishlistItem, PriceHistory, Store } from '../../types/models';
+
+// Helper to transform simple product data into ProductWithListings
+const enrichProduct = (p: any): ProductWithListings => {
+  const priceValue = parseFloat(p.price.replace(/[^0-9.]/g, '')) || 0;
+  return {
+    ...p,
+    category: 'Electronics',
+    listings: [
+      {
+        id: `listing-${p.id}`,
+        productId: p.id,
+        storeId: '1',
+        price: priceValue,
+        currency: 'PKR',
+        url: 'https://daraz.pk',
+        inStock: true,
+        lastUpdated: new Date(),
+        store: {
+          id: '1',
+          name: p.store || 'Daraz',
+          url: 'https://daraz.pk',
+          isActive: true,
+        } as Store,
+      },
+    ],
+    lowestPrice: priceValue,
+    highestPrice: priceValue * 1.1,
+  } as ProductWithListings;
+};
+
 
 class MockDataService {
   private delay(ms: number = 500): Promise<void> {
@@ -115,7 +145,7 @@ class MockDataService {
     }
 
     return {
-      results: results as ProductWithListings[],
+      results: results.map(enrichProduct),
       total: results.length,
       page: 1,
       totalPages: 1,
@@ -186,7 +216,7 @@ class MockDataService {
   }
 
   private mockTrending(): ProductWithListings[] {
-    return TRENDING_PRODUCTS as ProductWithListings[];
+    return TRENDING_PRODUCTS.map(enrichProduct);
   }
 
   private mockPriceHistory(productId: string): PriceHistoryResponse {

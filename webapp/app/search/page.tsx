@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -16,7 +16,7 @@ const allProducts = [
 
 const stores = ["Daraz", "Telemart", "Shophive"];
 
-export default function SearchPage() {
+function SearchContent() {
   const searchParams = useSearchParams();
   const queryParam = searchParams?.get("q") || "";
 
@@ -193,5 +193,13 @@ export default function SearchPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div className="container">Loading...</div>}>
+      <SearchContent />
+    </Suspense>
   );
 }

@@ -26,18 +26,6 @@ interface SearchProduct {
   originalPrice?: string;
 }
 
-// Fallback dummy data (used when backend is unavailable)
-const fallbackProducts: SearchProduct[] = [
-  { id: 1, name: "iPhone 15 Pro", specs: "256GB \u2022 5G \u2022 Daraz", price: "Rs. 345,000", rating: 4.9, reviews: 120, reviewsCount: 120, badge: "BEST", priceValue: 345000, image: "/images/iphone-15-pro.png", store: "Daraz" },
-  { id: 8, name: "MacBook Air M2", specs: "13\" \u2022 8GB RAM \u2022 256GB", price: "Rs. 285,000", rating: 4.9, reviews: 78, reviewsCount: 78, priceDrop: "-5%", priceValue: 285000, image: "/images/macbook-air.png", store: "Shophive" },
-  { id: 9, name: "Sony WH-1000XM5", specs: "Noise Cancelling \u2022 30hr", price: "Rs. 85,000", rating: 4.6, reviews: 203, reviewsCount: 203, priceValue: 85000, image: "/images/sony-xm5.png", store: "Telemart" },
-  { id: 10, name: "iPhone 15", specs: "128GB \u2022 Telemart", price: "Rs. 315,000", rating: 4.5, reviews: 89, reviewsCount: 89, priceValue: 315000, image: "/images/iphone-15-pro.png", store: "Telemart" },
-  { id: 11, name: "iPhone 15 Plus", specs: "256GB \u2022 Shophive", price: "Rs. 335,000", rating: 4.7, reviews: 56, reviewsCount: 56, priceValue: 335000, image: "/images/iphone-15-pro.png", store: "Shophive" },
-  { id: 3, name: "AirPods Pro", specs: "Active Noise Cancellation", price: "Rs. 65,000", rating: 4.8, reviews: 156, reviewsCount: 156, priceValue: 65000, image: "/images/airpods-pro.png", store: "Daraz" },
-  { id: 5, name: "iPad Pro 12.9\"", specs: "M2 \u2022 256GB", price: "Rs. 245,000", rating: 4.8, reviews: 92, reviewsCount: 92, priceValue: 245000, image: "/images/ipad-pro.png", store: "Daraz" },
-  { id: 12, name: "No-Name TWS Earbuds", specs: "Bluetooth 5.0", price: "Rs. 2,500", rating: 5.0, reviews: 3, reviewsCount: 3, priceValue: 2500, image: "/images/airpods-pro.png", store: "Daraz" },
-  { id: 13, name: "JBL Tune 230NC", specs: "ANC \u2022 JBL Pure Bass", price: "Rs. 12,000", rating: 4.3, reviews: 450, reviewsCount: 450, priceValue: 12000, image: "/images/sony-xm5.png", store: "Telemart" },
-];
 
 /** Convert backend scraped product into our display format */
 function normalizeProduct(p: any, idx: number): SearchProduct {
@@ -75,9 +63,9 @@ function SearchContent() {
   const [selectedStores, setSelectedStores] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [liveProducts, setLiveProducts] = useState<SearchProduct[] | null>(null);
+  const [liveProducts, setLiveProducts] = useState<SearchProduct[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [dataSource, setDataSource] = useState<"live" | "cache" | "fallback">("fallback");
+  const [dataSource, setDataSource] = useState<"live" | "cache" | "error" | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   useEffect(() => {
@@ -89,8 +77,8 @@ function SearchContent() {
   // Fetch from backend API when search query changes (debounced)
   const fetchFromAPI = useCallback(async (keyword: string) => {
     if (!keyword.trim()) {
-      setLiveProducts(null);
-      setDataSource("fallback");
+      setLiveProducts([]);
+      setDataSource(null);
       return;
     }
 
@@ -109,9 +97,9 @@ function SearchContent() {
       setLiveProducts(normalized);
       setDataSource(data.source === "cache" ? "cache" : "live");
     } catch (err) {
-      console.warn("[Search] Backend unavailable, using fallback data:", err);
-      setLiveProducts(null);
-      setDataSource("fallback");
+      console.warn("[Search] Backend unavailable:", err);
+      setLiveProducts([]);
+      setDataSource("error");
     } finally {
       setIsLoading(false);
     }
@@ -139,19 +127,7 @@ function SearchContent() {
   };
 
   const results = useMemo(() => {
-    // Use live products if available, otherwise fallback
-    const baseProducts = liveProducts !== null ? liveProducts : fallbackProducts;
-    let filtered = [...baseProducts];
-
-    // For fallback data, filter by search query client-side
-    if (liveProducts === null && searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      filtered = filtered.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        p.specs.toLowerCase().includes(q) ||
-        p.store.toLowerCase().includes(q)
-      );
-    }
+    let filtered = [...liveProducts];
 
     // Filter by stores
     if (selectedStores.length > 0) {
@@ -173,11 +149,8 @@ function SearchContent() {
     } else if (sort === "Top Rated") {
       filtered.sort((a, b) => b.rating - a.rating);
     } else {
-      // Relevance — backend already ranks by Bayesian composite,
-      // but re-rank client-side for fallback data or after filtering
-      if (liveProducts === null) {
-        filtered = rankByRelevance<SearchProduct>(filtered);
-      }
+      // Relevance — backend already ranks by Bayesian composite
+      // Add client-side ranking fallback here if needed in future
     }
 
     return filtered;
@@ -185,8 +158,7 @@ function SearchContent() {
 
   // Collect unique stores from base results for the filter sidebar so filters don't disappear
   const availableStores = useMemo(() => {
-    const baseProducts = liveProducts !== null ? liveProducts : fallbackProducts;
-    const storeSet = new Set(baseProducts.map(p => p.store));
+    const storeSet = new Set(liveProducts.map(p => p.store));
     return stores.filter(s => storeSet.has(s));
   }, [liveProducts]);
 
@@ -256,7 +228,7 @@ function SearchContent() {
                 </h2>
                 <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
                   Found {results.length} items{searchQuery && ` for "${searchQuery}"`}
-                  {dataSource !== "fallback" && (
+                  {dataSource && dataSource !== "error" && (
                     <span style={{ marginLeft: '8px', fontSize: '11px', padding: '2px 8px', borderRadius: '4px', background: dataSource === "live" ? 'var(--accent-success)' : 'var(--accent-primary)', color: '#fff' }}>
                       {dataSource === "live" ? "LIVE" : "CACHED"}
                     </span>
@@ -349,10 +321,24 @@ function SearchContent() {
               </Link>
             ))}
 
-            {!isLoading && results.length === 0 && (
+            {!isLoading && dataSource === "error" && (
+              <div className="card" style={{ padding: '60px 40px', textAlign: 'center' }}>
+                <h3 style={{ fontSize: '24px', marginBottom: '12px', color: 'var(--accent-alert)' }}>Connection Error</h3>
+                <p style={{ color: 'var(--text-secondary)' }}>Could not reach the Bhao.pk backend scrapers.</p>
+              </div>
+            )}
+
+            {!isLoading && dataSource !== "error" && results.length === 0 && searchQuery && (
               <div className="card" style={{ padding: '60px 40px', textAlign: 'center' }}>
                 <h3 style={{ fontSize: '24px', marginBottom: '12px' }}>No results found</h3>
                 <p style={{ color: 'var(--text-secondary)' }}>Try adjusting your filters or search query</p>
+              </div>
+            )}
+
+            {!isLoading && dataSource !== "error" && results.length === 0 && !searchQuery && (
+              <div className="card" style={{ padding: '60px 40px', textAlign: 'center' }}>
+                <h3 style={{ fontSize: '24px', marginBottom: '12px' }}>Search for a product</h3>
+                <p style={{ color: 'var(--text-secondary)' }}>Enter a keyword above to compare prices across Pakistani stores.</p>
               </div>
             )}
           </div>

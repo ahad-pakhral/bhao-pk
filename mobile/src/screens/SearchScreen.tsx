@@ -1,11 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, TextInput, Modal, Keyboard } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, TextInput, Modal, Keyboard, ActivityIndicator } from 'react-native';
 import { ArrowLeft, SlidersHorizontal, ChevronDown, X, Search as SearchIcon } from 'lucide-react-native';
 import { COLORS, SPACING } from '../theme';
 import { Typography, ProductCard } from '../components';
-import { ALL_PRODUCTS } from '../constants/dummyData';
 import { useSearch } from '../hooks/useSearch';
 import type { ProductCardData } from '../types/models';
+
+const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
+
+/** Convert backend scraped product into ProductCardData format */
+function normalizeProduct(p: any, idx: number): ProductCardData {
+  const price = typeof p.price === 'number' ? p.price : parseFloat(String(p.price).replace(/[^0-9.]/g, '')) || 0;
+  return {
+    id: p.id || `scraped-${idx}`,
+    name: p.name || '',
+    specs: p.store || '',
+    price: `Rs. ${price.toLocaleString()}`,
+    rating: p.rating || 0,
+    reviews: p.reviewsCount || 0,
+    reviewsCount: p.reviewsCount || 0,
+    priceValue: price,
+    image: p.imageUrl || undefined,
+    store: p.store || 'Unknown',
+    inStock: p.inStock !== false,
+  } as ProductCardData;
+}
 
 export const SearchScreen = ({ route, navigation }: any) => {
   const { query } = route.params || {};
@@ -14,6 +33,11 @@ export const SearchScreen = ({ route, navigation }: any) => {
   const [showSort, setShowSort] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(!query);
   const [hasSearched, setHasSearched] = useState(!!query);
+  const [liveProducts, setLiveProducts] = useState<ProductCardData[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Enforce real products from API
+  const productsSource = liveProducts;
 
   const {
     filteredProducts,
@@ -22,30 +46,48 @@ export const SearchScreen = ({ route, navigation }: any) => {
     updateFilters,
     updateSort,
     clearFilters,
-  } = useSearch(ALL_PRODUCTS as ProductCardData[], searchQuery);
+  } = useSearch(productsSource, searchQuery);
+
+  // Fetch from backend API
+  const fetchFromAPI = useCallback(async (keyword: string) => {
+    if (!keyword.trim()) return;
+    setIsLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/search`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ keyword }),
+      });
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      const data = await res.json();
+      const normalized = (data.results || []).map(normalizeProduct);
+      setLiveProducts(normalized);
+    } catch (err) {
+      console.warn('[Search] Backend unavailable:', err);
+      setLiveProducts([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (route?.params?.query) {
       setSearchQuery(route.params.query);
       setHasSearched(true);
       setShowSuggestions(false);
+      fetchFromAPI(route.params.query);
     }
-  }, [route?.params?.query]);
+  }, [route?.params?.query, fetchFromAPI]);
 
-  // Real-time product suggestions
-  const suggestions = searchQuery.trim()
-    ? ALL_PRODUCTS.filter(product =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.specs?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.store?.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 5)
-    : [];
+  // Real-time product suggestions disabled without dummy data or distinct backend endpoint
+  const suggestions: any[] = [];
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
       Keyboard.dismiss();
       setShowSuggestions(false);
       setHasSearched(true);
+      fetchFromAPI(searchQuery);
     }
   };
 
@@ -137,9 +179,12 @@ export const SearchScreen = ({ route, navigation }: any) => {
       ) : (
         <>
           <View style={styles.filterBar}>
-            <Typography variant="monoBold" color={COLORS.textSecondary}>
-              {filteredProducts.length} RESULTS
-            </Typography>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Typography variant="monoBold" color={COLORS.textSecondary}>
+                {filteredProducts.length} RESULTS
+              </Typography>
+              {isLoading && <ActivityIndicator size="small" color={COLORS.primary} style={{ marginLeft: 8 }} />}
+            </View>
             <TouchableOpacity style={styles.filterButton} onPress={() => setShowFilters(true)}>
               <SlidersHorizontal color={COLORS.background} size={16} />
               <Typography variant="bodySmall" color={COLORS.background} style={styles.filterText}>

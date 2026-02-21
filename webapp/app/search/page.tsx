@@ -320,8 +320,8 @@ function SearchContent() {
                   {item.priceDrop && <span className="badge badge-hot" style={{ position: 'absolute', top: '8px', right: '8px' }}>{item.priceDrop}</span>}
                 </div>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <h4 style={{ fontSize: '18px' }}>{item.name}</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '8px' }}>
+                    <h4 className="product-title" style={{ fontSize: '18px', marginBottom: '6px' }}>{item.name}</h4>
                     <div className="product-price">{item.price}</div>
                   </div>
                   <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: 'auto' }}>{item.store}</p>

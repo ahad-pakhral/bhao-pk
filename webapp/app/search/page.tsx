@@ -8,7 +8,9 @@ import { LayoutGrid, List as ListIcon } from "lucide-react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
-interface SearchProduct {
+import { useSearchStore } from "../../store/searchStore";
+
+export interface SearchProduct {
   id: number | string;
   name: string;
   specs: string;
@@ -68,6 +70,9 @@ function SearchContent() {
   const [dataSource, setDataSource] = useState<"live" | "cache" | "error" | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
+  // Global search cache
+  const { lastQuery, lastResults, lastFetchTime, setSearchResults } = useSearchStore();
+
   useEffect(() => {
     if (queryParam) {
       setSearchQuery(queryParam);
@@ -79,6 +84,14 @@ function SearchContent() {
     if (!keyword.trim()) {
       setLiveProducts([]);
       setDataSource(null);
+      return;
+    }
+
+    // Check frontend cache to prevent re-scraping on back navigation
+    if (keyword === lastQuery && lastResults.length > 0 && Date.now() - lastFetchTime < 15 * 60 * 1000) {
+      console.log("[Search] Using frontend cache for:", keyword);
+      setLiveProducts(lastResults);
+      setDataSource("cache");
       return;
     }
 
@@ -96,6 +109,9 @@ function SearchContent() {
       const normalized = (data.results || []).map(normalizeProduct);
       setLiveProducts(normalized);
       setDataSource(data.source === "cache" ? "cache" : "live");
+
+      // Save results to frontend cache
+      setSearchResults(keyword, normalized);
     } catch (err) {
       console.warn("[Search] Backend unavailable:", err);
       setLiveProducts([]);
@@ -296,6 +312,7 @@ function SearchContent() {
                   <img
                     src={item.image}
                     alt={item.name}
+                    referrerPolicy="no-referrer"
                     style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '12px' }}
                     onError={(e) => { (e.target as HTMLImageElement).src = '/images/iphone-15-pro.png'; }}
                   />

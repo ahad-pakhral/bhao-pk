@@ -4,7 +4,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 import { useWishlist } from "../../../hooks/useWishlist";
-import { alertsStorage } from "../../../services/storage.service";
+import { smartAlertsStorage } from "../../../services/storage.service";
+import { createSmartAlert } from "../../../utils/smartAlerts";
+import { ALL_PRODUCTS } from "../../../constants/dummyData";
+import { useSearchStore } from "../../../store/searchStore";
 
 export default function ProductDetail({ params }: { params: { id: string } }) {
   const [showAlertModal, setShowAlertModal] = useState(false);
@@ -14,39 +17,44 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [showAlert, setShowAlert] = useState(false);
+  const { lastResults } = useSearchStore();
   const { isInWishlist, toggleWishlist } = useWishlist();
 
-  // In a real app, you'd fetch data based on params.id
+  // Find the product in the cached search results
+  const scrapedProduct = lastResults.find((p) => String(p.id) === String(params.id));
+
+  if (!scrapedProduct) {
+    return (
+      <div className="container" style={{ padding: '100px 0', textAlign: 'center' }}>
+        <h2 style={{ fontSize: '32px', marginBottom: '16px' }}>Product Not Found</h2>
+        <p style={{ color: "var(--text-secondary)", fontSize: '18px' }}>Your search session may have expired, or this product doesn't exist.</p>
+        <Link href="/search" className="btn btn-primary" style={{ marginTop: '32px', display: 'inline-flex', alignItems: 'center', height: '48px', padding: '0 24px' }}>
+          Return to Search
+        </Link>
+      </div>
+    );
+  }
+
+  // Map scraped product to the detail view structure
   const product = {
-    id: params.id,
-    name: "iPhone 15 Pro",
-    specs: "256GB • Titanium • Space Black",
-    price: "Rs. 345,000",
-    rating: 4.9,
-    reviewsCount: 120,
-    store: "Daraz.pk",
-    description: "The iPhone 15 Pro features a strong and light aerospace-grade titanium design with a textured matte-glass back. It also features a Ceramic Shield front that's tougher than any smartphone glass.",
+    ...scrapedProduct,
+    description: "This product was discovered dynamically by Bhao.pk's intelligent scrapers. Pricing and availability vary by merchant. Detailed specifications are only available on the merchant's external website.",
     specifications: [
-      { key: "Display", value: "6.1\" Super Retina XDR" },
-      { key: "Processor", value: "A17 Pro chip" },
-      { key: "Camera", value: "48MP Main | Ultra Wide | Telephoto" },
-      { key: "Battery", value: "Up to 23 hours video playback" },
+      { key: "Merchant", value: scrapedProduct.store },
+      { key: "Details", value: scrapedProduct.specs || "N/A" }
     ],
-    reviews: [
-      { user: "Ali Khan", rating: 5, comment: "Best phone I've ever used. The titanium finish is amazing and it's so light!" },
-      { user: "Sara Ahmed", rating: 4.5, comment: "Great performance but battery life could be better. Camera is top notch though." },
-    ]
+    reviewsDetails: []
   };
 
-  // Mock price history data (last 30 days)
+  // Mock price history data (last 30 days) based on the actual price
   const [priceHistory, setPriceHistory] = useState<any[]>([]);
 
   useEffect(() => {
     const history = Array.from({ length: 30 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - (29 - i));
-      const basePrice = 345000;
-      const variation = Math.sin(i / 5) * 15000 + Math.random() * 5000;
+      const basePrice = product.priceValue || 50000;
+      const variation = Math.sin(i / 5) * (basePrice * 0.05) + Math.random() * (basePrice * 0.02);
       return {
         date: `${date.getDate()}/${date.getMonth() + 1}`,
         price: Math.round(basePrice + variation),
@@ -55,32 +63,21 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
     setPriceHistory(history);
   }, []);
 
-  const parsePrice = (priceStr: string): number => {
-    return parseInt(priceStr.replace(/[^0-9]/g, ''), 10) || 0;
-  };
-
-  const saveAlert = (tPrice: number) => {
-    const newAlert = {
-      id: `alert_${product.id}_${Date.now()}`,
-      userId: 'user_1',
-      productId: product.id,
-      productName: product.name,
-      productImage: '/images/iphone-15-pro.png',
-      currentPrice: parsePrice(product.price),
-      targetPrice: tPrice,
-      store: product.store,
-      isActive: true,
-      createdAt: new Date(),
+  const saveSmartAlert = (alertType: 'every_change' | 'target_price', tPrice?: number) => {
+    const productData = {
+      ...product,
+      image: '/images/iphone-15-pro.png',
+      category: 'Smartphones',
     };
-    alertsStorage.addAlert(newAlert);
+    const smartAlert = createSmartAlert(productData, alertType, tPrice, ALL_PRODUCTS);
+    smartAlertsStorage.addAlert(smartAlert);
   };
 
   const handleSetAlert = (type: 'every' | 'specific') => {
     setAlertType(type);
     if (type === 'every') {
-      const currentPrice = parsePrice(product.price);
-      saveAlert(currentPrice);
-      setSuccessMessage(`You'll be notified of every price change for ${product.name}`);
+      saveSmartAlert('every_change');
+      setSuccessMessage(`Tracking ${product.name} across all stores`);
       setShowSuccessToast(true);
       setShowAlertModal(false);
       setAlertType(null);
@@ -102,8 +99,8 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
       return;
     }
 
-    saveAlert(price);
-    setSuccessMessage(`You'll be notified when price reaches Rs. ${price.toLocaleString()}`);
+    saveSmartAlert('target_price', price);
+    setSuccessMessage(`Tracking across stores — target Rs. ${price.toLocaleString()}`);
     setShowSuccessToast(true);
     setShowAlertModal(false);
     setAlertType(null);
@@ -117,7 +114,11 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
         {/* Product Image */}
         <div style={{ flex: 1 }}>
           <div style={{ aspectRatio: '1/1', background: '#1a1a1a', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '120px', position: 'sticky', top: '100px', overflow: 'hidden' }}>
-            <img src="/images/iphone-15-pro.png" alt="iPhone 15 Pro" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '40px' }} />
+            {product.image ? (
+              <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '40px' }} />
+            ) : (
+              <div style={{ opacity: 0.1 }}>🛍️</div>
+            )}
           </div>
         </div>
 
@@ -137,7 +138,10 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
               <button
                 className="btn btn-primary"
                 style={{ flex: 1, height: '56px' }}
-                onClick={() => window.open('https://daraz.pk', '_blank')}
+                onClick={() => {
+                  if (product.url) window.open(product.url, '_blank');
+                  else alert("Store URL not available for this scraped product.");
+                }}
               >
                 Buy on {product.store}
               </button>
@@ -149,14 +153,14 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
                 Set Price Alert
               </button>
               <button
-                onClick={() => toggleWishlist(product.id)}
+                onClick={() => toggleWishlist(String(product.id))}
                 style={{
                   height: '56px', width: '56px', border: '1px solid var(--border-light)',
                   borderRadius: '12px', background: 'transparent', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}
               >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill={isInWishlist(product.id) ? '#FF4444' : 'none'} stroke={isInWishlist(product.id) ? '#FF4444' : '#fff'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill={isInWishlist(String(product.id)) ? '#FF4444' : 'none'} stroke={isInWishlist(String(product.id)) ? '#FF4444' : '#fff'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                 </svg>
               </button>
@@ -186,7 +190,7 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
         <div>
           <div className="section-title"><h3>User Reviews</h3></div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {product.reviews.map((review, i) => (
+            {product.reviewsDetails.length > 0 ? product.reviewsDetails.map((review: any, i: number) => (
               <div key={i} className="card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ fontWeight: '700' }}>{review.user}</span>
@@ -194,8 +198,11 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
                 </div>
                 <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>{review.comment}</p>
               </div>
-            ))}
-            <button className="btn btn-secondary" style={{ width: '100%' }}>View All Reviews</button>
+            )) : (
+              <div className="card" style={{ textAlign: 'center', padding: '32px' }}>
+                <p style={{ color: 'var(--text-secondary)' }}>No detailed reviews scraped for this product yet.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

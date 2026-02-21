@@ -1,6 +1,6 @@
 // Storage service for webapp using localStorage
 
-import { Alert } from '../types/models';
+import { Alert, SmartAlert } from '../types/models';
 
 class StorageService {
   setItem(key: string, value: any): void {
@@ -103,6 +103,38 @@ export const alertsStorage = {
 
   clearAlerts(): void {
     storageService.setItem('@alerts', []);
+  },
+};
+
+// Smart alerts storage
+export const smartAlertsStorage = {
+  getAlerts(): SmartAlert[] {
+    return storageService.getItem<SmartAlert[]>('@smart_alerts') || [];
+  },
+
+  addAlert(alert: SmartAlert): void {
+    const alerts = this.getAlerts();
+    storageService.setItem('@smart_alerts', [...alerts, alert]);
+  },
+
+  removeAlert(alertId: string): void {
+    const alerts = this.getAlerts();
+    storageService.setItem(
+      '@smart_alerts',
+      alerts.filter((a) => a.id !== alertId)
+    );
+  },
+
+  updateAlert(alertId: string, updates: Partial<SmartAlert>): void {
+    const alerts = this.getAlerts();
+    const updatedAlerts = alerts.map((alert) =>
+      alert.id === alertId ? { ...alert, ...updates } : alert
+    );
+    storageService.setItem('@smart_alerts', updatedAlerts);
+  },
+
+  clearAlerts(): void {
+    storageService.setItem('@smart_alerts', []);
   },
 };
 

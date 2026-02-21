@@ -1,0 +1,61 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String   // Hashed
+  name      String?
+  role      String   @default("USER") // USER or ADMIN
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  wishlists     WishlistItem[]
+  alerts        PriceAlert[]
+  searchHistory SearchHistory[]
+}
+
+model WishlistItem {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Product Pointer
+  store     String
+  url       String
+  name      String   
+  imageUrl  String?  
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, url])
+}
+
+model PriceAlert {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  targetPrice Float
+  keyword     String?  
+  productUrl  String?  
+  isNotified  Boolean  @default(false)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SearchHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  query     String
+  createdAt DateTime @default(now())
+}

@@ -1,42 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { Bell, Trash2, TrendingDown, ArrowLeft } from 'lucide-react-native';
+import React from 'react';
+import { View, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { Bell, ArrowLeft, RefreshCw } from 'lucide-react-native';
 import { COLORS, SPACING, BORDER_RADIUS } from '../theme';
 import { Typography, Button } from '../components';
-import { alertsStorage } from '../services/storage.service';
-import { Alert } from '../types/models';
+import { SmartAlertCard } from '../components/SmartAlertCard';
+import { useSmartAlerts } from '../hooks/useSmartAlerts';
 import Toast from 'react-native-toast-message';
 
 export const AlertsScreen = ({ navigation }: any) => {
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { alerts, triggeredAlerts, loading, removeAlert, refreshPrices } = useSmartAlerts();
+  const [refreshing, setRefreshing] = React.useState(false);
 
-  useEffect(() => {
-    loadAlerts();
-  }, []);
+  const handleRemove = async (id: string) => {
+    await removeAlert(id);
+    Toast.show({ type: 'info', text1: 'Alert deleted' });
+  };
 
-  const loadAlerts = async () => {
-    try {
-      const items = await alertsStorage.getAlerts();
-      setAlerts(items);
-    } catch (error) {
-      console.error('Failed to load alerts:', error);
-    } finally {
-      setLoading(false);
+  const handleViewProduct = (productId: string) => {
+    const { ALL_PRODUCTS } = require('../constants/dummyData');
+    const product = ALL_PRODUCTS.find((p: any) => p.id === productId);
+    if (product) {
+      navigation.navigate('ProductDetail', { product });
     }
   };
 
-  const removeAlert = async (alertId: string) => {
-    try {
-      await alertsStorage.removeAlert(alertId);
-      setAlerts(prev => prev.filter(a => a.id !== alertId));
-      Toast.show({
-        type: 'info',
-        text1: 'Alert deleted',
-      });
-    } catch (error) {
-      console.error('Failed to remove alert:', error);
-    }
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refreshPrices();
+    setRefreshing(false);
+    Toast.show({ type: 'success', text1: 'Prices updated' });
   };
 
   if (loading) {
@@ -49,39 +41,6 @@ export const AlertsScreen = ({ navigation }: any) => {
     );
   }
 
-  if (alerts.length === 0) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <ArrowLeft color={COLORS.text} size={24} />
-          </TouchableOpacity>
-          <View style={styles.headerCenter}>
-            <Typography variant="h3">Price Alerts</Typography>
-            <Typography color={COLORS.textSecondary} variant="caption">
-              {alerts.length} active
-            </Typography>
-          </View>
-          <View style={{ width: 24 }} />
-        </View>
-        <View style={styles.emptyState}>
-          <Bell color={COLORS.textSecondary} size={64} strokeWidth={1} />
-          <Typography variant="h3" style={styles.emptyTitle}>
-            No active alerts
-          </Typography>
-          <Typography color={COLORS.textSecondary} style={styles.emptyMessage}>
-            Set price alerts on products to get notified when prices drop
-          </Typography>
-          <Button
-            title="BROWSE PRODUCTS"
-            onPress={() => navigation.goBack()}
-            style={styles.browseButton}
-          />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -89,75 +48,71 @@ export const AlertsScreen = ({ navigation }: any) => {
           <ArrowLeft color={COLORS.text} size={24} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Typography variant="h3">Price Alerts</Typography>
+          <Typography variant="h3">Smart Alerts</Typography>
           <Typography color={COLORS.textSecondary} variant="caption">
-            {alerts.length} active
+            {alerts.length} active{triggeredAlerts.length > 0 ? ` • ${triggeredAlerts.length} triggered` : ''}
           </Typography>
         </View>
-        <View style={{ width: 24 }} />
+        <TouchableOpacity onPress={handleRefresh}>
+          <RefreshCw color={COLORS.text} size={20} />
+        </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {alerts.map((alert) => {
-          const priceDropPercent = ((alert.currentPrice - alert.targetPrice) / alert.currentPrice * 100).toFixed(0);
-          const isNearTarget = alert.currentPrice <= alert.targetPrice * 1.1;
-
-          return (
-            <View key={alert.id} style={styles.alertCard}>
-              <Image
-                source={{ uri: alert.productImage }}
-                style={styles.productImage}
-              />
-              <View style={styles.alertContent}>
-                <Typography variant="h4" numberOfLines={2} style={styles.productName}>
-                  {alert.productName}
-                </Typography>
-                <Typography variant="caption" color={COLORS.textSecondary}>
-                  {alert.store}
-                </Typography>
-
-                <View style={styles.priceRow}>
-                  <View>
-                    <Typography variant="caption" color={COLORS.textSecondary}>
-                      CURRENT
-                    </Typography>
-                    <Typography variant="monoBold" color={COLORS.text}>
-                      Rs. {alert.currentPrice.toLocaleString()}
-                    </Typography>
-                  </View>
-                  <TrendingDown
-                    color={isNearTarget ? COLORS.success : COLORS.textSecondary}
-                    size={20}
-                  />
-                  <View>
-                    <Typography variant="caption" color={COLORS.textSecondary}>
-                      TARGET
-                    </Typography>
-                    <Typography variant="monoBold" color={COLORS.primary}>
-                      Rs. {alert.targetPrice.toLocaleString()}
-                    </Typography>
-                  </View>
-                </View>
-
-                {isNearTarget && (
-                  <View style={styles.nearTargetBadge}>
-                    <Typography variant="caption" color={COLORS.success}>
-                      🎯 NEAR TARGET!
-                    </Typography>
-                  </View>
-                )}
-              </View>
-
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => removeAlert(alert.id)}
-              >
-                <Trash2 color={COLORS.error} size={18} />
-              </TouchableOpacity>
+      {alerts.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Bell color={COLORS.textSecondary} size={64} strokeWidth={1} />
+          <Typography variant="h3" style={styles.emptyTitle}>
+            No active alerts
+          </Typography>
+          <Typography color={COLORS.textSecondary} style={styles.emptyMessage}>
+            Set price alerts on products to track prices across all stores and discover better alternatives
+          </Typography>
+          <Button
+            title="BROWSE PRODUCTS"
+            onPress={() => navigation.goBack()}
+            style={styles.browseButton}
+          />
+        </View>
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={COLORS.primary}
+            />
+          }
+        >
+          {triggeredAlerts.length > 0 && (
+            <View style={styles.triggeredSection}>
+              <Typography variant="caption" color={COLORS.success} style={styles.sectionLabel}>
+                TRIGGERED ALERTS
+              </Typography>
+              {triggeredAlerts.map(alert => (
+                <SmartAlertCard
+                  key={alert.id}
+                  alert={alert}
+                  onRemove={handleRemove}
+                  onViewProduct={handleViewProduct}
+                />
+              ))}
             </View>
-          );
-        })}
-      </ScrollView>
+          )}
+
+          <Typography variant="caption" color={COLORS.textSecondary} style={styles.sectionLabel}>
+            {triggeredAlerts.length > 0 ? 'ALL ALERTS' : `${alerts.length} ALERT${alerts.length !== 1 ? 'S' : ''}`}
+          </Typography>
+          {alerts.map(alert => (
+            <SmartAlertCard
+              key={alert.id}
+              alert={alert}
+              onRemove={handleRemove}
+              onViewProduct={handleViewProduct}
+            />
+          ))}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 };
@@ -205,45 +160,11 @@ const styles = StyleSheet.create({
   browseButton: {
     paddingHorizontal: SPACING.xl * 2,
   },
-  alertCard: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.surface,
-    borderRadius: BORDER_RADIUS.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: SPACING.md,
+  triggeredSection: {
     marginBottom: SPACING.md,
   },
-  productImage: {
-    width: 80,
-    height: 80,
-    borderRadius: BORDER_RADIUS.md,
-    backgroundColor: COLORS.surfaceLight,
-  },
-  alertContent: {
-    flex: 1,
-    marginLeft: SPACING.md,
-  },
-  productName: {
-    marginBottom: SPACING.xs,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: SPACING.sm,
-  },
-  nearTargetBadge: {
-    backgroundColor: COLORS.surface,
-    borderWidth: 1,
-    borderColor: COLORS.success,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 2,
-    borderRadius: BORDER_RADIUS.sm,
-    alignSelf: 'flex-start',
-    marginTop: SPACING.xs,
-  },
-  deleteButton: {
-    padding: SPACING.xs,
+  sectionLabel: {
+    letterSpacing: 1,
+    marginBottom: SPACING.md,
   },
 });

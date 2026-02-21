@@ -4,7 +4,9 @@ import { ArrowLeft, Share2, Heart, ExternalLink, TrendingDown, X, Bell } from 'l
 import { COLORS, SPACING, BORDER_RADIUS } from '../theme';
 import { Typography, Button, PriceHistoryChart } from '../components';
 import { useWishlist } from '../hooks/useWishlist';
-import { alertsStorage } from '../services/storage.service';
+import { smartAlertsStorage } from '../services/storage.service';
+import { createSmartAlert } from '../utils/smartAlerts';
+import { ALL_PRODUCTS } from '../constants/dummyData';
 import Toast from 'react-native-toast-message';
 
 const { width } = Dimensions.get('window');
@@ -38,37 +40,21 @@ export const ProductDetailScreen = ({ route, navigation }: any) => {
     }
   };
 
-  const parsePrice = (priceStr: string): number => {
-    return parseInt(priceStr.replace(/[^0-9]/g, ''), 10) || 0;
-  };
-
-  const saveAlert = async (tPrice: number) => {
-    const newAlert = {
-      id: `alert_${product.id}_${Date.now()}`,
-      userId: 'user_1',
-      productId: product.id,
-      productName: product.name,
-      productImage: product.image,
-      currentPrice: parsePrice(product.price),
-      targetPrice: tPrice,
-      store: product.store,
-      isActive: true,
-      createdAt: new Date(),
-    };
-    await alertsStorage.addAlert(newAlert);
+  const saveSmartAlert = async (alertType: 'every_change' | 'target_price', tPrice?: number) => {
+    const smartAlert = createSmartAlert(product, alertType, tPrice, ALL_PRODUCTS);
+    await smartAlertsStorage.addAlert(smartAlert);
   };
 
   const handleSetAlert = async (type: 'every' | 'specific') => {
     setAlertType(type);
     if (type === 'every') {
-      const currentPrice = parsePrice(product.price);
-      await saveAlert(currentPrice);
+      await saveSmartAlert('every_change');
       setShowAlertModal(false);
       setAlertType(null);
       Toast.show({
         type: 'success',
-        text1: 'Alert Set!',
-        text2: `You'll be notified of every price change for ${product.name}`,
+        text1: 'Smart Alert Set!',
+        text2: `Tracking ${product.name} across all stores`,
       });
     }
   };
@@ -87,14 +73,14 @@ export const ProductDetailScreen = ({ route, navigation }: any) => {
       return;
     }
 
-    await saveAlert(price);
+    await saveSmartAlert('target_price', price);
     setShowAlertModal(false);
     setAlertType(null);
     setTargetPrice('');
     Toast.show({
       type: 'success',
-      text1: 'Alert Set!',
-      text2: `You'll be notified when price reaches Rs. ${price.toLocaleString()}`,
+      text1: 'Smart Alert Set!',
+      text2: `Tracking across stores — target Rs. ${price.toLocaleString()}`,
     });
   };
 

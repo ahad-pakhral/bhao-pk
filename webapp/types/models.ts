@@ -86,7 +86,55 @@ export interface ProductCardData {
   price: string;
   store: string;
   rating: number;
+  reviewsCount?: number;
   image: string;
   badge?: string;
   specs?: string;
+  category?: string;
+  originalPrice?: string;
+}
+
+// Smart Alerts — cross-store tracking with alternatives
+
+export interface SmartAlert {
+  id: string;
+  userId: string;
+  productId: string;
+  productName: string;
+  productImage: string;
+  category: string;
+  originalPrice: number;
+  targetPrice: number;
+  alertType: 'every_change' | 'target_price';
+  trackedStores: StoreSnapshot[];
+  bestCurrentPrice: number;
+  bestCurrentStore: string;
+  alternatives: AlternativeProduct[];
+  isActive: boolean;
+  isTriggered: boolean;
+  createdAt: Date;
+  lastCheckedAt: Date;
+}
+
+export interface StoreSnapshot {
+  store: string;
+  price: number;
+  url: string;
+  inStock: boolean;
+  lastUpdated: Date;
+  priceChange?: number;
+  priceChangePercent?: number;
+}
+
+export interface AlternativeProduct {
+  productId: string;
+  productName: string;
+  productImage: string;
+  price: number;
+  store: string;
+  url: string;
+  rating: number;
+  reviewsCount: number;
+  reason: string;
+  score: number;
 }

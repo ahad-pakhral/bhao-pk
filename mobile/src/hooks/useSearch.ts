@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { ProductWithListings } from '../types/models';
 import { SearchFilters, SortOption } from '../types/api';
+import { rankByRelevance } from '../utils/ranking';
 
 export const useSearch = (allProducts: ProductWithListings[], initialQuery: string = '') => {
   const [query, setQuery] = useState(initialQuery);
@@ -82,7 +83,7 @@ export const useSearch = (allProducts: ProductWithListings[], initialQuery: stri
         break;
       case 'relevance':
       default:
-        // Keep original order for relevance
+        filtered = rankByRelevance(filtered);
         break;
     }
 

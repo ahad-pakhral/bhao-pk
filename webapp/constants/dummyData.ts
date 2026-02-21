@@ -1,4 +1,4 @@
-// Comprehensive product data with features and reviews (matches web app structure)
+// Comprehensive product data with features and reviews
 
 export const TRENDING_PRODUCTS = [
     {
@@ -8,6 +8,7 @@ export const TRENDING_PRODUCTS = [
         store: 'Daraz',
         rating: 4.9,
         reviewsCount: 120,
+        category: 'Smartphones',
         image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=400',
         badge: 'HOT',
         specs: '256GB • Titanium • Space Black',
@@ -29,6 +30,7 @@ export const TRENDING_PRODUCTS = [
         store: 'Telemart',
         rating: 4.8,
         reviewsCount: 95,
+        category: 'Smartphones',
         image: 'https://images.unsplash.com/photo-1707248107510-09e23652697b?q=80&w=400',
         badge: 'BEST VALUE',
         specs: '256GB • 5G • Phantom Black',
@@ -50,6 +52,7 @@ export const TRENDING_PRODUCTS = [
         store: 'Daraz',
         rating: 4.7,
         reviewsCount: 200,
+        category: 'Audio',
         image: 'https://images.unsplash.com/photo-1588423770574-91021163dfbb?q=80&w=400',
         specs: 'Active Noise Cancellation • Transparency Mode',
         features: [
@@ -70,6 +73,7 @@ export const TRENDING_PRODUCTS = [
         store: 'Shophive',
         rating: 4.9,
         reviewsCount: 85,
+        category: 'Laptops',
         image: 'https://images.unsplash.com/photo-1517336714481-489a20fb3ca4?q=80&w=400',
         specs: 'M2 Chip • 8GB • 256GB',
         features: [
@@ -93,6 +97,7 @@ export const RECENTLY_VIEWED = [
         store: 'Daraz',
         rating: 4.8,
         reviewsCount: 110,
+        category: 'Tablets',
         image: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&w=400',
         badge: 'NEW',
         specs: 'M2 Chip • 12.9-inch • Wi-Fi',
@@ -114,6 +119,7 @@ export const RECENTLY_VIEWED = [
         store: 'Telemart',
         rating: 4.6,
         reviewsCount: 75,
+        category: 'Audio',
         image: 'https://images.unsplash.com/photo-1675662058309-8736e053d4f4?q=80&w=400',
         specs: 'Noise Cancelling • 30hr Battery',
         features: [
@@ -139,6 +145,7 @@ export const ALL_PRODUCTS = [
         store: 'Shophive',
         rating: 4.7,
         reviewsCount: 60,
+        category: 'Tablets',
         image: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&w=400',
         specs: 'A15 Bionic • 8.3-inch',
         features: [
@@ -159,6 +166,7 @@ export const ALL_PRODUCTS = [
         store: 'Daraz',
         rating: 4.5,
         reviewsCount: 150,
+        category: 'Audio',
         image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?q=80&w=400',
         specs: 'Active Noise Cancellation',
         features: [
@@ -179,6 +187,7 @@ export const ALL_PRODUCTS = [
         store: 'Telemart',
         rating: 4.8,
         reviewsCount: 180,
+        category: 'Smartphones',
         image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=400',
         specs: '128GB • 5G • Midnight',
         features: [
@@ -190,6 +199,109 @@ export const ALL_PRODUCTS = [
         reviews: [
             { user: 'Imran Butt', rating: 5, comment: 'Solid phone at a better price than the 15. Does everything I need!' },
             { user: 'Maryam Ali', rating: 4.5, comment: 'Great camera and performance. Happy with my purchase.' },
+        ],
+    },
+    // Edge-case products to demonstrate Bayesian ranking
+    {
+        id: '10',
+        name: 'No-Name TWS Earbuds',
+        price: 'Rs. 2,500',
+        store: 'Daraz',
+        rating: 5.0,
+        reviewsCount: 3,       // Perfect rating but only 3 reviews — should rank LOW
+        category: 'Audio',
+        image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?q=80&w=400',
+        specs: 'Bluetooth 5.0 • Touch Control',
+        features: [
+            { key: 'Audio', value: 'Bluetooth 5.0 stereo' },
+            { key: 'Battery', value: 'Up to 4 hours' },
+            { key: 'Charging', value: 'USB-C charging case' },
+            { key: 'Controls', value: 'Touch controls' },
+        ],
+        reviews: [
+            { user: 'Buyer1', rating: 5, comment: 'Amazing product!' },
+        ],
+    },
+    {
+        id: '11',
+        name: 'JBL Tune 230NC',
+        price: 'Rs. 12,000',
+        store: 'Telemart',
+        rating: 4.3,
+        reviewsCount: 450,     // Lower rating but massive reviews — should rank HIGH
+        category: 'Audio',
+        image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?q=80&w=400',
+        specs: 'Active Noise Cancelling • JBL Pure Bass',
+        features: [
+            { key: 'Audio', value: 'JBL Pure Bass Sound' },
+            { key: 'Battery', value: 'Up to 10 hours + 30 hours with case' },
+            { key: 'ANC', value: 'Active Noise Cancelling' },
+            { key: 'Water Resistance', value: 'IPX4 rated' },
+        ],
+        reviews: [
+            { user: 'Tariq Mehmood', rating: 4.5, comment: 'Best budget ANC earbuds. Bass is punchy!' },
+            { user: 'Amna Rizvi', rating: 4, comment: 'Good value for money. ANC is decent.' },
+        ],
+    },
+    {
+        id: '12',
+        name: 'Samsung Galaxy Watch 6',
+        price: 'Rs. 55,000',
+        store: 'Shophive',
+        rating: 4.6,
+        reviewsCount: 15,      // Medium-low confidence
+        category: 'Wearables',
+        image: 'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?q=80&w=400',
+        specs: 'Wear OS • Heart Rate • GPS',
+        features: [
+            { key: 'Display', value: '1.3" Super AMOLED' },
+            { key: 'OS', value: 'Wear OS 4.0' },
+            { key: 'Health', value: 'Heart Rate, SpO2, Sleep Tracking' },
+            { key: 'Battery', value: 'Up to 40 hours' },
+        ],
+        reviews: [
+            { user: 'Zubair Khan', rating: 5, comment: 'Great smartwatch for the price!' },
+        ],
+    },
+    // Cross-store listings — same product at different stores/prices
+    {
+        id: '13',
+        name: 'iPhone 15 Pro',
+        price: 'Rs. 335,000',
+        store: 'Telemart',
+        rating: 4.8,
+        reviewsCount: 45,
+        category: 'Smartphones',
+        image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=400',
+        specs: '256GB • Titanium • Space Black',
+        features: [
+            { key: 'Display', value: '6.1" Super Retina XDR' },
+            { key: 'Processor', value: 'A17 Pro chip' },
+            { key: 'Camera', value: '48MP Main | Ultra Wide | Telephoto' },
+            { key: 'Battery', value: 'Up to 23 hours video playback' },
+        ],
+        reviews: [
+            { user: 'Rizwan Shah', rating: 5, comment: 'Got it cheaper here than Daraz. Same quality!' },
+        ],
+    },
+    {
+        id: '14',
+        name: 'iPhone 15 Pro',
+        price: 'Rs. 340,000',
+        store: 'Shophive',
+        rating: 4.7,
+        reviewsCount: 30,
+        category: 'Smartphones',
+        image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=400',
+        specs: '256GB • Titanium • Space Black',
+        features: [
+            { key: 'Display', value: '6.1" Super Retina XDR' },
+            { key: 'Processor', value: 'A17 Pro chip' },
+            { key: 'Camera', value: '48MP Main | Ultra Wide | Telephoto' },
+            { key: 'Battery', value: 'Up to 23 hours video playback' },
+        ],
+        reviews: [
+            { user: 'Hamza Ali', rating: 4.5, comment: 'Fast delivery from Shophive. Phone is great.' },
         ],
     },
 ];

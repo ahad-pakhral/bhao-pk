@@ -1,7 +1,7 @@
 // Storage service for mobile using AsyncStorage
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Alert, WishlistItem } from '../types/models';
+import { Alert, SmartAlert, WishlistItem } from '../types/models';
 
 class StorageService {
   async setItem(key: string, value: any): Promise<void> {
@@ -104,6 +104,38 @@ export const alertsStorage = {
 
   async clearAlerts(): Promise<void> {
     await storageService.setItem('@alerts', []);
+  },
+};
+
+// Smart alerts storage
+export const smartAlertsStorage = {
+  async getAlerts(): Promise<SmartAlert[]> {
+    return (await storageService.getItem<SmartAlert[]>('@smart_alerts')) || [];
+  },
+
+  async addAlert(alert: SmartAlert): Promise<void> {
+    const alerts = await this.getAlerts();
+    await storageService.setItem('@smart_alerts', [...alerts, alert]);
+  },
+
+  async removeAlert(alertId: string): Promise<void> {
+    const alerts = await this.getAlerts();
+    await storageService.setItem(
+      '@smart_alerts',
+      alerts.filter(a => a.id !== alertId)
+    );
+  },
+
+  async updateAlert(alertId: string, updates: Partial<SmartAlert>): Promise<void> {
+    const alerts = await this.getAlerts();
+    const updatedAlerts = alerts.map(alert =>
+      alert.id === alertId ? { ...alert, ...updates } : alert
+    );
+    await storageService.setItem('@smart_alerts', updatedAlerts);
+  },
+
+  async clearAlerts(): Promise<void> {
+    await storageService.setItem('@smart_alerts', []);
   },
 };
 

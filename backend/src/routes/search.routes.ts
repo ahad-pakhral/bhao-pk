@@ -55,10 +55,11 @@ router.get('/product', async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/search/matches?url=&store= — find same product across other stores
+// GET /api/search/matches?url=&store=&name= — find same product across other stores
+// name is optional: if provided (from frontend), skip scraping the source product
 router.get('/matches', async (req: Request, res: Response) => {
   try {
-    const { url, store } = req.query;
+    const { url, store, name: queryName } = req.query;
 
     if (!url || !store) {
       return res.status(400).json({ error: 'url and store query params are required' });
@@ -71,14 +72,23 @@ router.get('/matches', async (req: Request, res: Response) => {
       return res.json(cached);
     }
 
-    // Scrape source product to get its name
-    const sourceDetail = await scrapeProductDetail(String(url), String(store));
-    if (!sourceDetail) {
-      return res.status(404).json({ error: 'Could not scrape source product' });
+    // Get source product name — prefer query param (from frontend), fallback to scraping
+    let sourceName = queryName ? String(queryName) : null;
+    let sourcePrice = 0;
+    let sourceImage = '';
+
+    if (!sourceName) {
+      const sourceDetail = await scrapeProductDetail(String(url), String(store));
+      if (!sourceDetail) {
+        return res.status(404).json({ error: 'Could not scrape source product' });
+      }
+      sourceName = sourceDetail.name;
+      sourcePrice = sourceDetail.price;
+      sourceImage = sourceDetail.imageUrl;
     }
 
     // Build search query: take first meaningful words, stop at storage spec
-    const words = sourceDetail.name.split(/\s+/);
+    const words = sourceName.split(/\s+/);
     const searchWords: string[] = [];
     for (const word of words) {
       if (searchWords.length >= 5) break; // Cap at 5 words
@@ -91,7 +101,7 @@ router.get('/matches', async (req: Request, res: Response) => {
     if (searchQuery.length < 3) {
       return res.json({
         matches: [],
-        sourceProduct: { name: sourceDetail.name, store: String(store), price: sourceDetail.price, imageUrl: sourceDetail.imageUrl },
+        sourceProduct: { name: sourceName, store: String(store), price: sourcePrice, imageUrl: sourceImage },
         count: 0,
       });
     }
@@ -101,17 +111,17 @@ router.get('/matches', async (req: Request, res: Response) => {
 
     // Apply fuzzy matching (excludes source product URL + accessories)
     const matches = findMatchingProducts(
-      { name: sourceDetail.name, url: String(url) },
+      { name: sourceName, url: String(url) },
       allResults
     );
 
     const response = {
       matches,
       sourceProduct: {
-        name: sourceDetail.name,
+        name: sourceName,
         store: String(store),
-        price: sourceDetail.price,
-        imageUrl: sourceDetail.imageUrl,
+        price: sourcePrice,
+        imageUrl: sourceImage,
       },
       count: matches.length,
     };

@@ -17,6 +17,8 @@ function inferStoreFromUrl(url: string): string | null {
   if (lower.includes("daraz")) return "daraz";
   if (lower.includes("shophive")) return "shophive";
   if (lower.includes("telemart")) return "telemart";
+  if (lower.includes("mega")) return "mega";
+  if (lower.includes("priceoye")) return "priceoye";
   return null;
 }
 
@@ -213,7 +215,7 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
   useEffect(() => {
     if (!scrapedProduct?.url || !scrapedProduct?.store) return;
     setMatchesLoading(true);
-    fetch(`${API_BASE}/search/matches?url=${encodeURIComponent(scrapedProduct.url)}&store=${encodeURIComponent(scrapedProduct.store)}`)
+    fetch(`${API_BASE}/search/matches?url=${encodeURIComponent(scrapedProduct.url)}&store=${encodeURIComponent(scrapedProduct.store)}&name=${encodeURIComponent(scrapedProduct.name)}`)
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (data?.matches) {

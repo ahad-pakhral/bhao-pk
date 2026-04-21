@@ -123,9 +123,26 @@ export function findMatchingProducts(
   });
 
   const sourceCleaned = cleanProductName(sourceProduct.name);
-  const matches = fuse.search(sourceCleaned);
+  const fuseMatches = fuse.search(sourceCleaned);
 
-  // 5. Return matches sorted by price ascending (cheapest first)
+  // 5. Post-filter: require at least one distinguishing word from source to appear in match
+  // Extract meaningful words (length >= 3, not common filler words) from source name
+  const fillerWords = new Set(['the', 'and', 'for', 'with', 'new', 'buy', 'best', 'official', 'warranty', 'free', 'delivery', 'price', 'gb', 'tb', 'ram', 'storage']);
+  const sourceWords = sourceCleaned
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(w => w.length >= 3 && !fillerWords.has(w));
+
+  const matches = fuseMatches.filter(m => {
+    const matchNameLower = (m.item.cleanedName || m.item.name || '').toLowerCase();
+    // At least one source word (length >= 3) must appear in the match name
+    return sourceWords.some(w => matchNameLower.includes(w));
+  });
+
+  // 6. Return matches sorted by price ascending (cheapest first)
+  return matches
+    .map(m => m.item)
+  // 6. Return matches sorted by price ascending (cheapest first)
   return matches
     .map(m => m.item)
     .sort((a, b) => a.price - b.price);

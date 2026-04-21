@@ -1,167 +1,173 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { useSmartAlerts } from "../../hooks/useSmartAlerts";
-import { SmartAlert } from "../../types/models";
+import { useSmartAlerts, EnrichedAlertData } from "../../hooks/useSmartAlerts";
+import { useAuthStore } from "../../store/authStore";
 
-function AlertCard({ alert, onRemove, onViewProduct }: {
-    alert: SmartAlert;
-    onRemove: (id: string) => void;
-    onViewProduct: (productId: string) => void;
-}) {
-    const [showAlternatives, setShowAlternatives] = useState(false);
+export const dynamic = 'force-dynamic';
 
-    const isNearTarget = alert.bestCurrentPrice <= alert.targetPrice * 1.1;
-    const progressPercent = alert.originalPrice > alert.targetPrice
-        ? Math.min(100, Math.max(0,
-            ((alert.originalPrice - alert.bestCurrentPrice) / (alert.originalPrice - alert.targetPrice)) * 100
-        ))
-        : 0;
-
-    return (
-        <div className="card" style={{ padding: '24px' }}>
-            {/* Header */}
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                <div style={{ width: '60px', height: '60px', background: '#1a1a1a', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
-                    <img src={alert.productImage || '/images/iphone-15-pro.png'} alt={alert.productName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-                <div style={{ flex: 1 }}>
-                    <h4 style={{ fontSize: '18px', marginBottom: '4px' }}>{alert.productName}</h4>
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                        {alert.category} | {alert.alertType === 'every_change' ? 'Every Change' : 'Target Price'}
-                    </div>
-                </div>
-                <button
-                    onClick={() => onRemove(alert.id)}
-                    style={{ background: 'none', border: 'none', color: 'var(--accent-alert)', cursor: 'pointer', fontSize: '14px', padding: '4px 8px' }}
-                >
-                    Remove
-                </button>
-            </div>
-
-            {/* Cross-Store Prices */}
-            {alert.trackedStores.length > 0 && (
-                <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border-light)' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '12px' }}>
-                        PRICES ACROSS STORES
-                    </div>
-                    {alert.trackedStores.map((snapshot, idx) => {
-                        const isBest = snapshot.price === alert.bestCurrentPrice;
-                        return (
-                            <div key={idx} style={{ display: 'flex', alignItems: 'center', padding: '6px 0', gap: '12px' }}>
-                                <span style={{ flex: 1, fontSize: '14px', color: isBest ? 'var(--accent-primary)' : 'inherit' }}>
-                                    {snapshot.store}
-                                </span>
-                                <span style={{ fontFamily: 'monospace', fontWeight: 700, color: isBest ? 'var(--accent-primary)' : 'inherit' }}>
-                                    Rs. {snapshot.price.toLocaleString()}
-                                </span>
-                                {snapshot.priceChangePercent != null && snapshot.priceChangePercent !== 0 && (
-                                    <span style={{
-                                        fontSize: '12px', width: '45px', textAlign: 'right',
-                                        color: snapshot.priceChangePercent < 0 ? 'var(--accent-success)' : 'var(--accent-alert)',
-                                    }}>
-                                        {snapshot.priceChangePercent < 0 ? '' : '+'}{snapshot.priceChangePercent.toFixed(0)}%
-                                    </span>
-                                )}
-                                {isBest && (
-                                    <span className="badge badge-best" style={{ fontSize: '10px', padding: '2px 8px' }}>BEST</span>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
-
-            {/* Target Progress */}
-            <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border-light)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>BEST PRICE</div>
-                        <div style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--accent-primary)', fontSize: '16px' }}>
-                            Rs. {alert.bestCurrentPrice.toLocaleString()}
-                        </div>
-                    </div>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isNearTarget ? 'var(--accent-success)' : 'var(--text-muted)'} strokeWidth="2">
-                        <polyline points="22 17 13.5 8.5 8.5 13.5 2 7" /><polyline points="16 17 22 17 22 11" />
-                    </svg>
-                    <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>TARGET</div>
-                        <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '16px' }}>
-                            Rs. {alert.targetPrice.toLocaleString()}
-                        </div>
-                    </div>
-                </div>
-                {alert.alertType === 'target_price' && (
-                    <div style={{ height: '4px', background: '#1a1a1a', borderRadius: '2px', marginTop: '12px', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${progressPercent}%`, background: 'var(--accent-primary)', borderRadius: '2px' }} />
-                    </div>
-                )}
-                {isNearTarget && (
-                    <span style={{
-                        display: 'inline-block', marginTop: '8px', border: '1px solid var(--accent-success)',
-                        padding: '2px 10px', borderRadius: '4px', fontSize: '12px', color: 'var(--accent-success)',
-                    }}>
-                        NEAR TARGET!
-                    </span>
-                )}
-            </div>
-
-            {/* Alternatives */}
-            {alert.alternatives.length > 0 && (
-                <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border-light)' }}>
-                    <button
-                        onClick={() => setShowAlternatives(!showAlternatives)}
-                        style={{
-                            background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer',
-                            width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                            fontSize: '11px', letterSpacing: '1px', padding: 0, marginBottom: '8px',
-                        }}
-                    >
-                        <span>BETTER ALTERNATIVES ({alert.alternatives.length})</span>
-                        <span>{showAlternatives ? '▲' : '▼'}</span>
-                    </button>
-                    {showAlternatives && alert.alternatives.map((alt, idx) => (
-                        <div
-                            key={idx}
-                            onClick={() => onViewProduct(alt.productId)}
-                            style={{
-                                display: 'flex', gap: '12px', alignItems: 'center', padding: '10px 0',
-                                borderBottom: '1px solid var(--border-light)', cursor: 'pointer',
-                            }}
-                        >
-                            <div style={{ width: '40px', height: '40px', background: '#1a1a1a', borderRadius: '6px', overflow: 'hidden', flexShrink: 0 }}>
-                                <img src={alt.productImage || '/images/iphone-15-pro.png'} alt={alt.productName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            </div>
-                            <div style={{ flex: 1 }}>
-                                <div style={{ fontSize: '14px', marginBottom: '2px' }}>{alt.productName}</div>
-                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                    <span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--accent-primary)', fontSize: '13px' }}>
-                                        Rs. {alt.price.toLocaleString()}
-                                    </span>
-                                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{alt.store}</span>
-                                </div>
-                                <span style={{ fontSize: '11px', color: 'var(--accent-success)' }}>{alt.reason}</span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-
-            {/* Actions */}
-            <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
-                <Link href={`/product/${alert.productId}`} className="btn btn-primary" style={{ flex: 1, textAlign: 'center', padding: '10px', fontSize: '12px' }}>
-                    VIEW PRODUCT
-                </Link>
-            </div>
-        </div>
-    );
+function deriveStoreFromUrl(url: string): string {
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    if (hostname.includes('daraz')) return 'Daraz';
+    if (hostname.includes('shophive')) return 'Shophive';
+    if (hostname.includes('telemart')) return 'Telemart';
+  } catch {}
+  return 'Unknown';
 }
 
-export default function AlertsPage() {
-    const { alerts, triggeredAlerts, loading, removeAlert, refreshPrices } = useSmartAlerts();
+function AlertCard({ alert, onRemove }: {
+    alert: EnrichedAlertData;
+    onRemove: (id: string) => void;
+}) {
+    const displayTarget = Number.isFinite(alert.targetPrice) && alert.targetPrice > 0
+        ? alert.targetPrice.toLocaleString()
+        : '\u2014';
+    const storeName = alert.product?.store || (alert.productUrl ? deriveStoreFromUrl(alert.productUrl) : null);
+    const productName = alert.product?.name || alert.keyword || alert.productUrl || 'Custom Alert';
+    const currentPrice = alert.product?.price;
+    const currentPriceDisplay = currentPrice ? `Rs. ${currentPrice.toLocaleString()}` : null;
+    const targetReached = alert.isNotified || (currentPrice != null && currentPrice <= alert.targetPrice);
 
-    if (loading) {
+    const productHref = alert.productUrl
+        ? `/product/${encodeURIComponent(alert.productUrl)}?url=${encodeURIComponent(alert.productUrl)}&store=${encodeURIComponent(storeName || '')}`
+        : null;
+
+    const cardContent = (
+        <div className="card" style={{
+            padding: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+            cursor: productHref ? 'pointer' : 'default',
+            textDecoration: 'none',
+            color: 'inherit',
+        }}>
+            {/* Product Image */}
+            <div style={{
+                width: '100px',
+                height: '100px',
+                minWidth: '100px',
+                borderRadius: '8px',
+                backgroundColor: 'var(--bg-secondary, #1a1a2e)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+            }}>
+                {alert.product?.imageUrl ? (
+                    <img
+                        src={alert.product.imageUrl}
+                        alt={productName}
+                        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                    />
+                ) : (
+                    <span style={{ fontSize: '28px', color: 'var(--text-muted)' }}>&#128269;</span>
+                )}
+            </div>
+
+            {/* Product Info */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+                <h4 style={{
+                    fontSize: '16px',
+                    marginBottom: '6px',
+                    color: 'var(--text-main)',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    lineHeight: '1.3',
+                }}>
+                    {productName}
+                </h4>
+
+                {/* Store Badge */}
+                {storeName && (
+                    <span style={{
+                        display: 'inline-block',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        color: 'var(--accent-primary)',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        marginBottom: '6px',
+                        textTransform: 'capitalize',
+                    }}>
+                        {storeName}
+                    </span>
+                )}
+
+                {/* Price Line */}
+                <div style={{ fontSize: '14px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                    {currentPriceDisplay && (
+                        <span>
+                            Current: <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>{currentPriceDisplay}</span>
+                        </span>
+                    )}
+                    <span>
+                        Target: <span style={{
+                            color: targetReached ? 'var(--accent-success)' : 'var(--accent-primary)',
+                            fontWeight: 'bold',
+                        }}>Rs. {displayTarget}</span>
+                    </span>
+                    {targetReached && (
+                        <span style={{
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            color: '#fff',
+                            backgroundColor: 'var(--accent-success)',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                        }}>
+                            TARGET REACHED
+                        </span>
+                    )}
+                </div>
+            </div>
+
+            {/* Remove Button */}
+            <button
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onRemove(alert.id);
+                }}
+                style={{
+                    background: 'none',
+                    border: '1px solid var(--accent-alert)',
+                    borderRadius: '6px',
+                    color: 'var(--accent-alert)',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    padding: '8px 14px',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                }}
+            >
+                REMOVE
+            </button>
+        </div>
+    );
+
+    // If alert has a product URL, wrap entire card in a Link to Bhao product page
+    if (productHref) {
+        return <Link href={productHref} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>{cardContent}</Link>;
+    }
+
+    return cardContent;
+}
+
+function AlertsContent() {
+    const { enrichedAlerts, loading, removeAlert } = useSmartAlerts();
+    const { isAuthenticated, isLoading: authLoading } = useAuthStore();
+
+    if (authLoading || loading) {
         return (
             <div className="container" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <p style={{ color: 'var(--text-muted)' }}>Loading alerts...</p>
@@ -169,53 +175,37 @@ export default function AlertsPage() {
         );
     }
 
-    const handleViewProduct = (productId: string) => {
-        window.location.href = `/product/${productId}`;
-    };
+    if (!isAuthenticated) {
+        return (
+            <div className="container" style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+                <h2 style={{ fontSize: '24px' }}>Login Required</h2>
+                <p style={{ color: 'var(--text-muted)' }}>You must be logged in to view and manage your Price Alerts.</p>
+                <Link href="/login" className="btn btn-primary">Login Now</Link>
+            </div>
+        );
+    }
 
     return (
         <div className="container">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
-                <div>
-                    <h1 style={{ fontSize: '36px', marginBottom: '8px' }}>Smart Alerts</h1>
-                    <p style={{ color: 'var(--text-muted)' }}>
-                        Track prices across stores and discover better alternatives
-                    </p>
-                </div>
-                {alerts.length > 0 && (
-                    <button className="btn btn-secondary" style={{ padding: '10px 20px', fontSize: '13px' }} onClick={refreshPrices}>
-                        Refresh Prices
-                    </button>
-                )}
+            <div style={{ marginBottom: '32px' }}>
+                <h1 style={{ fontSize: '36px', marginBottom: '8px' }}>Price Alerts</h1>
+                <p style={{ color: 'var(--text-muted)' }}>
+                    Track products and get notified when they drop below your target price.
+                </p>
             </div>
 
-            {alerts.length > 0 ? (
+            {enrichedAlerts.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {triggeredAlerts.length > 0 && (
-                        <div style={{ marginBottom: '8px' }}>
-                            <div style={{ fontSize: '11px', color: 'var(--accent-success)', letterSpacing: '1px', marginBottom: '12px' }}>
-                                TRIGGERED ALERTS
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                {triggeredAlerts.map(alert => (
-                                    <AlertCard key={alert.id} alert={alert} onRemove={removeAlert} onViewProduct={handleViewProduct} />
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '4px' }}>
-                        {triggeredAlerts.length > 0 ? 'ALL ALERTS' : `${alerts.length} ALERT${alerts.length !== 1 ? 'S' : ''}`}
-                    </div>
-                    {alerts.map(alert => (
-                        <AlertCard key={alert.id} alert={alert} onRemove={removeAlert} onViewProduct={handleViewProduct} />
+                    {enrichedAlerts.map(alert => (
+                        <AlertCard key={alert.id} alert={alert} onRemove={removeAlert} />
                     ))}
                 </div>
             ) : (
                 <div className="card" style={{ padding: '60px 40px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔔</div>
+                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>&#128276;</div>
                     <h3 style={{ fontSize: '24px', marginBottom: '12px' }}>No active alerts</h3>
                     <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
-                        Set price alerts on products to track prices across all stores and discover better alternatives
+                        Set price alerts on search results or specific products to track them automatically.
                     </p>
                     <Link href="/search" className="btn btn-primary">
                         Browse Products
@@ -223,5 +213,15 @@ export default function AlertsPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+import { Suspense } from 'react';
+
+export default function AlertsPage() {
+    return (
+        <Suspense fallback={<div className="container" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: 'var(--text-muted)' }}>Loading alerts...</p></div>}>
+            <AlertsContent />
+        </Suspense>
     );
 }

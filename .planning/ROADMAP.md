@@ -28,7 +28,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. User can click an alert card and land on the Bhao product page (not the external store)
   3. User can view a product page that shows the same product from multiple stores side-by-side with prices
   4. User sees a "Best Value" badge on the cheapest listing within a multi-vendor product page
-**Plans**: TBD
+**Plans**: 3 plans in 2 waves
 
 Plans:
 - [ ] 01-01: Replace plain alert cards with rich product cards (image, name, store, price, target)
@@ -90,7 +90,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Product Experience | 0/3 | Not started | - |
+| 1. Product Experience | 0/3 | Planned | - |
 | 2. Price History | 0/3 | Not started | - |
 | 3. Notifications & Admin | 0/4 | Not started | - |
 | 4. Mobile Integration | 0/3 | Not started | - |

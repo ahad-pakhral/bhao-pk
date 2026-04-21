@@ -10,30 +10,31 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 1 of 4 (Product Experience)
-Plan: 1 of 3 in current phase
-Status: Completed 01-01, ready for 01-02
-Last activity: 2026-04-21 -- Completed rich alert cards with enrichment endpoint
+Plan: 2 of 3 in current phase
+Status: Completed 01-02, ready for 01-03
+Last activity: 2026-04-21 -- Completed product matching service with fuse.js
 
-Progress: [███░░░░░░░] 33%
+Progress: [██████░░░░] 67%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
+- Total plans completed: 2
 - Average duration: 3 min
-- Total execution time: 3 min
+- Total execution time: 6 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-product-experience | 1 | 3min | 3min |
+| 01-product-experience | 2 | 6min | 3min |
 
 **Recent Trend:**
 - Last 5 plans: -
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 01 P02 | 3min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -46,6 +47,8 @@ Recent decisions affecting current work:
 - Phase grouping: Alerts+Multi-Vendor first (visible impact), Price History second (foundation), Notifications+Admin third (behind-scenes), Mobile last (stabilization)
 - Alert enrichment: cache-first pattern with Redis (1hr TTL), parallel Promise.allSettled, graceful fallback to null
 - Alert cards: entire card links to Bhao product page (not external store), removed separate VIEW/VISIT buttons
+- Product matching: fuse.js threshold 0.3 for balanced precision/recall, self-contained service (duplicated ACCESSORY_KEYWORDS)
+- Price comparison: matches sorted by price ascending (Best Value), not by relevance ranking
 
 ### Pending Todos
 
@@ -60,5 +63,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-04-21
-Stopped at: Completed 01-01 (rich alert cards), ready for 01-02
+Stopped at: Completed 01-02 (product matching service), ready for 01-03
 Resume file: None

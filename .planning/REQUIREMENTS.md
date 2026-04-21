@@ -15,7 +15,7 @@ Requirements for completing the MVP. Each maps to roadmap phases.
 ### Multi-Vendor Product Page
 
 - [ ] **PROD-01**: Product detail page shows the same product from multiple stores side-by-side with prices
-- [ ] **PROD-02**: Products from different stores are grouped by name similarity (fuzzy matching)
+- [x] **PROD-02**: Products from different stores are grouped by name similarity (fuzzy matching)
 - [ ] **PROD-03**: "Best Value" badge is automatically assigned to the lowest-priced listing by the ranking algorithm
 
 ### Price History
@@ -85,7 +85,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ALRT-01 | Phase 1 | Complete |
 | ALRT-02 | Phase 1 | Complete |
 | PROD-01 | Phase 1 | Pending |
-| PROD-02 | Phase 1 | Pending |
+| PROD-02 | Phase 1 | Complete |
 | PROD-03 | Phase 1 | Pending |
 | HIST-01 | Phase 2 | Pending |
 | HIST-02 | Phase 2 | Pending |

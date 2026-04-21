@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans in 2 waves
 
 Plans:
-- [ ] 01-01: Replace plain alert cards with rich product cards (image, name, store, price, target)
+- [x] 01-01: Replace plain alert cards with rich product cards (image, name, store, price, target)
 - [ ] 01-02: Build fuzzy product matching to group same products across stores
 - [ ] 01-03: Multi-vendor product page with side-by-side store listings and Best Value badge
 
@@ -90,7 +90,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Product Experience | 0/3 | Planned | - |
+| 1. Product Experience | 1/3 | In progress | 01-01 |
 | 2. Price History | 0/3 | Not started | - |
 | 3. Notifications & Admin | 0/4 | Not started | - |
 | 4. Mobile Integration | 0/3 | Not started | - |

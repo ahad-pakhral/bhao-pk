@@ -9,8 +9,8 @@ Requirements for completing the MVP. Each maps to roadmap phases.
 
 ### Alerts & Product Cards
 
-- [ ] **ALRT-01**: Alerts page displays product cards with image, name, store, price, and target price — not just plain text with link buttons
-- [ ] **ALRT-02**: Each alert card links to the Bhao product page (not directly to the external store)
+- [x] **ALRT-01**: Alerts page displays product cards with image, name, store, price, and target price — not just plain text with link buttons
+- [x] **ALRT-02**: Each alert card links to the Bhao product page (not directly to the external store)
 
 ### Multi-Vendor Product Page
 
@@ -82,8 +82,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ALRT-01 | Phase 1 | Pending |
-| ALRT-02 | Phase 1 | Pending |
+| ALRT-01 | Phase 1 | Complete |
+| ALRT-02 | Phase 1 | Complete |
 | PROD-01 | Phase 1 | Pending |
 | PROD-02 | Phase 1 | Pending |
 | PROD-03 | Phase 1 | Pending |

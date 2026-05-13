@@ -2,29 +2,81 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuthStore } from "../../store/authStore";
 
-const searchHistory = [
-  { query: "iPhone 15", date: "2 hours ago" },
-  { query: "MacBook Air", date: "Yesterday" },
-  { query: "AirPods Pro", date: "2 days ago" },
-  { query: "Samsung S24", date: "3 days ago" },
-  { query: "iPad Pro", date: "1 week ago" },
-];
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+
+interface HistoryItem {
+  id: string;
+  user_id: string;
+  query: string;
+  created_at: string;
+}
+
+function formatRelativeDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  return date.toLocaleDateString('en-PK', { day: 'numeric', month: 'short' });
+}
 
 export default function HistoryPage() {
   const router = useRouter();
-  const [history, setHistory] = useState(searchHistory);
+  const { isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const clearHistory = () => {
-    if (confirm('Clear all search history?')) {
-      setHistory([]);
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/login');
+      return;
     }
+  }, [authLoading, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const token = localStorage.getItem('sb-token');
+    if (!token) return;
+
+    fetch(`${API_BASE}/auth/history`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        setHistory((data?.history || []) as HistoryItem[]);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [isAuthenticated]);
+
+  const clearHistory = async () => {
+    if (!confirm('Clear all search history? This cannot be undone.')) return;
+    const token = localStorage.getItem('sb-token');
+    if (!token) return;
+    const res = await fetch(`${API_BASE}/auth/history`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) setHistory([]);
   };
 
-  const removeItem = (index: number) => {
-    setHistory(history.filter((_, i) => i !== index));
-  };
+  if (authLoading || loading) {
+    return (
+      <div className="container" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: 'var(--text-muted)' }}>Loading history...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="container">
@@ -36,10 +88,7 @@ export default function HistoryPage() {
           </p>
         </div>
         {history.length > 0 && (
-          <button
-            className="btn btn-secondary"
-            onClick={clearHistory}
-          >
+          <button className="btn btn-secondary" onClick={clearHistory}>
             Clear All
           </button>
         )}
@@ -49,7 +98,7 @@ export default function HistoryPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
           {history.map((item, index) => (
             <div
-              key={index}
+              key={item.id || index}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -57,47 +106,27 @@ export default function HistoryPage() {
                 borderBottom: index < history.length - 1 ? '1px solid var(--border-light)' : 'none',
                 cursor: 'pointer',
                 background: 'var(--bg-surface)',
+                borderRadius: index === 0 ? '8px 8px 0 0' : index === history.length - 1 ? '0 0 8px 8px' : '0',
               }}
               className="card"
               onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-surface-hover)'}
               onMouseLeave={(e) => e.currentTarget.style.background = 'var(--bg-surface)'}
+              onClick={() => router.push(`/search?q=${encodeURIComponent(item.query)}`)}
             >
               <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{ color: '#666', marginRight: '16px' }}
+                width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                strokeLinecap="round" strokeLinejoin="round" style={{ color: '#666', marginRight: '16px', flexShrink: 0 }}
               >
                 <circle cx="12" cy="12" r="10"></circle>
                 <polyline points="12 6 12 12 16 14"></polyline>
               </svg>
-              <div style={{ flex: 1 }} onClick={() => router.push(`/search?q=${encodeURIComponent(item.query)}`)}>
+              <div style={{ flex: 1 }}>
                 <div style={{ fontSize: '16px', marginBottom: '4px' }}>{item.query}</div>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{item.date}</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{formatRelativeDate(item.created_at)}</div>
               </div>
-              <button
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                  padding: '8px',
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removeItem(index);
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
             </div>
           ))}
         </div>
@@ -108,7 +137,7 @@ export default function HistoryPage() {
           <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
             Your recent searches will appear here
           </p>
-          <Link href="/search" className="btn btn-primary">
+          <Link href="/search" className="btn btn-primary" style={{ textDecoration: 'none' }}>
             Start Searching
           </Link>
         </div>

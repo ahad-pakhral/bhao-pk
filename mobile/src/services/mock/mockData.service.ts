@@ -115,7 +115,7 @@ class MockDataService {
     }
 
     return {
-      results: results as ProductWithListings[],
+      results: results as unknown as ProductWithListings[],
       total: results.length,
       page: 1,
       totalPages: 1,
@@ -186,7 +186,7 @@ class MockDataService {
   }
 
   private mockTrending(): ProductWithListings[] {
-    return TRENDING_PRODUCTS as ProductWithListings[];
+    return TRENDING_PRODUCTS as unknown as ProductWithListings[];
   }
 
   private mockPriceHistory(productId: string): PriceHistoryResponse {

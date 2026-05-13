@@ -31,22 +31,63 @@ bayesianRating = (C * m + n * R) / (C + n)
 ## Composite Score
 
 ```
-score = 0.30 * bayesianRating
-      + 0.30 * priceScore
-      + 0.20 * popularity
-      + 0.10 * storeReliability
-      + 0.10 * discountBonus
+score = 0.50 * relevance
+      + 0.20 * priceScore
+      + 0.10 * bayesianRating
+      + 0.10 * popularity
+      + 0.05 * storeReliability
+      + 0.05 * discountBonus
 ```
 
 ### Components (all normalized to 0-1):
 
 | Component | Formula | Why |
 |-----------|---------|-----|
+| relevance | `calculateRelevance(name, query)` | Textual match (exact vs tokens) |
+| priceScore | `1 - (log(price) - log(min)) / (log(max) - log(min))` | Log-scale price (favors value) |
 | bayesianRating | `(bayesian - 1) / 4` | Quality with confidence |
-| priceScore | `1 - (price - min) / (max - min)` | Lower price = higher score |
-| popularity | `log(1+reviews) / log(1+maxReviews)` | Log-dampened so 10K reviews doesn't dominate 100 |
+| popularity | `log(1+reviews) / log(1+maxReviews)` | Log-dampened reviews count |
 | storeReliability | Lookup table (0.5-0.85) | Trust signal per store |
 | discountBonus | `(original - current) / original` | Rewards deals |
+
+### Penalties (Multipliers):
+
+| Penalty | Trigger | Multiplier | Effect |
+|---------|---------|------------|--------|
+| **Hard Elimination** | <40% of query tokens match (`MIN_MATCH_RATIO`) | `score = 0` | Removes unrelated products entirely |
+| **Partial Match** | Some query tokens missing | `0.1x` on relevance | Moves junk results down |
+| **Out of Stock** | `inStock === false` | `0.1x` on score | Buries unavailable items |
+| **Generation Mismatch** | Query "16" vs product "17" (adjacent) | `0.03x` on score | Wrong generation sinks below correct |
+| **Generation Mismatch** | Query "16" vs product "14" (far) | `0.01x` on score | Near-elimination |
+| **Model Variant Mismatch** | "pro max" vs "pro", "ultra" vs base | `0.3-0.4x` on score | Wrong tier penalized |
+| **Accessory** | Accessory keyword in name but query doesn't want accessories | `0.03x` on score | Devices rank above cases/covers |
+| **Prefix Accessory** | Name starts with query words + accessory keywords after | `0.03x` on score | "iPhone 16 Camera Rings" ranked below iPhone 16 |
+| **Generic Mention** | "better than", "alternative to", "like iphone" | `0.02x` on relevance | Comparison products eliminated |
+
+### Relevance Calculation (`calculateRelevance`):
+
+1. **Token matching**: Each query token matched via word boundary regex (supports typo tolerance for tokens >4 chars)
+2. **Hard cutoff**: If `matchRatio < 0.4` → relevance = 0
+3. **Base relevance**: Full match (all tokens) → `max(0.85, 1 - (nameLen - queryLen)/100)`. Partial match → `matchRatio * 0.1`
+4. **Position weight** (critical for single-word queries like "iphone"):
+   - Position 0 (name starts with query) → `1.2x` boost
+   - Position <10 → `1.0x` (neutral)
+   - Position <30 → `0.6x` (could be accessory)
+   - Position 30+ → `0.15x` (mentioned in passing)
+
+### Generation Penalty (`calculateGenerationPenalty`):
+
+Applied to the **final composite score** (not just relevance) so ALL factors are penalized:
+- Extracts numbers ≥5 from query and product name
+- If query has a number not in the product, and product has a different number ≥5 → mismatch
+- Adjacent generations (±1): `0.03x` | Far generations: `0.01x`
+- Also checks model variants: pro/max (0.4x), plus/mini/ultra (0.3x)
+
+### Accessory Detection:
+
+- **60+ keywords** in `ACCESSORY_KEYWORDS`: cases, covers, protectors, chargers, cables, skins, holders, mounts, repair parts, decorative parts (camera ring, arrow, bezel, button), protection materials (360 protection, carbon fiber, matte, glossy, etc.)
+- **`isPrefixAccessory()`**: Detects accessories that start with the device name (e.g., "Iphone 16 Pro Max Arrow Camera Rings"). Checks text after the last matched query token — if it contains specs (GB, TB) it's the device; if it contains accessory keywords it's an accessory.
+- **Query-aware**: If the query itself contains accessory keywords (e.g., "iphone case"), the penalty is disabled.
 
 ### Store Reliability Scores:
 ```

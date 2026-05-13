@@ -1,24 +1,83 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
-import { ArrowLeft, Search, X, Clock } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
+import { ArrowLeft, Search, Clock } from 'lucide-react-native';
 import { COLORS, SPACING, BORDER_RADIUS } from '../theme';
 import { Typography } from '../components';
+import { useAuth } from '../context/AuthContext';
+import { apiClient } from '../services/api/client';
+import Toast from 'react-native-toast-message';
 
 export const SearchHistoryScreen = ({ navigation }: any) => {
-  const [recentSearches, setRecentSearches] = useState([
-    'iPhone 15',
-    'MacBook Air',
-    'AirPods Pro',
-    'Samsung S24',
-    'iPad Pro',
-  ]);
+  const { isAuthenticated } = useAuth();
+  const [history, setHistory] = useState<Array<{ id: string; query: string; created_at: string }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const clearAll = () => {
-    setRecentSearches([]);
+  const formatRelativeDate = (dateStr: string): string => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString('en-PK', { day: 'numeric', month: 'short' });
   };
 
-  const removeSearch = (index: number) => {
-    setRecentSearches(prev => prev.filter((_, i) => i !== index));
+  const loadHistory = useCallback(async () => {
+    setLoading(true);
+    try {
+      if (!isAuthenticated) {
+        setHistory([]);
+        return;
+      }
+      const data = await apiClient.get<any>('/auth/history');
+      setHistory((data?.history || []) as any[]);
+    } catch (e: any) {
+      console.warn('[History] Failed to load:', e?.message || e);
+      setHistory([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener?.('focus', () => {
+      loadHistory();
+    });
+    loadHistory();
+    return unsubscribe;
+  }, [navigation, loadHistory]);
+
+  const clearAll = async () => {
+    if (!isAuthenticated) return;
+    Alert.alert('Clear History', 'Clear all your search history? This cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Clear All',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await apiClient.delete<any>('/auth/history');
+            setHistory([]);
+            Toast.show({ type: 'success', text1: 'History cleared' });
+          } catch (e: any) {
+            Toast.show({ type: 'error', text1: 'Failed to clear', text2: e?.message || 'Please try again' });
+          }
+        },
+      },
+    ]);
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadHistory();
+    setRefreshing(false);
   };
 
   return (
@@ -28,34 +87,52 @@ export const SearchHistoryScreen = ({ navigation }: any) => {
           <ArrowLeft color={COLORS.text} size={24} />
         </TouchableOpacity>
         <Typography variant="h3">Search History</Typography>
-        <TouchableOpacity onPress={clearAll}>
-          <Typography variant="caption" color={COLORS.primary}>Clear All</Typography>
-        </TouchableOpacity>
+        {history.length > 0 ? (
+          <TouchableOpacity onPress={clearAll}>
+            <Typography variant="caption" color={COLORS.primary}>Clear All</Typography>
+          </TouchableOpacity>
+        ) : (
+          <View style={{ width: 60 }} />
+        )}
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />}
+      >
         <Typography variant="monoBold" color={COLORS.textSecondary} style={styles.sectionTitle}>
           RECENT SEARCHES
         </Typography>
 
-        {recentSearches.map((search, index) => (
+        {!isAuthenticated ? (
+          <View style={styles.emptyState}>
+            <Search color={COLORS.textSecondary} size={64} strokeWidth={1} />
+            <Typography variant="h3" style={styles.emptyTitle}>Login required</Typography>
+            <Typography color={COLORS.textSecondary} style={styles.emptyText}>
+              Login to view your search history.
+            </Typography>
+          </View>
+        ) : loading ? (
+          <View style={styles.emptyState}>
+            <Typography color={COLORS.textSecondary}>Loading history...</Typography>
+          </View>
+        ) : history.map((item, index) => (
           <TouchableOpacity
-            key={index}
+            key={item.id || String(index)}
             style={styles.historyItem}
-            onPress={() => navigation.navigate('Search', { query: search })}
+            onPress={() => navigation.navigate('Search', { query: item.query })}
           >
             <Clock color={COLORS.textSecondary} size={20} />
-            <Typography style={styles.searchText}>{search}</Typography>
-            <TouchableOpacity
-              style={styles.removeButton}
-              onPress={() => removeSearch(index)}
-            >
-              <X color={COLORS.textSecondary} size={16} />
-            </TouchableOpacity>
+            <View style={styles.searchText}>
+              <Typography numberOfLines={1}>{item.query}</Typography>
+              <Typography variant="caption" color={COLORS.textSecondary}>
+                {formatRelativeDate(item.created_at)}
+              </Typography>
+            </View>
           </TouchableOpacity>
         ))}
 
-        {recentSearches.length === 0 && (
+        {isAuthenticated && !loading && history.length === 0 && (
           <View style={styles.emptyState}>
             <Search color={COLORS.textSecondary} size={64} strokeWidth={1} />
             <Typography variant="h3" style={styles.emptyTitle}>No search history</Typography>
@@ -104,9 +181,6 @@ const styles = StyleSheet.create({
   searchText: {
     flex: 1,
     marginLeft: SPACING.md,
-  },
-  removeButton: {
-    padding: SPACING.xs,
   },
   emptyState: {
     paddingTop: 60,

@@ -1,189 +1,357 @@
-// Product ranking algorithm with Bayesian average and composite scoring
-//
-// Solves the "50 reviews @ 4.5 vs 5 reviews @ 5.0" problem:
-// Products with few reviews get pulled toward the global average,
-// while products with many reviews stay close to their raw rating.
+// Frontend ranking — mirrors backend/src/services/ranking.service.ts
 
 export interface RankingConfig {
-  confidenceThreshold: number;  // C: reviews needed to trust rating halfway (default: 25)
-  globalAverageRating: number;  // m: prior assumption (computed from data)
+  confidenceThreshold: number;
   weights: {
-    rating: number;      // quality of rating (default: 0.30)
-    price: number;       // price competitiveness (default: 0.30)
-    popularity: number;  // review volume (default: 0.20)
-    store: number;       // store reliability (default: 0.10)
-    discount: number;    // discount bonus (default: 0.10)
+    relevance: number;
+    bayesianRating: number;
+    priceScore: number;
+    popularity: number;
+    storeReliability: number;
+    discountBonus: number;
   };
+  storeReliabilityTable: Record<string, number>;
 }
 
 export const DEFAULT_RANKING_CONFIG: RankingConfig = {
   confidenceThreshold: 25,
-  globalAverageRating: 4.0,
   weights: {
-    rating: 0.30,
-    price: 0.30,
-    popularity: 0.20,
-    store: 0.10,
-    discount: 0.10,
+    relevance: 0.50,
+    bayesianRating: 0.10,
+    priceScore: 0.20,
+    popularity: 0.10,
+    storeReliability: 0.05,
+    discountBonus: 0.05,
+  },
+  storeReliabilityTable: {
+    Daraz: 0.85,
+    Telemart: 0.80,
+    Shophive: 0.75,
   },
 };
 
-const STORE_RELIABILITY: Record<string, number> = {
-  'Daraz': 0.85,
-  'Telemart': 0.80,
-  'Shophive': 0.75,
-  'Mega': 0.70,
-  'PriceOye': 0.80,
-};
-const DEFAULT_STORE_RELIABILITY = 0.50;
+// Minimum fraction of query tokens that must match for a product to be considered relevant
+const MIN_MATCH_RATIO = 0.4;
 
-/**
- * Bayesian average rating.
- * Formula: (C * m + n * R) / (C + n)
- */
-export function bayesianAverage(
-  rawRating: number,
-  reviewCount: number,
-  globalAverage: number,
-  confidenceThreshold: number
-): number {
-  return (
-    (confidenceThreshold * globalAverage + reviewCount * rawRating) /
-    (confidenceThreshold + reviewCount)
-  );
-}
+// 1. Text Relevance Score (Substring + Token Match + Position Weight)
+function calculateRelevance(productName: string, query: string): number {
+  if (!query) return 1.0;
 
-/** Parse "Rs. 345,000" → 345000 */
-export function parsePrice(priceStr: string): number {
-  return parseInt(priceStr.replace(/[^0-9]/g, ''), 10) || 0;
-}
+  const normalizedName = productName.toLowerCase();
+  const normalizedQuery = query.toLowerCase().trim();
 
-/** Weighted global average rating across all products. */
-export function computeGlobalAverage(
-  products: Array<{ rating?: number; reviewsCount?: number }>
-): number {
-  const withRatings = products.filter(p => p.rating != null && p.rating > 0);
-  if (withRatings.length === 0) return 4.0;
+  const queryTokens = normalizedQuery.split(/\s+/).filter(t => t.trim().length > 0);
+  if (queryTokens.length === 0) return 1.0;
 
-  let totalWeighted = 0;
-  let totalReviews = 0;
-  for (const p of withRatings) {
-    const n = p.reviewsCount || 1;
-    totalWeighted += (p.rating || 0) * n;
-    totalReviews += n;
-  }
-  return totalWeighted / totalReviews;
-}
+  const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-/**
- * Composite score for a single product (0–1, higher is better).
- */
-export function calculateProductScore(
-  product: {
-    rating?: number;
-    reviewsCount?: number;
-    price?: string;
-    store?: string;
-    originalPrice?: string;
-  },
-  context: {
-    minPrice: number;
-    maxPrice: number;
-    maxReviewsCount: number;
-    globalAverageRating: number;
-  },
-  config: RankingConfig = DEFAULT_RANKING_CONFIG
-): number {
-  const { weights, confidenceThreshold } = config;
-  const rating = product.rating || 0;
-  const reviewCount = product.reviewsCount || 0;
-  const price = product.price ? parsePrice(product.price) : 0;
+  let matches = 0;
+  let firstMatchIndex = normalizedName.length; // Track earliest match position
 
-  // 1. Bayesian rating → 0-1
-  const bayesian = bayesianAverage(
-    rating,
-    reviewCount,
-    context.globalAverageRating,
-    confidenceThreshold
-  );
-  const normalizedRating = Math.max(0, (bayesian - 1) / 4);
+  for (const token of queryTokens) {
+    const escapedToken = escapeRegExp(token);
+    const regex = new RegExp(`\\b${escapedToken}\\b`, 'i');
+    const match = regex.exec(normalizedName);
 
-  // 2. Price score (lower = better) → 0-1
-  let normalizedPrice = 1.0;
-  if (context.maxPrice > context.minPrice && price > 0) {
-    normalizedPrice = 1 - (price - context.minPrice) / (context.maxPrice - context.minPrice);
-  }
-
-  // 3. Popularity (log-dampened reviews) → 0-1
-  let normalizedPopularity = 0;
-  if (context.maxReviewsCount > 0 && reviewCount > 0) {
-    normalizedPopularity =
-      Math.log(1 + reviewCount) / Math.log(1 + context.maxReviewsCount);
-  }
-
-  // 4. Store reliability → 0-1
-  const storeScore = STORE_RELIABILITY[product.store || ''] ?? DEFAULT_STORE_RELIABILITY;
-
-  // 5. Discount bonus → 0-1
-  let discountBonus = 0;
-  if (product.originalPrice) {
-    const original = parsePrice(product.originalPrice);
-    if (original > price && original > 0) {
-      discountBonus = (original - price) / original;
+    if (match) {
+      matches++;
+      firstMatchIndex = Math.min(firstMatchIndex, match.index);
+    } else if (token.length > 4) {
+      let partialMatch = false;
+      for (let i = 0; i < token.length; i++) {
+        const typoToken = token.substring(0, i) + token.substring(i + 1);
+        if (typoToken.length >= 4) {
+          const typoRegex = new RegExp(`\\b${escapeRegExp(typoToken)}\\b`, 'i');
+          const typoMatch = typoRegex.exec(normalizedName);
+          if (typoMatch) {
+            partialMatch = true;
+            firstMatchIndex = Math.min(firstMatchIndex, typoMatch.index);
+            break;
+          }
+        }
+      }
+      if (partialMatch) matches += 0.8;
     }
   }
 
-  return (
-    weights.rating * normalizedRating +
-    weights.price * normalizedPrice +
-    weights.popularity * normalizedPopularity +
-    weights.store * storeScore +
-    weights.discount * discountBonus
-  );
+  const matchRatio = matches / queryTokens.length;
+
+  // Hard cutoff: if too few tokens match, this product is unrelated — eliminate it
+  if (matchRatio < MIN_MATCH_RATIO) {
+    return 0;
+  }
+
+  // Base relevance from match ratio
+  let relevance: number;
+  if (matchRatio < 1.0) {
+    relevance = matchRatio * 0.1;
+  } else {
+    relevance = Math.max(0.85, 1 - (normalizedName.length - normalizedQuery.length) / 100);
+  }
+
+  // Position weight: query found early in the name = likely the actual product
+  if (firstMatchIndex === 0) {
+    relevance *= 1.2; // Name starts with query word — very likely the actual product
+  } else if (firstMatchIndex < 10) {
+    relevance *= 1.0; // Near the start — fine
+  } else if (firstMatchIndex < 30) {
+    relevance *= 0.6; // Middle of name — could be accessory or related product
+  } else {
+    relevance *= 0.15; // Far into name — query word mentioned in passing
+  }
+
+  return Math.min(relevance, 1.0);
 }
 
 /**
- * Rank products by composite score (descending).
- * Use this for "relevance" sorting.
+ * Detect generation/version mismatches.
+ * If query contains "16" and product contains "17", it's a different generation.
+ * Also handles: pro vs non-pro, max vs mini, plus vs base model.
  */
-export function rankByRelevance<
-  T extends {
-    rating?: number;
-    reviewsCount?: number;
-    price?: string;
-    store?: string;
-    originalPrice?: string;
+function calculateGenerationPenalty(query: string, productName: string): number {
+  const queryNumbers = query.match(/\b(\d{1,2})\b/g) || [];
+  const productNumbers = productName.match(/\b(\d{1,2})\b/g) || [];
+
+  // Check for direct generation mismatch (e.g. query "16" vs product "17")
+  for (const qNum of queryNumbers) {
+    const qn = parseInt(qNum, 10);
+    if (qn < 5) continue; // Skip low numbers (e.g. "iphone 4", "galaxy s3")
+
+    // Does the product contain this exact generation number?
+    if (!productNumbers.some(pNum => parseInt(pNum, 10) === qn)) {
+      // Product doesn't have query's generation — check if it has a DIFFERENT generation
+      const productGeneration = productNumbers.find(pNum => {
+        const pn = parseInt(pNum, 10);
+        return pn >= 5 && pn !== qn;
+      });
+      if (productGeneration) {
+        const pn = parseInt(productGeneration, 10);
+        // Adjacent generations (e.g. 16 vs 17) — strong penalty, wrong generation
+        if (Math.abs(pn - qn) <= 1) {
+          return 0.03;
+        }
+        // Far generations (e.g. 16 vs 14) — near-elimination
+        return 0.01;
+      }
+    }
   }
->(products: T[], config?: RankingConfig): T[] {
+
+  const queryHasMax = /\bmax\b/.test(query);
+  const productHasMax = /\bmax\b/.test(productName);
+  const queryHasPro = /\bpro\b/.test(query) && !queryHasMax;
+  const productHasPro = /\bpro\b/.test(productName) && !productHasMax;
+  const queryHasPlus = /\bplus\b/.test(query);
+  const productHasPlus = /\bplus\b/.test(productName);
+  const queryHasMini = /\bmini\b/.test(query);
+  const productHasMini = /\bmini\b/.test(productName);
+  const queryHasUltra = /\bultra\b/.test(query);
+  const productHasUltra = /\bultra\b/.test(productName);
+
+  if (queryHasMax && !productHasMax && productHasPro) return 0.4;
+  if (queryHasPro && productHasMax) return 0.4;
+  if (queryHasPlus && !productHasPlus) return 0.3;
+  if (queryHasMini && !productHasMini) return 0.3;
+  if (queryHasUltra && !productHasUltra) return 0.3;
+
+  return 1.0;
+}
+
+const ACCESSORY_KEYWORDS = [
+  // Cases and covers
+  'case', 'cover', 'shell', 'bumper', 'holster', 'pouch',
+  'back cover', 'face plate', 'flip cover', 'rear cover',
+  // Screen protection
+  'protector', 'glass', 'tempered glass', 'screen protector',
+  'lens protector', 'camera lens', 'film',
+  // Skins, wraps, decals (non-device)
+  'skin', 'wrap', 'sticker', 'decal', 'membrane', 'back sheet',
+  // Cables and charging
+  'cable', 'charger', 'adapter', 'cord', 'dock',
+  // Wearables attachments
+  'strap', 'band', 'silicone',
+  // Mounts and stands
+  'holder', 'mount', 'stand', 'car mount',
+  // Non-device / repair parts
+  'housing', 'convert to', 'converter', 'body housing', 'replacement',
+  'back housing', 'front glass', 'frame', 'battery replacement',
+  'back protection', 'full protection', '360 protection', 'carbon fiber',
+  // Repair/conversion
+  'repair', 'fix', 'service pack', 'tool kit',
+  // Compatibility markers (universal accessory)
+  'compatible with', 'for iphone', 'for samsung', 'fits',
+  // Accessories often bundled
+  'bundle', 'combo pack', 'accessory kit',
+  // Small decorative parts that follow device names
+  'camera ring', 'ring', 'arrow', 'lens ring', 'bezel', 'button',
+  'antenna', 'speaker mesh', 'earpiece', 'microphone mesh',
+  'volume button', 'power button', 'sim tray', 'sim slot',
+  // Additional non-device keywords
+  'matte', 'glossy', 'transparent', 'clear', 'tinted',
+  'hybrid', 'armor', 'defender', 'rugged',
+];
+
+/**
+ * Check if a product is a "prefix accessory" — the product name contains the query
+ * words but also contains accessory keywords, indicating it's an accessory FOR the
+ * queried device, not the device itself.
+ */
+function isPrefixAccessory(nameLower: string, queryLower: string): boolean {
+  const queryTokens = queryLower.split(/\s+/).filter(t => t.length > 1);
+  if (queryTokens.length === 0) return false;
+
+  const lastTokenMatch = queryTokens.slice().reverse().find(token => {
+    const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(escaped, 'i').test(nameLower);
+  });
+
+  if (!lastTokenMatch) return false;
+
+  const escaped = lastTokenMatch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const lastMatch = new RegExp(escaped, 'i').exec(nameLower);
+  if (!lastMatch) return false;
+
+  const afterLastQuery = nameLower.substring(lastMatch.index + lastMatch[0].length).trim();
+
+  if (afterLastQuery.length === 0) return false;
+
+  // Check if what follows contains only specs/variants (GB, TB, etc.)
+  const onlySpecs = /^(\/?\s*\d+\s*(gb|tb|gbps|mh[zs]|inch|mp|px|pt|mah|watt|v|a|g|kg|oz|mm|cm)\s*[\/,]?\s*)+$/i.test(afterLastQuery);
+  if (onlySpecs) return false;
+
+  return ACCESSORY_KEYWORDS.some(kw => afterLastQuery.includes(kw));
+}
+
+// Stop-words that are too generic to indicate a specific product
+const GENERIC_IN_DESCRIPTION = [
+  'better than', 'alternative to', 'like iphone', 'unlike',
+];
+
+export const parsePrice = (val: string | number): number => {
+  if (typeof val === 'number') return val;
+  return parseFloat(val.replace(/[^0-9.]/g, '')) || 0;
+};
+
+export function rankByRelevance<T extends {
+  price: number | string;
+  rating: number;
+  reviewsCount: number;
+  store: string;
+  originalPrice?: string | number;
+  inStock?: boolean;
+  name?: string;
+}>(
+  products: T[],
+  query: string = "",
+  config: RankingConfig = DEFAULT_RANKING_CONFIG
+): T[] {
   if (products.length === 0) return [];
 
-  const globalAvg = computeGlobalAverage(products);
-  const cfg: RankingConfig = config || {
-    ...DEFAULT_RANKING_CONFIG,
-    globalAverageRating: globalAvg,
-  };
+  // Compute global averages
+  const totalRating = products.reduce((sum, p) => sum + p.rating, 0);
+  const globalAvg = totalRating / products.length;
 
-  let minPrice = Infinity;
-  let maxPrice = 0;
-  let maxReviewsCount = 0;
+  // 2. Outlier Filtering for Price Range (IQR Method)
+  const validPrices = products.map(p => parsePrice(p.price)).filter(p => p > 0).sort((a, b) => a - b);
+  let minPrice = 1;
+  let maxPrice = 1;
 
-  for (const p of products) {
-    const price = p.price ? parsePrice(p.price) : 0;
-    if (price > 0 && price < minPrice) minPrice = price;
-    if (price > maxPrice) maxPrice = price;
-    if ((p.reviewsCount || 0) > maxReviewsCount) {
-      maxReviewsCount = p.reviewsCount || 0;
+  if (validPrices.length > 0) {
+    if (validPrices.length > 3) {
+      const q1 = validPrices[Math.floor(validPrices.length * 0.25)];
+      const q3 = validPrices[Math.floor(validPrices.length * 0.75)];
+      const iqr = q3 - q1;
+
+      const lowerBound = q1 - 1.5 * iqr;
+      const upperBound = q3 + 1.5 * iqr;
+
+      const filteredPrices = validPrices.filter(p => p >= lowerBound && p <= upperBound);
+      minPrice = filteredPrices.length > 0 ? Math.min(...filteredPrices) : validPrices[0];
+      maxPrice = filteredPrices.length > 0 ? Math.max(...filteredPrices) : validPrices[validPrices.length - 1];
+    } else {
+      minPrice = validPrices[0];
+      maxPrice = validPrices[validPrices.length - 1];
     }
   }
-  if (minPrice === Infinity) minPrice = 0;
 
-  const context = { minPrice, maxPrice, maxReviewsCount, globalAverageRating: cfg.globalAverageRating };
+  if (maxPrice <= minPrice) maxPrice = minPrice + 1;
 
-  const scored = products.map(p => ({
-    product: p,
-    score: calculateProductScore(p, context, cfg),
-  }));
+  const maxReviews = Math.max(...products.map(p => p.reviewsCount), 1);
+
+  const normalizedQuery = query.toLowerCase().trim();
+  const queryWantsAccessory = ACCESSORY_KEYWORDS.some(kw => normalizedQuery.includes(kw));
+
+  // Score each product
+  const scored = products.map(product => {
+    const rawOrig = product.originalPrice ? parsePrice(product.originalPrice) : 0;
+    const currentPrice = parsePrice(product.price);
+
+    const relevance = calculateRelevance(product.name || "", query);
+
+    // Hard elimination: if relevance is 0, product doesn't match the query at all
+    if (relevance === 0) {
+      return { product, score: 0 };
+    }
+
+    // Extra penalty: product name contains generic comparison phrases
+    const nameLower = (product.name || "").toLowerCase();
+    const isGenericMention = GENERIC_IN_DESCRIPTION.some(phrase => nameLower.includes(phrase));
+    if (isGenericMention) {
+      return { product, score: relevance * 0.02 };
+    }
+
+    const bayesian = (config.confidenceThreshold * globalAvg + product.reviewsCount * product.rating) /
+      (config.confidenceThreshold + product.reviewsCount);
+    const normalizedBayesian = Math.max(0, Math.min(1, (bayesian - 1) / 4));
+
+    let priceScore = 0;
+    if (currentPrice > 0) {
+      const clampedPrice = Math.max(minPrice, Math.min(currentPrice, maxPrice));
+      const logPrice = Math.log(clampedPrice);
+      const logMin = Math.log(minPrice);
+      const logMax = Math.log(maxPrice);
+
+      priceScore = logMax > logMin
+        ? 1 - ((logPrice - logMin) / (logMax - logMin))
+        : 1;
+    }
+
+    const popularity = maxReviews > 1
+      ? Math.log(1 + product.reviewsCount) / Math.log(1 + maxReviews)
+      : 0;
+
+    const storeReliability = config.storeReliabilityTable[product.store] || 0.70;
+
+    const discountBonus = rawOrig > currentPrice
+      ? (rawOrig - currentPrice) / rawOrig
+      : 0;
+
+    let score =
+      config.weights.relevance * relevance +
+      config.weights.bayesianRating * normalizedBayesian +
+      config.weights.priceScore * priceScore +
+      config.weights.popularity * popularity +
+      config.weights.storeReliability * storeReliability +
+      config.weights.discountBonus * discountBonus;
+
+    // Stock Penalization
+    if (product.inStock === false) {
+      score *= 0.1;
+    }
+
+    // Generation mismatch — applied to final score so it affects ALL factors
+    const genPenalty = calculateGenerationPenalty(normalizedQuery, nameLower);
+    score *= genPenalty;
+
+    // Accessory Penalization — very strong
+    const isAccessory = ACCESSORY_KEYWORDS.some(kw => nameLower.includes(kw));
+    const isPrefixedAcc = isPrefixAccessory(nameLower, normalizedQuery);
+    if (!queryWantsAccessory && (isAccessory || isPrefixedAcc)) {
+      score *= 0.03; // 97% penalty — accessories sink to the bottom
+    }
+
+    return { product, score };
+  });
 
   scored.sort((a, b) => b.score - a.score);
-  return scored.map(s => s.product);
+  return scored.map(item => item.product);
 }

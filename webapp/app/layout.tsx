@@ -3,17 +3,10 @@
 import "./globals.css";
 import Link from "next/link";
 import { Logo } from "../components/Logo";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-
-const allProducts = [
-  { id: 1, name: "iPhone 15 Pro", price: "Rs. 345k", store: "Daraz" },
-  { id: 2, name: "Samsung S24", price: "Rs. 320k", store: "Telemart" },
-  { id: 3, name: "AirPods Pro", price: "Rs. 65k", store: "Daraz" },
-  { id: 4, name: "MacBook Air", price: "Rs. 285k", store: "Shophive" },
-  { id: 5, name: "iPad Pro", price: "Rs. 245k", store: "Daraz" },
-  { id: 6, name: "Sony XM5", price: "Rs. 85k", store: "Telemart" },
-];
+import { ToastProvider } from "../components/Toast";
+import { useState, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { useAuthStore } from "../store/authStore";
 
 export default function RootLayout({
   children,
@@ -21,25 +14,39 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const router = useRouter();
-  const [searchExpanded, setSearchExpanded] = useState(false);
+  const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState("");
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const { user, isAuthenticated, checkSession, logout } = useAuthStore();
 
-  const filteredSuggestions = searchQuery.trim()
-    ? allProducts.filter(product =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.store.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 5)
-    : [];
+  useEffect(() => {
+    checkSession();
+  }, [checkSession]);
 
-  const handleNavSearch = () => {
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
-      setShowSuggestions(false);
-      setSearchExpanded(false);
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery("");
     }
   };
+
+  const navItems = [
+    { href: "/search", label: "Browse" },
+    { href: "/wishlist", label: "Wishlist" },
+    { href: "/alerts", label: "Alerts" },
+  ];
 
   return (
     <html lang="en">
@@ -48,202 +55,152 @@ export default function RootLayout({
         <meta name="description" content="Track prices. Compare deals. Save money." />
       </head>
       <body>
-        <nav className="navbar">
-          <Link href="/" className="nav-logo" style={{ textDecoration: 'none' }}>
-            <Logo size="md" showText={true} />
-          </Link>
-
-          {!searchExpanded ? (
-            <>
-              <div className="nav-links">
-                <Link href="/" className="nav-link">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
-                  Home
+        <ToastProvider>
+          <nav className={`navbar ${scrolled ? "navbar-scrolled" : ""}`}>
+            <div className="navbar-inner">
+              {/* Left: Logo + Nav */}
+              <div className="navbar-left">
+                <Link href="/" className="nav-logo">
+                  <Logo size="sm" showText={true} />
                 </Link>
-                <button
-                  onClick={() => setSearchExpanded(true)}
-                  className="nav-link"
-                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
-                  Search
-                </button>
-                <Link href="/wishlist" className="nav-link">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
-                  Wishlist
-                </Link>
-                <Link href="/alerts" className="nav-link">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CCFF00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-                  Alerts
-                </Link>
-                <Link href="/profile" className="nav-link">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-                  Profile
-                </Link>
-              </div>
-              <div className="nav-auth">
-                <Link href="/login" className="btn btn-secondary">LOGIN</Link>
-                <Link href="/signup" className="btn btn-primary">SIGN UP</Link>
-              </div>
-            </>
-          ) : (
-            <div style={{ flex: 1, marginLeft: '20px', marginRight: '20px', position: 'relative' }} className="search-bar-wrapper">
-              <div style={{
-                position: 'relative',
-                background: '#0a0a0a',
-                border: '1px solid #333',
-                borderRadius: '12px',
-                padding: '6px 12px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-              }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#666' }}>
-                  <circle cx="11" cy="11" r="8" />
-                  <path d="m21 21-4.3-4.3" />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  autoFocus
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setShowSuggestions(e.target.value.trim().length > 0);
-                  }}
-                  onFocus={() => searchQuery.trim() && setShowSuggestions(true)}
-                  onBlur={() => {
-                    setTimeout(() => {
-                      setShowSuggestions(false);
-                      if (!searchQuery) {
-                        setSearchExpanded(false);
-                      }
-                    }, 200);
-                  }}
-                  onKeyDown={(e) => e.key === 'Enter' && handleNavSearch()}
-                  style={{
-                    flex: 1,
-                    background: 'transparent',
-                    border: 'none',
-                    color: '#fff',
-                    fontFamily: 'var(--font-body)',
-                    fontSize: '14px',
-                    outline: 'none',
-                  }}
-                />
-                <button
-                  onClick={() => {
-                    setSearchExpanded(false);
-                    setSearchQuery("");
-                    setShowSuggestions(false);
-                  }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#666',
-                    cursor: 'pointer',
-                    padding: '4px',
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
-                </button>
-              </div>
-
-              {showSuggestions && filteredSuggestions.length > 0 && (
-                <div style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  right: 0,
-                  background: 'var(--bg-surface)',
-                  border: '1px solid var(--border-light)',
-                  borderRadius: '0 0 12px 12px',
-                  marginTop: '4px',
-                  zIndex: 1000,
-                  overflow: 'hidden',
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-                }}>
-                  <div style={{
-                    padding: '8px 16px',
-                    fontSize: '10px',
-                    color: '#666',
-                    textTransform: 'uppercase',
-                    borderBottom: '1px solid #1a1a1a',
-                  }}>
-                    Suggestions
-                  </div>
-                  {filteredSuggestions.map((product) => (
+                <div className="nav-divider" />
+                <div className="nav-links-desktop">
+                  {navItems.map(item => (
                     <Link
-                      key={product.id}
-                      href={`/product/${product.id}`}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        padding: '12px 16px',
-                        cursor: 'pointer',
-                        borderBottom: '1px solid #1a1a1a',
-                        textDecoration: 'none',
-                        color: 'inherit',
-                      }}
-                      onClick={() => {
-                        setShowSuggestions(false);
-                        setSearchExpanded(false);
-                        setSearchQuery("");
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-surface-hover)'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      key={item.href}
+                      href={item.href}
+                      className={`nav-link ${pathname === item.href || (item.href !== "/search" && pathname.startsWith(item.href)) ? "nav-link-active" : ""}`}
                     >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#666', flexShrink: 0 }}>
-                        <circle cx="11" cy="11" r="8" />
-                        <path d="m21 21-4.3-4.3" />
-                      </svg>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '13px', marginBottom: '2px' }}>{product.name}</div>
-                        <div style={{ fontSize: '11px', color: '#666' }}>
-                          {product.store} • {product.price}
-                        </div>
-                      </div>
+                      {item.label}
                     </Link>
                   ))}
                 </div>
-              )}
-            </div>
-          )}
-        </nav>
+              </div>
 
-        <main>{children}</main>
+              {/* Center: Search */}
+              <form onSubmit={handleSearch} className="navbar-search">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Compare prices..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="navbar-search-input"
+                />
+              </form>
 
-        <footer>
-          <div className="footer-content">
-            <div className="footer-col">
-              <h4>BHAO.PK</h4>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Intelligent price comparison engine for the savvy shopper.</p>
+              {/* Right: Auth */}
+              <div className="navbar-right">
+                {isAuthenticated ? (
+                  <>
+                    <Link href="/profile" className="nav-profile-btn">
+                      <div className="nav-avatar">
+                        {(user?.name || user?.email || "U")[0].toUpperCase()}
+                      </div>
+                      <span className="nav-profile-name">{user?.name || user?.email?.split("@")[0]}</span>
+                    </Link>
+                    <button onClick={async () => { await logout(); router.push("/"); }} className="nav-logout-btn">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                      </svg>
+                    </button>
+                  </>
+                ) : (
+                  <div className="nav-auth-guest">
+                    <Link href="/login" className="nav-login-btn">Log in</Link>
+                    <Link href="/signup" className="btn btn-primary nav-signup-btn">Sign up</Link>
+                  </div>
+                )}
+
+                {/* Mobile Menu Toggle */}
+                <button className="mobile-menu-toggle" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+                  {mobileMenuOpen ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+                  )}
+                </button>
+              </div>
             </div>
-            <div className="footer-col">
-              <h4>Platform</h4>
-              <ul>
-                <li><Link href="/search">Search Products</Link></li>
-                <li><Link href="/trending">Trending Now</Link></li>
-                <li><Link href="/alerts">Price Alerts</Link></li>
-              </ul>
+
+            {/* Mobile Menu Dropdown */}
+            {mobileMenuOpen && (
+              <div className="mobile-menu">
+                <form onSubmit={(e) => { handleSearch(e); setMobileMenuOpen(false); }} className="mobile-search">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Compare prices..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="mobile-search-input"
+                  />
+                </form>
+                {navItems.map(item => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`mobile-nav-link ${pathname === item.href ? "mobile-nav-link-active" : ""}`}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+                <div className="mobile-auth">
+                  {isAuthenticated ? (
+                    <>
+                      <Link href="/profile" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>
+                        Profile ({user?.name || user?.email?.split("@")[0]})
+                      </Link>
+                      <button onClick={async () => { await logout(); setMobileMenuOpen(false); router.push("/"); }} className="mobile-nav-link mobile-nav-logout">
+                        Log out
+                      </button>
+                    </>
+                  ) : (
+                    <div className="mobile-auth-buttons">
+                      <Link href="/login" className="btn btn-secondary" style={{ flex: 1, justifyContent: "center" }}>Log in</Link>
+                      <Link href="/signup" className="btn btn-primary" style={{ flex: 1, justifyContent: "center" }}>Sign up</Link>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </nav>
+
+          <main>{children}</main>
+
+          <footer>
+            <div className="footer-content">
+              <div className="footer-col">
+                <Link href="/" style={{ textDecoration: "none", marginBottom: "12px", display: "inline-block" }}>
+                  <Logo size="md" showText={true} />
+                </Link>
+                <p style={{ color: "var(--text-secondary)", fontSize: "13px", lineHeight: "1.6" }}>Intelligent price comparison engine for the savvy shopper. Data, no fluff.</p>
+              </div>
+              <div className="footer-col">
+                <h4>Platform</h4>
+                <ul>
+                  <li><Link href="/search">Browse Products</Link></li>
+                  <li><Link href="/wishlist">Wishlist</Link></li>
+                  <li><Link href="/alerts">Price Alerts</Link></li>
+                </ul>
+              </div>
+              <div className="footer-col">
+                <h4>Company</h4>
+                <ul>
+                  <li><Link href="/about">About Us</Link></li>
+                  <li><Link href="/privacy">Privacy Policy</Link></li>
+                </ul>
+              </div>
             </div>
-            <div className="footer-col">
-              <h4>Company</h4>
-              <ul>
-                <li><Link href="/about">About Us</Link></li>
-                <li><Link href="/privacy">Privacy Policy</Link></li>
-                <li><Link href="/admin/login">Admin Access</Link></li>
-              </ul>
+            <div className="footer-bottom">
+              &copy; {new Date().getFullYear()} BHAO.PK &mdash; Data. No Fluff.
             </div>
-          </div>
-          <div className="footer-bottom">
-            &copy; 2025 BHAO.PK - Data. No Fluff.
-          </div>
-        </footer>
+          </footer>
+        </ToastProvider>
       </body>
     </html>
   );

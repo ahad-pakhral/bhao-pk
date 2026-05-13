@@ -20,6 +20,7 @@ import { AlertsScreen } from '../screens/AlertsScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { SearchHistoryScreen } from '../screens/SearchHistoryScreen';
 import { EditProfileScreen } from '../screens/EditProfileScreen';
+import { ChangePasswordScreen } from '../screens/ChangePasswordScreen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -76,6 +77,7 @@ export const AppNavigator = () => {
       <Stack.Screen name="Wishlist" component={WishlistScreen} />
       <Stack.Screen name="Alerts" component={AlertsScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
       <Stack.Screen name="SearchHistory" component={SearchHistoryScreen} />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
       <Stack.Screen name="AdminLogin" component={AdminLoginScreen} />

@@ -1,46 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
-import { Heart, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react-native';
-import { COLORS, SPACING } from '../theme';
-import { Typography, ProductCard } from '../components';
-import { wishlistStorage } from '../services/storage.service';
-import { ALL_PRODUCTS } from '../constants/dummyData';
-import Toast from 'react-native-toast-message';
+import React from 'react';
+import { View, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image, Linking } from 'react-native';
+import { Heart, Trash2, ShoppingBag, ArrowLeft, ExternalLink } from 'lucide-react-native';
+import { COLORS, SPACING, BORDER_RADIUS } from '../theme';
+import { Typography, Button } from '../components';
+import { useWishlist } from '../hooks/useWishlist';
+import { useAuth } from '../context/AuthContext';
 
 export const WishlistScreen = ({ navigation }: any) => {
-  const [wishlist, setWishlist] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { isAuthenticated } = useAuth();
+  const { wishlist, loading, toggleWishlist } = useWishlist();
 
-  useEffect(() => {
-    loadWishlist();
-  }, []);
-
-  const loadWishlist = async () => {
+  const removeFromWishlist = async (item: any) => {
     try {
-      const items = await wishlistStorage.getWishlist();
-      setWishlist(items);
-    } catch (error) {
-      console.error('Failed to load wishlist:', error);
-    } finally {
-      setLoading(false);
+      await toggleWishlist({ store: item.store, url: item.url, name: item.name, imageUrl: item.imageUrl });
+    } catch (e) {
+      console.error('Failed to remove from wishlist:', e);
     }
   };
-
-  const removeFromWishlist = async (productId: string) => {
-    try {
-      await wishlistStorage.removeFromWishlist(productId);
-      setWishlist(prev => prev.filter(id => id !== productId));
-      Toast.show({
-        type: 'info',
-        text1: 'Removed from wishlist',
-      });
-    } catch (error) {
-      console.error('Failed to remove from wishlist:', error);
-    }
-  };
-
-  // Get product details for wishlist items
-  const wishlistProducts = ALL_PRODUCTS.filter(p => wishlist.includes(p.id));
 
   if (loading) {
     return (
@@ -52,7 +28,7 @@ export const WishlistScreen = ({ navigation }: any) => {
     );
   }
 
-  if (wishlistProducts.length === 0) {
+  if (!isAuthenticated) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
@@ -62,7 +38,41 @@ export const WishlistScreen = ({ navigation }: any) => {
           <View style={styles.headerCenter}>
             <Typography variant="h3">Wishlist</Typography>
             <Typography color={COLORS.textSecondary} variant="caption">
-              {wishlist.length} items
+              Login required
+            </Typography>
+          </View>
+          <View style={{ width: 24 }} />
+        </View>
+        <View style={styles.emptyState}>
+          <Heart color={COLORS.textSecondary} size={64} strokeWidth={1} />
+          <Typography variant="h3" style={styles.emptyTitle}>
+            Login required
+          </Typography>
+          <Typography color={COLORS.textSecondary} style={styles.emptyMessage}>
+            Please login to use wishlist.
+          </Typography>
+          <TouchableOpacity style={styles.browseButton} onPress={() => navigation.navigate('Login')}>
+            <ShoppingBag color={COLORS.background} size={20} />
+            <Typography color={COLORS.background} style={styles.browseButtonText}>
+              GO TO LOGIN
+            </Typography>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (wishlist.length === 0) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <ArrowLeft color={COLORS.text} size={24} />
+          </TouchableOpacity>
+          <View style={styles.headerCenter}>
+            <Typography variant="h3">Wishlist</Typography>
+            <Typography color={COLORS.textSecondary} variant="caption">
+              0 items
             </Typography>
           </View>
           <View style={{ width: 24 }} />
@@ -98,25 +108,58 @@ export const WishlistScreen = ({ navigation }: any) => {
         <View style={styles.headerCenter}>
           <Typography variant="h3">Wishlist</Typography>
           <Typography color={COLORS.textSecondary} variant="caption">
-            {wishlistProducts.length} items
+            {wishlist.length} items
           </Typography>
         </View>
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {wishlistProducts.map((product) => (
-          <View key={product.id} style={styles.productWrapper}>
-            <ProductCard
-              {...product}
-              onPress={() => navigation.navigate('ProductDetail', { product })}
-            />
+        {wishlist.map((item) => (
+          <View key={item.id} style={styles.itemCard}>
             <TouchableOpacity
-              style={styles.removeButton}
-              onPress={() => removeFromWishlist(product.id)}
+              style={styles.itemTopRow}
+              activeOpacity={0.9}
+              onPress={() => {
+                navigation.navigate('ProductDetail', {
+                  product: {
+                    url: item.url,
+                    store: item.store,
+                    name: item.name,
+                    image: item.imageUrl || undefined,
+                  },
+                });
+              }}
             >
-              <Trash2 color={COLORS.error} size={20} />
+              {item.imageUrl ? (
+                <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
+              ) : (
+                <View style={styles.itemImagePlaceholder} />
+              )}
+              <View style={styles.itemInfo}>
+                <Typography variant="body" numberOfLines={2} style={{ fontWeight: '700' }}>
+                  {item.name}
+                </Typography>
+                <Typography variant="caption" color={COLORS.textSecondary}>
+                  {item.store}
+                </Typography>
+              </View>
             </TouchableOpacity>
+
+            <View style={styles.itemActions}>
+              <Button
+                title="VISIT STORE"
+                size="sm"
+                variant="outline"
+                onPress={() => {
+                  Linking.openURL(item.url).catch(() => {});
+                }}
+                icon={<ExternalLink size={16} color={COLORS.primary} />}
+              />
+              <TouchableOpacity style={styles.removeButton} onPress={() => removeFromWishlist(item)}>
+                <Trash2 color={COLORS.error} size={20} />
+              </TouchableOpacity>
+            </View>
           </View>
         ))}
       </ScrollView>
@@ -150,14 +193,45 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: SPACING.lg,
   },
-  productWrapper: {
-    position: 'relative',
+  itemCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.lg,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: SPACING.md,
     marginBottom: SPACING.md,
   },
+  itemTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  itemImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    marginRight: SPACING.md,
+    backgroundColor: '#1a1a1a',
+  },
+  itemImagePlaceholder: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    marginRight: SPACING.md,
+    backgroundColor: '#1a1a1a',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  itemInfo: {
+    flex: 1,
+  },
+  itemActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: SPACING.md,
+    gap: SPACING.md,
+  },
   removeButton: {
-    position: 'absolute',
-    top: SPACING.sm,
-    right: SPACING.sm,
     backgroundColor: COLORS.surface,
     padding: SPACING.sm,
     borderRadius: 20,

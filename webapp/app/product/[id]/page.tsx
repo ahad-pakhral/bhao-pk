@@ -22,6 +22,18 @@ function inferStoreFromUrl(url: string): string | null {
   return null;
 }
 
+function normalizeStoreKey(store: string | null | undefined): string | null {
+  if (!store) return null;
+  const s = String(store).trim().toLowerCase();
+  if (!s) return null;
+  if (s.includes("daraz")) return "daraz";
+  if (s.includes("shophive")) return "shophive";
+  if (s.includes("telemart")) return "telemart";
+  if (s.includes("mega")) return "mega";
+  if (s.includes("priceoye")) return "priceoye";
+  return s;
+}
+
 function VendorCard({ product, isBestValue }: { product: any; isBestValue: boolean }) {
   const price = typeof product.price === 'number' ? product.price : parseInt(String(product.price || '0').replace(/[^\d]/g, ''), 10) || 0;
   return (
@@ -128,7 +140,7 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
       const decodedId = decodeURIComponent(params.id);
       const inferredStore = inferStoreFromUrl(decodedId);
       const queryUrl = searchParams?.get('url') || (decodedId.startsWith('http') ? decodedId : null);
-      const queryStore = searchParams?.get('store') || inferredStore;
+      const queryStore = normalizeStoreKey(searchParams?.get('store') || inferredStore);
       if (queryUrl && queryStore) {
         fetch(`${API_BASE}/search/product?url=${encodeURIComponent(queryUrl)}&store=${encodeURIComponent(queryStore)}`)
           .then(res => res.ok ? res.json() : null)
@@ -168,11 +180,11 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
   useEffect(() => {
     if (!scrapedProduct) return;
     const url = scrapedProduct.url;
-    const store = scrapedProduct.store;
-    if (!url || !store) return;
+    const storeKey = normalizeStoreKey(scrapedProduct.store) || inferStoreFromUrl(url);
+    if (!url || !storeKey) return;
 
     setDetailsLoading(true);
-    fetch(`${API_BASE}/search/product?url=${encodeURIComponent(url)}&store=${encodeURIComponent(store)}`)
+    fetch(`${API_BASE}/search/product?url=${encodeURIComponent(url)}&store=${encodeURIComponent(storeKey)}`)
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (data?.product) {
@@ -197,25 +209,56 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
       .finally(() => setDetailsLoading(false));
   }, [scrapedProduct?.url]);
 
-  // Generate price history
+  // Fetch real price history points (falls back to a single-point "today" view if empty).
   useEffect(() => {
-    if (!scrapedProduct) return;
-    const price = scrapedProduct.priceValue || scrapedProduct.price || 0;
-    const numericPrice = typeof price === "number" ? price : parseInt(String(price).replace(/[^\d]/g, ""), 10) || 0;
-    if (numericPrice > 0) {
-      const now = new Date();
-      setPriceHistory([{
-        date: `${now.getDate()}/${now.getMonth() + 1}`,
-        price: numericPrice,
-      }]);
-    }
-  }, [scrapedProduct?.priceValue]);
+    if (!scrapedProduct?.url || !scrapedProduct?.store) return;
+
+    const url = scrapedProduct.url;
+    const store = normalizeStoreKey(scrapedProduct.store) || inferStoreFromUrl(url);
+    if (!store) return;
+
+    fetch(`${API_BASE}/history?url=${encodeURIComponent(url)}&store=${encodeURIComponent(store)}`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        const points = Array.isArray(data?.points) ? data.points : [];
+        const normalized = points
+          .filter((p: any) => p && typeof p.price === 'number' && (p.day || p.date))
+          .map((p: any) => ({
+            date: String(p.day || p.date),
+            price: Number(p.price),
+          }));
+
+        if (normalized.length > 0) {
+          setPriceHistory(normalized);
+          return;
+        }
+
+        // Fallback: show a single real-time point derived from the currently displayed price.
+        const price = scrapedProduct.priceValue || scrapedProduct.price || 0;
+        const numericPrice = typeof price === "number" ? price : parseInt(String(price).replace(/[^\d]/g, ""), 10) || 0;
+        if (numericPrice > 0) {
+          const day = new Date().toISOString().slice(0, 10);
+          setPriceHistory([{ date: day, price: numericPrice }]);
+        } else {
+          setPriceHistory([]);
+        }
+      })
+      .catch(() => {
+        // Keep UI usable even if backend is down.
+        setPriceHistory([]);
+      });
+  }, [scrapedProduct?.url, scrapedProduct?.store, scrapedProduct?.priceValue]);
 
   // Step 4: Fetch cross-store matches for comparison
   useEffect(() => {
     if (!scrapedProduct?.url || !scrapedProduct?.store) return;
     setMatchesLoading(true);
-    fetch(`${API_BASE}/search/matches?url=${encodeURIComponent(scrapedProduct.url)}&store=${encodeURIComponent(scrapedProduct.store)}&name=${encodeURIComponent(scrapedProduct.name)}`)
+    const store = normalizeStoreKey(scrapedProduct.store) || inferStoreFromUrl(scrapedProduct.url);
+    if (!store) {
+      setMatchesLoading(false);
+      return;
+    }
+    fetch(`${API_BASE}/search/matches?url=${encodeURIComponent(scrapedProduct.url)}&store=${encodeURIComponent(store)}&name=${encodeURIComponent(scrapedProduct.name)}`)
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (data?.matches) {
@@ -453,12 +496,10 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
           </div>
 
           {/* Price History */}
-          {priceHistory.length > 0 && (
-            <div style={{ padding: "24px", background: "var(--bg-surface)", borderRadius: "16px", border: "1px solid var(--border-light)" }}>
-              <h4 style={{ marginBottom: "16px", fontSize: "12px", color: "var(--text-muted)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Price History</h4>
-              <PriceHistoryChart data={priceHistory} />
-            </div>
-          )}
+          <div style={{ padding: "24px", background: "var(--bg-surface)", borderRadius: "16px", border: "1px solid var(--border-light)" }}>
+            <h4 style={{ marginBottom: "16px", fontSize: "12px", color: "var(--text-muted)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Price History</h4>
+            <PriceHistoryChart data={priceHistory} />
+          </div>
         </div>
       </div>
 

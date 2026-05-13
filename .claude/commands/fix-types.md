@@ -85,23 +85,32 @@ if (!keyword) {
 }
 ```
 
-### 6. `pg` Pool query result type
+### 6. `req.user.id` vs `req.user.userId` — Supabase vs old JWT
 
+Auth middleware (`backend/src/middleware/auth.middleware.ts`) sets `req.user` to the Supabase user object, which uses `.id`.
+
+**Old code** (legacy JWT) used `.userId`. If you see `req.user.userId`, change it to `req.user.id`.
+
+**Files that had this bug:** `user.controller.ts`, `alerts.routes.ts`
+
+### 7. `Parameter implicitly has an 'any' type`
+
+When mapping over data from an API response, TypeScript infers `any`:
 ```typescript
-const result = await query('SELECT * FROM users WHERE id = $1', [id]);
-const user = result.rows[0]; // type: any
+// BAD
+product.specifications.map((spec, i) => ...)
+
+// GOOD
+product.specifications.map((spec: any, i: number) => ...)
 ```
 
-For type safety, define row interfaces:
-```typescript
-interface UserRow {
-  id: string;
-  name: string;
-  email: string;
-}
-const result = await query('SELECT * FROM users WHERE id = $1', [id]);
-const user: UserRow = result.rows[0];
-```
+**Files that had this:** `webapp/app/product/[id]/page.tsx`
+
+## Database Type Notes
+
+We use **Supabase** (not Prisma, not raw pg). All DB operations go through `backend/src/services/db.service.ts` which wraps the Supabase JS client. Row types are inferred from the `.select()` return type — no manual row interfaces needed.
+
+Supabase returns `snake_case` column names. The db.service.ts methods accept `camelCase` parameters and map them.
 
 ## Quick Type Check Commands
 

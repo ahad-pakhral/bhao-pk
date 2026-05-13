@@ -142,8 +142,5 @@ export function findMatchingProducts(
   // 6. Return matches sorted by price ascending (cheapest first)
   return matches
     .map(m => m.item)
-  // 6. Return matches sorted by price ascending (cheapest first)
-  return matches
-    .map(m => m.item)
     .sort((a, b) => a.price - b.price);
 }

@@ -2,13 +2,16 @@
 
 import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { rankByRelevance } from "../../utils/ranking";
-import { LayoutGrid, List as ListIcon } from "lucide-react";
+import { LayoutGrid, List as ListIcon, Search } from "lucide-react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
 import { useSearchStore } from "../../store/searchStore";
+import { useAuthStore } from "../../store/authStore";
+import { useWishlist } from "../../hooks/useWishlist";
+import { useToast } from "../../components/Toast";
 
 export interface SearchProduct {
   id: number | string;
@@ -54,13 +57,14 @@ function normalizeProduct(p: any, idx: number): SearchProduct {
   };
 }
 
-const stores = ["Daraz", "Telemart", "Shophive", "Mega", "PriceOye"];
+const stores = ["Daraz", "Telemart", "Shophive"];
 
 function SearchContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const queryParam = searchParams?.get("q") || "";
 
-  const [searchQuery, setSearchQuery] = useState(queryParam);
+  const [searchInput, setSearchInput] = useState(queryParam);
   const [sort, setSort] = useState("Relevance");
   const [selectedStores, setSelectedStores] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("");
@@ -72,14 +76,20 @@ function SearchContent() {
 
   // Global search cache
   const { lastQuery, lastResults, lastFetchTime, setSearchResults } = useSearchStore();
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (queryParam) {
-      setSearchQuery(queryParam);
+      setSearchInput(queryParam);
+      fetchFromAPI(queryParam);
+    } else {
+      setSearchInput("");
+      fetchFromAPI("");
     }
   }, [queryParam]);
 
-  // Fetch from backend API when search query changes (debounced)
+  // Fetch from backend API
   const fetchFromAPI = useCallback(async (keyword: string) => {
     if (!keyword.trim()) {
       setLiveProducts([]);
@@ -88,7 +98,8 @@ function SearchContent() {
     }
 
     // Check frontend cache to prevent re-scraping on back navigation
-    if (keyword === lastQuery && lastResults.length > 0 && Date.now() - lastFetchTime < 15 * 60 * 1000) {
+    const { lastQuery, lastResults, lastFetchTime } = useSearchStore.getState();
+    if (lastQuery === keyword && lastResults.length > 0 && Date.now() - lastFetchTime < 30 * 60 * 1000) {
       console.log("[Search] Using frontend cache for:", keyword);
       setLiveProducts(lastResults);
       setDataSource("cache");
@@ -97,9 +108,14 @@ function SearchContent() {
 
     setIsLoading(true);
     try {
+      // Include auth token (if logged in) so backend can log search_history for admin stats.
+      const token = useAuthStore.getState().token;
       const res = await fetch(`${API_BASE}/search`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ keyword }),
       });
 
@@ -120,14 +136,6 @@ function SearchContent() {
       setIsLoading(false);
     }
   }, []);
-
-  // Debounce API calls
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchFromAPI(searchQuery);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [searchQuery, fetchFromAPI]);
 
   const toggleStore = (store: string) => {
     setSelectedStores(prev =>
@@ -170,7 +178,7 @@ function SearchContent() {
     }
 
     return filtered;
-  }, [searchQuery, selectedStores, minPrice, maxPrice, sort, liveProducts]);
+  }, [queryParam, selectedStores, minPrice, maxPrice, sort, liveProducts]);
 
   // Collect unique stores from base results for the filter sidebar so filters don't disappear
   const availableStores = useMemo(() => {
@@ -228,14 +236,31 @@ function SearchContent() {
         {/* Results Area */}
         <div style={{ flex: 1 }}>
           <div style={{ marginBottom: '24px' }}>
-            <input
-              type="text"
-              placeholder="Search products across all Pakistani stores..."
-              className="input-field"
-              style={{ width: '100%', marginBottom: '16px' }}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <div style={{ position: 'relative', width: '100%', marginBottom: '16px' }}>
+              <input
+                type="text"
+                placeholder="Search products across all Pakistani stores..."
+                className="input-field"
+                style={{ width: '100%', paddingRight: '48px' }}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchInput.trim()) {
+                    router.push(`/search?q=${encodeURIComponent(searchInput.trim())}`);
+                  }
+                }}
+              />
+              <button
+                style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+                onClick={() => {
+                  if (searchInput.trim()) {
+                    router.push(`/search?q=${encodeURIComponent(searchInput.trim())}`);
+                  }
+                }}
+              >
+                <Search size={20} />
+              </button>
+            </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <h2 style={{ fontSize: '24px' }}>
@@ -243,9 +268,9 @@ function SearchContent() {
                   {isLoading && <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginLeft: '12px' }}>Scraping stores...</span>}
                 </h2>
                 <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
-                  Found {results.length} items{searchQuery && ` for "${searchQuery}"`}
+                  Found {results.length} items{queryParam && ` for "${queryParam}"`}
                   {dataSource && dataSource !== "error" && (
-                    <span style={{ marginLeft: '8px', fontSize: '11px', padding: '2px 8px', borderRadius: '4px', background: dataSource === "live" ? 'var(--accent-success)' : 'var(--accent-primary)', color: '#fff' }}>
+                    <span className={`badge ${dataSource === "live" ? "badge-live" : "badge-cached"}`} style={{ marginLeft: '8px', verticalAlign: 'middle' }}>
                       {dataSource === "live" ? "LIVE" : "CACHED"}
                     </span>
                   )}
@@ -307,7 +332,7 @@ function SearchContent() {
             )}
 
             {results.map((item, idx) => (
-              <Link href={`/product/${item.id}`} key={`${item.store}-${item.id}-${idx}`} className="card" style={{ display: 'flex', flexDirection: viewMode === 'grid' ? 'column' : 'row', gap: '24px', textDecoration: 'none', color: 'inherit' }}>
+              <Link href={item.url ? `/product/${item.id}?url=${encodeURIComponent(item.url)}&store=${encodeURIComponent(item.store)}` : `/product/${item.id}`} key={`${item.store}-${item.id}-${idx}`} className="card" style={{ display: 'flex', flexDirection: viewMode === 'grid' ? 'column' : 'row', gap: '24px', textDecoration: 'none', color: 'inherit', position: 'relative' }}>
                 <div style={{ width: viewMode === 'grid' ? '100%' : '140px', height: viewMode === 'grid' ? '240px' : '140px', background: '#1a1a1a', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
                   <img
                     src={item.image}
@@ -319,6 +344,40 @@ function SearchContent() {
                   {item.badge && <span className="badge badge-best" style={{ position: 'absolute', top: '8px', left: '8px' }}>{item.badge}</span>}
                   {item.priceDrop && <span className="badge badge-hot" style={{ position: 'absolute', top: '8px', right: '8px' }}>{item.priceDrop}</span>}
                 </div>
+
+                <button
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!item.url) {
+                      showToast("Product URL missing; can't add to wishlist", "error");
+                      return;
+                    }
+                    const result = await toggleWishlist({ name: item.name, url: item.url, store: item.store, imageUrl: item.image });
+                    if (result === 'added') showToast("Added to wishlist", "success");
+                    else if (result === 'removed') showToast("Removed from wishlist", "error");
+                    else if (result === 'error') showToast("Failed to add to wishlist", "error");
+                    else if (result === 'auth_required') showToast("Please login to save to your wishlist", "info");
+                  }}
+                  style={{
+                    position: 'absolute', top: '12px', right: '12px', zIndex: 2,
+                    background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%',
+                    width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                  }}
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill={item.url && isInWishlist(item.url) ? '#FF4444' : 'none'}
+                    stroke={item.url && isInWishlist(item.url) ? '#FF4444' : '#fff'}
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                  </svg>
+                </button>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '8px' }}>
                     <h4 className="product-title" style={{ fontSize: '18px', marginBottom: '6px' }}>{item.name}</h4>
@@ -345,14 +404,14 @@ function SearchContent() {
               </div>
             )}
 
-            {!isLoading && dataSource !== "error" && results.length === 0 && searchQuery && (
+            {!isLoading && dataSource !== "error" && results.length === 0 && queryParam && (
               <div className="card" style={{ padding: '60px 40px', textAlign: 'center' }}>
                 <h3 style={{ fontSize: '24px', marginBottom: '12px' }}>No results found</h3>
                 <p style={{ color: 'var(--text-secondary)' }}>Try adjusting your filters or search query</p>
               </div>
             )}
 
-            {!isLoading && dataSource !== "error" && results.length === 0 && !searchQuery && (
+            {!isLoading && dataSource !== "error" && results.length === 0 && !queryParam && (
               <div className="card" style={{ padding: '60px 40px', textAlign: 'center' }}>
                 <h3 style={{ fontSize: '24px', marginBottom: '12px' }}>Search for a product</h3>
                 <p style={{ color: 'var(--text-secondary)' }}>Enter a keyword above to compare prices across Pakistani stores.</p>

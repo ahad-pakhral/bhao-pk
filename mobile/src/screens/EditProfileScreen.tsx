@@ -1,25 +1,36 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, TextInput } from 'react-native';
-import { ArrowLeft, User, Mail, Phone, MapPin } from 'lucide-react-native';
+import { ArrowLeft, User, Mail } from 'lucide-react-native';
 import { COLORS, SPACING, BORDER_RADIUS } from '../theme';
 import { Typography, Button } from '../components';
 import { useAuth } from '../context/AuthContext';
 import Toast from 'react-native-toast-message';
+import { apiClient } from '../services/api/client';
 
 export const EditProfileScreen = ({ navigation }: any) => {
-  const { user } = useAuth();
+  const { user, isAuthenticated, updateLocalUser } = useAuth();
   const [name, setName] = useState(user?.name || '');
-  const [email, setEmail] = useState(user?.email || '');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
-    Toast.show({
-      type: 'success',
-      text1: 'Profile updated',
-      text2: 'Your changes have been saved successfully',
-    });
-    navigation.goBack();
+  const handleSave = async () => {
+    if (!isAuthenticated || !user) {
+      Toast.show({ type: 'info', text1: 'Login required' });
+      navigation.navigate('Login');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const res = await apiClient.put<any>('/auth/profile', { name });
+      const updatedName = res?.user?.name ?? name;
+      updateLocalUser({ name: updatedName });
+      Toast.show({ type: 'success', text1: 'Profile updated' });
+      navigation.goBack();
+    } catch (e: any) {
+      Toast.show({ type: 'error', text1: 'Update failed', text2: e?.message || 'Please try again' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -37,11 +48,6 @@ export const EditProfileScreen = ({ navigation }: any) => {
           <View style={styles.avatar}>
             <User color={COLORS.background} size={48} />
           </View>
-          <TouchableOpacity>
-            <Typography color={COLORS.primary} style={styles.changePhotoText}>
-              Change Photo
-            </Typography>
-          </TouchableOpacity>
         </View>
 
         <View style={styles.formSection}>
@@ -69,48 +75,15 @@ export const EditProfileScreen = ({ navigation }: any) => {
               <Mail color={COLORS.textSecondary} size={20} />
               <TextInput
                 style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Enter your email"
+                value={user?.email || ''}
+                editable={false}
+                placeholder="Email"
                 placeholderTextColor={COLORS.textSecondary}
-                keyboardType="email-address"
-                autoCapitalize="none"
               />
             </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Typography variant="caption" color={COLORS.textSecondary} style={styles.label}>
-              PHONE NUMBER
+            <Typography variant="caption" color={COLORS.textSecondary} style={{ marginTop: SPACING.xs }}>
+              Email cannot be changed
             </Typography>
-            <View style={styles.inputWrapper}>
-              <Phone color={COLORS.textSecondary} size={20} />
-              <TextInput
-                style={styles.input}
-                value={phone}
-                onChangeText={setPhone}
-                placeholder="+92 300 1234567"
-                placeholderTextColor={COLORS.textSecondary}
-                keyboardType="phone-pad"
-              />
-            </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Typography variant="caption" color={COLORS.textSecondary} style={styles.label}>
-              ADDRESS
-            </Typography>
-            <View style={styles.inputWrapper}>
-              <MapPin color={COLORS.textSecondary} size={20} />
-              <TextInput
-                style={styles.input}
-                value={address}
-                onChangeText={setAddress}
-                placeholder="Enter your address"
-                placeholderTextColor={COLORS.textSecondary}
-                multiline
-              />
-            </View>
           </View>
         </View>
 
@@ -118,6 +91,8 @@ export const EditProfileScreen = ({ navigation }: any) => {
           title="SAVE CHANGES"
           onPress={handleSave}
           style={styles.saveButton}
+          loading={saving}
+          disabled={saving}
         />
       </ScrollView>
     </SafeAreaView>
@@ -155,9 +130,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.md,
-  },
-  changePhotoText: {
-    fontFamily: 'Archivo_600SemiBold',
   },
   formSection: {
     marginBottom: SPACING.xl,

@@ -8,6 +8,19 @@ import { supabase } from '../services/supabase.service';
 
 const router = Router();
 
+function normalizeStoreKey(raw: unknown): string | null {
+  if (!raw) return null;
+  const s = String(raw).trim().toLowerCase();
+  if (!s) return null;
+  // Accept both display names and canonical store keys.
+  if (s.includes('daraz')) return 'daraz';
+  if (s.includes('shophive')) return 'shophive';
+  if (s.includes('telemart')) return 'telemart';
+  if (s.includes('mega')) return 'mega';
+  if (s.includes('priceoye')) return 'priceoye';
+  return s;
+}
+
 // GET /api/search/trending — cached trending products (MUST be before /:id and /product)
 router.get('/trending', async (_req: Request, res: Response) => {
   try {
@@ -36,19 +49,57 @@ router.get('/product', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'url and store query params are required' });
     }
 
-    const cacheKey = `detail:${String(store)}:${String(url)}`;
-    const cached = await cacheGet(cacheKey);
-    if (cached) {
-      return res.json({ product: cached, source: 'cache' });
-    }
+  const urlStr = String(url);
+  const storeKey = normalizeStoreKey(store);
+  if (!storeKey) {
+    return res.status(400).json({ error: 'Invalid store query param' });
+  }
 
-    const detail = await scrapeProductDetail(String(url), String(store));
-    if (!detail) {
-      return res.status(404).json({ error: 'Failed to scrape product page' });
+  const cacheKey = `detail:${storeKey}:${urlStr}`;
+  const cached = await cacheGet(cacheKey);
+  if (cached) {
+    // Even when serving from cache, attempt a daily snapshot upsert so charts accumulate.
+    try {
+      const cachedPrice = (cached as any)?.price;
+      if (typeof cachedPrice === 'number' && cachedPrice > 0) {
+      const day = new Date().toISOString().slice(0, 10);
+      await db.recordPriceSnapshot({
+        productUrl: urlStr,
+        store: storeKey,
+        price: cachedPrice,
+        day,
+        scrapedAt: new Date().toISOString(),
+      });
+      }
+    } catch (e) {
+      console.warn('[Price History] Failed to record cached product snapshot:', (e as any)?.message || e);
     }
+    return res.json({ product: cached, source: 'cache' });
+  }
 
-    await cacheSet(cacheKey, detail, 3600); // 1 hour TTL
-    res.json({ product: detail, source: 'live' });
+  const detail = await scrapeProductDetail(urlStr, storeKey);
+  if (!detail) {
+    return res.status(404).json({ error: 'Failed to scrape product page' });
+  }
+
+  // Best-effort daily snapshot recording for product detail scrapes.
+  try {
+    if (typeof detail.price === 'number' && detail.price > 0) {
+      const day = new Date().toISOString().slice(0, 10);
+      await db.recordPriceSnapshot({
+        productUrl: urlStr,
+        store: storeKey,
+        price: detail.price,
+        day,
+        scrapedAt: new Date().toISOString(),
+      });
+    }
+  } catch (e) {
+    console.warn('[Price History] Failed to record product snapshot:', (e as any)?.message || e);
+  }
+
+  await cacheSet(cacheKey, detail, 3600); // 1 hour TTL
+  res.json({ product: detail, source: 'live' });
   } catch (error) {
     console.error('Product detail error:', error);
     res.status(500).json({ error: 'Failed to fetch product details' });
@@ -64,9 +115,14 @@ router.get('/matches', async (req: Request, res: Response) => {
     if (!url || !store) {
       return res.status(400).json({ error: 'url and store query params are required' });
     }
+    const urlStr = String(url);
+    const storeKey = normalizeStoreKey(store);
+    if (!storeKey) {
+      return res.status(400).json({ error: 'Invalid store query param' });
+    }
 
     // Check cache first
-    const cacheKey = `matches:${String(url)}`;
+    const cacheKey = `matches:${urlStr}`;
     const cached = await cacheGet(cacheKey);
     if (cached) {
       return res.json(cached);
@@ -78,7 +134,7 @@ router.get('/matches', async (req: Request, res: Response) => {
     let sourceImage = '';
 
     if (!sourceName) {
-      const sourceDetail = await scrapeProductDetail(String(url), String(store));
+      const sourceDetail = await scrapeProductDetail(urlStr, storeKey);
       if (!sourceDetail) {
         return res.status(404).json({ error: 'Could not scrape source product' });
       }
@@ -101,7 +157,7 @@ router.get('/matches', async (req: Request, res: Response) => {
     if (searchQuery.length < 3) {
       return res.json({
         matches: [],
-        sourceProduct: { name: sourceName, store: String(store), price: sourcePrice, imageUrl: sourceImage },
+        sourceProduct: { name: sourceName, store: storeKey, price: sourcePrice, imageUrl: sourceImage },
         count: 0,
       });
     }
@@ -111,7 +167,7 @@ router.get('/matches', async (req: Request, res: Response) => {
 
     // Apply fuzzy matching (excludes source product URL + accessories)
     const matches = findMatchingProducts(
-      { name: sourceName, url: String(url) },
+      { name: sourceName, url: urlStr },
       allResults
     );
 
@@ -119,7 +175,7 @@ router.get('/matches', async (req: Request, res: Response) => {
       matches,
       sourceProduct: {
         name: sourceName,
-        store: String(store),
+        store: storeKey,
         price: sourcePrice,
         imageUrl: sourceImage,
       },
@@ -178,6 +234,28 @@ router.post('/', async (req: Request, res: Response) => {
     for (const product of ranked) {
       const idx = ranked.indexOf(product);
       await cacheSet(`product:scraped-${idx}`, product, 3600);
+    }
+
+    // Best-effort daily snapshot recording (must not fail the request).
+    try {
+      const day = new Date().toISOString().slice(0, 10);
+      const scrapedAt = new Date().toISOString();
+      // Cap to avoid huge writes if scrapers return massive result sets.
+      const toRecord = ranked
+        .filter(p => p?.url && p?.store && typeof p?.price === 'number')
+        .slice(0, 50)
+        .map(p => ({
+          productUrl: p.url,
+          store: p.store,
+          price: p.price,
+          day,
+          scrapedAt,
+        }));
+      if (toRecord.length > 0) {
+        await db.recordPriceSnapshots(toRecord);
+      }
+    } catch (e) {
+      console.warn('[Price History] Failed to record search snapshots:', (e as any)?.message || e);
     }
 
     const authHeader = req.headers.authorization;

@@ -4,9 +4,8 @@ import { ArrowLeft, SlidersHorizontal, ChevronDown, X, Search as SearchIcon } fr
 import { COLORS, SPACING } from '../theme';
 import { Typography, ProductCard } from '../components';
 import { useSearch } from '../hooks/useSearch';
-import type { ProductCardData } from '../types/models';
-
-const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
+import type { ProductCardData, ProductWithListings } from '../types/models';
+import { apiClient } from '../services/api/client';
 
 /** Convert backend scraped product into ProductCardData format */
 function normalizeProduct(p: any, idx: number): ProductCardData {
@@ -37,7 +36,7 @@ export const SearchScreen = ({ route, navigation }: any) => {
   const [isLoading, setIsLoading] = useState(false);
 
   // Enforce real products from API
-  const productsSource = liveProducts;
+  const productsSource = liveProducts as unknown as ProductWithListings[];
 
   const {
     filteredProducts,
@@ -53,13 +52,7 @@ export const SearchScreen = ({ route, navigation }: any) => {
     if (!keyword.trim()) return;
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/search`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keyword }),
-      });
-      if (!res.ok) throw new Error(`API error: ${res.status}`);
-      const data = await res.json();
+      const data = await apiClient.post<any>('/search', { keyword });
       const normalized = (data.results || []).map(normalizeProduct);
       setLiveProducts(normalized);
     } catch (err) {
@@ -197,12 +190,21 @@ export const SearchScreen = ({ route, navigation }: any) => {
             {filteredProducts.map((product) => (
               <ProductCard
                 key={product.id}
-                {...product}
+                {...(product as any)}
+                price={(product as any).price || ""}
                 onPress={() => navigation.navigate('ProductDetail', { product })}
               />
             ))}
 
-            {filteredProducts.length === 0 && (
+            {filteredProducts.length === 0 && isLoading && (
+              <View style={styles.emptyState}>
+                <ActivityIndicator size="large" color={COLORS.primary} />
+                <Typography color={COLORS.textSecondary} style={styles.emptyText}>
+                  Searching for products...
+                </Typography>
+              </View>
+            )}
+            {filteredProducts.length === 0 && !isLoading && (
               <View style={styles.emptyState}>
                 <Typography variant="h3" style={styles.emptyTitle}>No results found</Typography>
                 <Typography color={COLORS.textSecondary} style={styles.emptyText}>

@@ -68,15 +68,65 @@ class PriceOyeScraper(BaseScraper):
         html = self.fetch(url)
         soup = BeautifulSoup(html, 'lxml')
 
-        price = 0
-        in_stock = True
+        result = {
+            'price': 0,
+            'originalPrice': None,
+            'inStock': True,
+            'name': '',
+            'imageUrl': '',
+            'rating': 0,
+            'reviewsCount': 0,
+            'description': '',
+            'specs': [],
+            'reviews': [],
+        }
 
+        # Name
+        title_el = soup.select_one('.product-title, .p-title, h1')
+        if title_el:
+            result['name'] = title_el.get_text(strip=True)
+
+        # Image
+        img_el = soup.select_one('.product-image img, .main-product-img img, [class*="product-image"] img')
+        if img_el:
+            result['imageUrl'] = img_el.get('src') or img_el.get('data-src') or ''
+
+        # Price
         price_el = soup.select_one('.product-price, .price, .p-price')
         if price_el:
-            price = parse_price(price_el.get_text(strip=True))
+            result['price'] = parse_price(price_el.get_text(strip=True))
 
+        # Original price
+        orig_el = soup.select_one('.price-old, .original-price, .price-regular')
+        if orig_el:
+            orig = parse_price(orig_el.get_text(strip=True))
+            if orig > result['price']:
+                result['originalPrice'] = orig
+
+        # Stock
         oos_el = soup.select_one('.out-of-stock, .sold-out')
         if oos_el:
-            in_stock = False
+            result['inStock'] = False
 
-        return {'price': price, 'inStock': in_stock}
+        # Rating
+        rating_el = soup.select_one('.rating, .stars')
+        if rating_el:
+            nums = re.findall(r'([\d.]+)', rating_el.get_text(strip=True))
+            if nums:
+                result['rating'] = float(nums[0])
+
+        # Description
+        desc_el = soup.select_one('.product-description, .description, [class*="product-desc"]')
+        if desc_el:
+            result['description'] = desc_el.get_text(strip=True)[:500]
+
+        # Specs (PriceOye has specs for phones/electronics)
+        for row in soup.select('.specs-table table tr, .specification table tr, [class*="spec-row"], .product-specs tr'):
+            cells = row.select('td, th')
+            if len(cells) >= 2:
+                key = cells[0].get_text(strip=True).rstrip(':')
+                val = cells[1].get_text(strip=True)
+                if key and val:
+                    result['specs'].append({'key': key, 'value': val})
+
+        return result

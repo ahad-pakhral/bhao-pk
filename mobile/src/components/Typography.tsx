@@ -53,40 +53,40 @@ export const Typography: React.FC<TypographyProps> = ({
 const styles = StyleSheet.create({
   h1: {
     fontFamily: FONTS.bold,
-    fontSize: 32,
-    lineHeight: 40,
+    fontSize: 26,
+    lineHeight: 34,
   },
   h2: {
     fontFamily: FONTS.bold,
-    fontSize: 24,
-    lineHeight: 32,
-  },
-  h3: {
-    fontFamily: FONTS.medium,
     fontSize: 20,
     lineHeight: 28,
   },
-  body: {
-    fontFamily: FONTS.regular,
-    fontSize: 16,
+  h3: {
+    fontFamily: FONTS.medium,
+    fontSize: 17,
     lineHeight: 24,
   },
-  bodySmall: {
+  body: {
     fontFamily: FONTS.regular,
     fontSize: 14,
     lineHeight: 20,
   },
+  bodySmall: {
+    fontFamily: FONTS.regular,
+    fontSize: 13,
+    lineHeight: 18,
+  },
   caption: {
     fontFamily: FONTS.regular,
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 11,
+    lineHeight: 15,
   },
   mono: {
     fontFamily: FONTS.mono,
-    fontSize: 14,
+    fontSize: 12,
   },
   monoBold: {
     fontFamily: FONTS.monoBold,
-    fontSize: 14,
+    fontSize: 12,
   },
 });

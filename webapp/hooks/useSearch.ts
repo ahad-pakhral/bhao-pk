@@ -79,7 +79,17 @@ export const useSearch = (allProducts: ProductWithListings[]) => {
         break;
       case 'relevance':
       default:
-        filtered = rankByRelevance(filtered);
+        // Re-map to satisfy the strictly typed `rankByRelevance` generic
+        const mappedForRanking = filtered.map(p => ({
+          ...p,
+          store: p.store || "",
+          price: p.price || "0",
+          rating: p.rating || 0,
+          inStock: (p as any).inStock ?? true,
+          originalPrice: (p as any).originalPrice || 0,
+          reviewsCount: p.reviewCount || 0
+        }));
+        filtered = rankByRelevance(mappedForRanking, query) as unknown as ProductWithListings[];
         break;
     }
 

@@ -9,6 +9,335 @@
 
 ## Changelog
 
+### [2026-04-28 19:00] — Smart Alerts system detailed breakdown added to defense prep (Docs)
+
+**What changed:**
+- `docs/DEFENSE_PREP.md` — Added Appendix B with full technical breakdown of the Smart Alerts system: two-layer architecture diagram (frontend smart alerts vs backend alert checker), all 3 data models (SmartAlert, StoreSnapshot, AlternativeProduct), alert creation flow (5 steps from resolve target → cross-store snapshots → best price → alternatives → assembly), trigger logic for both alert types, backend cron job flow, enriched alerts API with parallel scraping, backend alert creation API, feature matrix showing current state vs vision, end-to-end worked example (6 steps from alert creation to email delivery to UI display), and table mapping panelist concerns to specific code solutions.
+
+**Why:**
+- User needs detailed technical answers for defense panel questions about alert granularity and cross-store coverage.
+
+**Technical details:**
+- Documented the `buildStoreSnapshots()` function which does exact name matching across all search results to find the same product on different stores.
+- Explained `findAlternatives()` which filters by same category + different product name + cheaper/higher-rated to surface better deals the user didn't consider.
+- Mapped the `shouldAlertTrigger()` decision function showing it compares `bestCurrentPrice` (lowest across all stores) not a single URL.
+- Detailed the backend cron job (node-cron every 30 min) and its resilience pattern (don't mark notified if email fails).
+- Documented the `/api/alerts/enriched` endpoint's parallel scraping via Promise.allSettled with Redis caching.
+
+**Side effects:**
+- None
+
+**Gotchas / Lessons learned:**
+- None
+
+**Testing:**
+- Not tested (documentation only)
+
+**Related skills updated:**
+- None yet
+
+### [2026-04-28 18:30] — Ranking algorithm detailed breakdown added to defense prep (Docs)
+
+**What changed:**
+- `docs/DEFENSE_PREP.md` — Added Appendix A with full technical breakdown of the ranking algorithm: ASCII flowchart of the 3-phase pipeline, pre-processing (IQR outlier filtering, global stats, query analysis), hard gates (relevance cutoff, generic phrase elimination), all 6 composite signals with formulas and rationale, 3 post-scoring filters (stock penalty, generation mismatch, accessory detection), complete scoring formula, worked example table with 6 products, and the full 60+ accessory keyword list.
+
+**Why:**
+- User needs to confidently explain the ranking algorithm in detail during defense panel questioning.
+
+**Technical details:**
+- Documented the Bayesian average formula with confidence threshold C=25 and worked example showing how it handles small-sample bias.
+- Explained log normalization for both price and popularity signals and why linear scoring would be too extreme.
+- Detailed the two-level accessory detection: direct keyword match + prefix accessory detection (checks text after last matched query token for accessory keywords vs specs-only suffixes).
+- Included the IQR method for price range normalization and how it handles outliers.
+
+**Side effects:**
+- None
+
+**Gotchas / Lessons learned:**
+- None
+
+**Testing:**
+- Not tested (documentation only)
+
+**Related skills updated:**
+- None yet
+
+### [2026-04-28 18:00] — Defense preparation document (Docs)
+
+**What changed:**
+- `docs/DEFENSE_PREP.md` — Created comprehensive defense preparation document covering 4 tough panel questions: ranking/retrieval strategy, product storage legality, alert abuse prevention, and cross-store alert coverage.
+
+**Why:**
+- User got stuck in a previous defense panel on these questions and needs prepared answers grounded in the actual codebase.
+
+**Technical details:**
+- Analyzed `ranking.service.ts` (6-signal composite scoring), `alert-checker.service.ts` (per-URL cron-based checking), `smartAlerts.ts` (cross-store tracking architecture), `cache.service.ts` (Redis-only product storage with TTL), `product-matching.service.ts` (fuzzy cross-store matching), and `schema.prisma` (no product tables, only user data + pointers).
+- Framed the ranking system as a two-stage retrieval architecture (broad recall via scrapers, precision ranking via composite scoring).
+- Documented the legal position: no product data in PostgreSQL, only Redis cache with 1-4hr TTL, price snapshots are factual market data.
+- Identified the gap between frontend smart alerts (cross-store) and backend alert checker (per-URL) and positioned it as a planned iteration.
+
+**Side effects:**
+- None
+
+**Gotchas / Lessons learned:**
+- None
+
+**Testing:**
+- Not tested (documentation only)
+
+**Related skills updated:**
+- None yet
+
+### [2026-04-23 12:30] — Mobile bugfixes: detail API unwrap, alert price zero, chart touch, wishlist, images (Fix)
+
+**What changed:**
+- `mobile/src/screens/ProductDetailScreen.tsx` — **Root cause fix**: Changed `setDetail(data)` to `setDetail(data?.product || data)` because the backend `/search/product` endpoint returns `{ product: {...}, source }` but the code was storing the wrapper, causing `detail?.name`, `detail?.price`, `detail?.imageUrl` to all be undefined. This cascading failure caused: empty comparison section, wrong/zero prices for alerts, missing images, missing specs/reviews. Also added proper auth guard + error toast to wishlist button, added `Linking.canOpenURL` check before `Linking.openURL` for "GO TO STORE" button, and added price-zero guard for alert creation with user-facing toast.
+- `mobile/src/screens/AlertsScreen.tsx` — Fixed "TARGET REACHED" showing on every alert by adding `targetNum > 0` and `currentPrice > 0` guards to the `targetReached` calculation. Previously any alert with `targetPrice: 0` (caused by the detail unwrap bug) or any scraped product with `price: 0` would incorrectly show as reached.
+- `mobile/src/components/PriceHistoryChart.tsx` — Replaced `TouchableOpacity` inside SVG elements (which doesn't work on Android) with a single `Pressable` wrapping the entire `<Svg>` element. Touch coordinates are calculated via `hitTest()` function to determine which bar/point was tapped. Fixed TypeScript errors: removed unused `G` import, fixed destructuring of chart dimensions object.
+- `mobile/src/components/ProductCard.tsx` — Removed invalid `cacheKey` prop from `Image` source (not a valid RN Image prop, caused silent render failures). Changed `resizeMode` from `"cover"` to `"contain"`. Replaced emoji placeholder with `Package` icon from lucide-react-native.
+- `mobile/android/app/src/main/AndroidManifest.xml` — Added `POST_NOTIFICATIONS` permission for Android 13+. Added `http` scheme to queries intent so `Linking.openURL` can open HTTP store URLs in browser.
+
+**Why:**
+- User reported: wishlist button non-functional, product card not matching web, price history graph disappeared, comparison section gone, "GO TO STORE" not opening browser, most images not loading, alerts showing "target reached" with price zero, notification command not working.
+
+**Technical details:**
+- The detail API unwrap bug (`setDetail(data)` vs `setDetail(data?.product)`) was the single root cause of 5+ symptoms. The backend search routes return `{ product: {...}, source: "cache" }` but the mobile code stored the entire response object.
+- `TouchableOpacity` from react-native cannot wrap SVG child elements (`Rect`, `Circle`) - it doesn't know how to handle SVG touch targets. The fix uses `Pressable` at the RN layer wrapping the whole `<Svg>`, with coordinate math to determine which data point was tapped.
+- `cacheKey` is not a valid prop on RN's `Image` component source object - it's from a custom library or web-only API. Using it silently fails or causes render issues.
+- The alerts "TARGET REACHED" with price zero was caused by: (1) detail unwrap bug making `priceValue = 0`, (2) `everyTargetPrice = 0 * 0.99 = 0`, (3) `currentPrice <= 0` being true for any scraped product with price 0.
+
+**Side effects:**
+- Product detail page now correctly shows name, price, image, rating, specs, reviews from the API.
+- Alerts screen no longer shows false "TARGET REACHED" for alerts with zero target or zero current price.
+- Price history chart is now interactive on Android (tap to see data points).
+- Product cards render images correctly without the `cacheKey` prop.
+- HTTP URLs can now be opened in the browser via `Linking.openURL`.
+
+**Gotchas / Lessons learned:**
+- Always unwrap API response objects (`data.product`) instead of storing the raw response. This is a common pattern mismatch between what the backend returns and what the frontend expects.
+- `TouchableOpacity` does NOT work inside SVG in react-native-svg. Use `Pressable` wrapping the entire `<Svg>` with coordinate-based hit testing.
+- `cacheKey` is NOT a valid React Native `Image` source property. Check the RN docs for valid props.
+
+**Testing:**
+- Verified on Android device via Expo dev client
+- Chart renders with both line and bar modes, taps work correctly
+- Alert creation no longer allows price zero (shows user-friendly toast)
+- Alerts screen no longer shows false "TARGET REACHED"
+
+**Related skills updated:**
+- None yet
+
+### [2026-04-22 20:00] — Mobile app polish: image fix, SVG chart, settings, product details (UI)
+
+**What changed:**
+- `mobile/src/screens/ProductDetailScreen.tsx` — Fixed product image loading (removed invalid `cacheKey` prop, added `onError` fallback with Package icon placeholder, switched from `resizeMode="cover"` to `"contain"` for better product image display). Added discount badge (-X%), original price with strikethrough, "You Save" calculation, "In Stock" badge with check icon, star rating display, Product Details grid section (Store, Price, Original Price, You Save, Rating, Availability), review dates, and "View full details on store" section. Removed share button (Share2 import + icon button).
+- `mobile/src/components/PriceHistoryChart.tsx` — Replaced basic View-based bar chart with SVG chart using `react-native-svg`. Added smooth line chart mode for <=8 data points (with gradient area fill, gradient line stroke, interactive data point circles, crosshair on selection) and bar chart mode for >8 data points (with gradient-filled bars, grid lines, selection indicator). Added single-point handling for charts with only 1 data point. Tooltip moved below chart as a card instead of floating above bars.
+- `mobile/src/screens/SettingsScreen.tsx` — Removed dark/light mode toggle (Moon import + state + setting item). Made push notifications toggle persist to AsyncStorage. Added logout button at bottom of settings. Made "About BHAO.PK" show an Alert dialog with app info instead of trying to open a web URL. Added user-friendly confirmation for "Delete Account". Removed unused `ArrowLeft` import.
+
+**Why:**
+- User reported product page showing gray box for images (invalid RN Image prop `cacheKey`).
+- Price history chart looked basic compared to webapp — needed SVG-based chart with gradients.
+- Settings page had non-functional dark mode toggle and notification preference wasn't persisted.
+- Product page was missing several details present in the webapp version (discount info, product details grid, in-stock status, etc.).
+- Share button on product page was non-functional placeholder.
+
+**Technical details:**
+- SVG chart uses `react-native-svg` (already installed) with `Path`, `Rect`, `Circle`, `Line`, `Defs`, `LinearGradient`, `Stop`, and `G` elements.
+- Chart auto-switches between line mode (<=8 points) and bar mode (>8 points) for optimal readability.
+- Image error handling uses `onError` callback to set `imageError` state, which swaps to a Package icon placeholder.
+- Notification preference stored under AsyncStorage key `'notifications_enabled'`.
+
+**Side effects:**
+- PriceHistoryChart now renders SVG instead of View-based bars — renders correctly on both iOS and Android via react-native-svg.
+- Settings "About" no longer tries to open web URLs that may not exist.
+
+**Gotchas / Lessons learned:**
+- React Native's `Image` component does NOT support `cacheKey` prop (that's a web-only or custom library prop). Using it silently fails and can cause rendering issues.
+- `resizeMode="contain"` with padding on the Image component is better for product images than `"cover"` which crops them.
+
+**Testing:**
+- Verified on Android device via Expo dev client
+- SVG chart renders correctly with both line and bar modes
+- Settings toggles persist across app restarts
+
+**Related skills updated:**
+- None yet
+
+### [2026-04-21 20:30] — Phase 3 Execute: Email notifications + Admin stats/dashboard (Feature)
+
+**What changed:**
+- `backend/src/services/email.service.ts` — Added `sendPriceDropEmail()` using Resend (requires `RESEND_API_KEY` + `EMAIL_FROM`; builds deep-link back to the Bhao product page).
+- `backend/supabase-migration.sql` — Added duplicate-prevention columns on `price_alerts`: `notified_at`, `last_notified_price` (re-runnable `ADD COLUMN IF NOT EXISTS`).
+- `backend/src/services/db.service.ts` — Expanded `updateAlert()` to update notification-tracking fields; added `getLatestPriceHistoryPoints()` and `getAdminStats()`.
+- `backend/src/services/alert-checker.service.ts` — Alert checker now emails on trigger (price <= target), includes best-effort old price from `price_history`, and only marks the alert notified after a successful send.
+- `backend/src/services/alert-checker.service.ts` — Exported `runAlertCheckOnce()` helper for manual Phase 3 verification runs.
+- `backend/src/middleware/admin.middleware.ts` — New `requireAdmin` middleware (role check from `users` table).
+- `backend/src/routes/admin.routes.ts` — New `GET /api/admin/stats` endpoint (protected by `requireAuth` + `requireAdmin`).
+- `backend/src/server.ts` — Mounted `/api/admin`.
+- `webapp/app/admin/login/page.tsx` — Removed dummy admin login; now uses real Supabase login + role=ADMIN gate.
+- `webapp/app/admin/dashboard/page.tsx` — Removed hardcoded stats; now fetches live stats from `/api/admin/stats` and blocks non-admin users.
+
+**Why:**
+- Phase 3 requirements: real email notifications + duplicate prevention + real admin dashboard data (no dummy UI).
+
+**Testing:**
+- `npm -C backend run build`
+- `npm -C webapp run build`
+
+### [2026-04-21 20:55] — Admin dashboard: remove dummy activity/health + make controls functional (Fix)
+
+**What changed:**
+- `backend/src/routes/admin.routes.ts` — Added real admin endpoints: `GET /api/admin/activity`, `GET /api/admin/health`, `POST /api/admin/run-alert-check` (all admin-protected).
+- `backend/src/services/db.service.ts` — Added `getAdminActivity()` to build a unified activity feed from `users`, `search_history`, `wishlist_items`, and `price_alerts`.
+- `backend/src/services/cache.service.ts` — Exported `cacheStatus()` so admin health reflects real Redis state.
+- `webapp/app/admin/dashboard/page.tsx` — Removed dummy logs + dummy health bars; dashboard now fetches real activity/health and the buttons work (`Run Alert Check`, `Refresh`, `Load More`, `Open Health JSON`).
+
+**Why:**
+- User request: no placeholders or dummy UI in admin. Everything shown must come from real backend data and every control must do something real.
+
+### [2026-04-21 21:00] — Admin stats “today” uses local midnight (Fix)
+
+**What changed:**
+- `backend/src/services/db.service.ts` — `getAdminStats()` now calculates “Searches Today” from the server’s local midnight instead of UTC midnight.
+
+**Why:**
+- Admin dashboard showed `Searches Today: 0` even after searches because the UTC day boundary can be off by several hours vs Asia/Karachi local time.
+
+### [2026-04-21 21:05] — Admin dashboard realtime polling (Feature)
+
+**What changed:**
+- `webapp/app/admin/dashboard/page.tsx` — Admin dashboard now polls every 5 seconds (stats + activity + health) while the tab is visible. Added pause/resume control.
+
+**Why:**
+- User request: admin should update in realtime without manual refresh.
+
+### [2026-04-21 21:21] — Fix admin “Searches Today” + health JSON auth (Fix)
+
+**What changed:**
+- `webapp/app/search/page.tsx` — Search requests now include Bearer token when logged in, allowing backend to write `search_history` rows.
+- `webapp/app/page.tsx` — Recommendation searches now include Bearer token as well (so they count in `search_history`).
+- `webapp/app/admin/health/page.tsx` — New admin-only health page that fetches `/api/admin/health` with Authorization and displays JSON.
+- `webapp/app/admin/dashboard/page.tsx` — “Open Health JSON” now opens `/admin/health` (works) instead of hitting the API directly (which cannot include auth headers in a new tab).
+
+**Why:**
+- Admin stats were correct but `search_history` stayed empty because the webapp search POST didn’t include Authorization.
+- Opening the API health endpoint in a new tab always failed with `Unauthorized: Missing token` because browsers can’t attach Authorization headers to a plain link.
+
+### [2026-04-21 21:33] — GSD: Plan Phase 4 (Mobile Integration) (Planning)
+
+**What changed:**
+- `.planning/phases/04-mobile-integration/04-01-PLAN.md` — Trending + backend-persisted recently viewed plan (adds `/api/recently-viewed`).
+- `.planning/phases/04-mobile-integration/04-02-PLAN.md` — Mobile wishlist sync plan (align to `/api/wishlist` contract).
+- `.planning/phases/04-mobile-integration/04-03-PLAN.md` — Mobile alerts integration plan (align to `/api/alerts` + `/api/alerts/enriched`).
+- `.planning/ROADMAP.md` — Phase 4 moved from TBD to planned waves.
+- `.planning/STATE.md` — Phase 4 marked planned/ready to execute.
+
+**Why:**
+- Next milestone: remove remaining mobile dummy data and wire mobile screens to the already-working backend APIs.
+
+### [2026-04-21 18:49] — Fix product deep-link store casing (Fix)
+
+**What changed:**
+- `backend/src/routes/search.routes.ts` — Normalized `store` query param (`Daraz` -> `daraz`, etc.) for `GET /api/search/product` and `GET /api/search/matches` so product-detail scrapes don't fail when the UI passes display-cased store names.
+- `webapp/app/product/[id]/page.tsx` — Normalized store keys before calling `/api/search/product`, `/api/search/matches`, and `/api/history` to avoid brittle behavior when cached products use display-cased store labels.
+- `webapp/app/alerts/page.tsx` — Alert cards now deep-link with canonical store keys in the URL (`store=daraz`) while still displaying human-friendly labels.
+
+**Why:**
+- We had real scraper failures like `Product detail error (Daraz)` (store casing mismatch). This surfaced as "Product Not Found" especially when opening product pages in a new tab or via alerts deep-links.
+
+### [2026-04-21 18:38] — GSD: Move to Phase 3 (Notifications & Admin) and create plans (Planning)
+
+**What changed:**
+- `.planning/phases/03-notifications-admin/03-01-PLAN.md` — Email provider + alert checker email integration plan.
+- `.planning/phases/03-notifications-admin/03-02-PLAN.md` — Duplicate-prevention tracking plan (`notified_at`, `last_notified_price`).
+- `.planning/phases/03-notifications-admin/03-03-PLAN.md` — Admin auth + `GET /api/admin/stats` backend plan.
+- `.planning/phases/03-notifications-admin/03-04-PLAN.md` — Admin dashboard UI wiring plan.
+- `.planning/ROADMAP.md` — Phase 3 marked as planned (4 plans / 3 waves).
+- `.planning/STATE.md` — Current position updated to Phase 3 planned/ready to execute.
+
+**Why:**
+- Phase 2 is verified; next milestone work is notifications + real admin dashboard.
+
+### [2026-04-21 18:30] — Fix price history store filter casing (Fix)
+
+**What changed:**
+- `backend/src/services/db.service.ts` — `getPriceHistory()` now filters `store` case-insensitively (`ilike`) so `daraz` matches rows stored as `Daraz` (or vice versa).
+
+**Why:**
+- `/api/history?store=daraz` could return zero points if snapshots were saved with a different store casing.
+
+### [2026-04-21 17:22] — Phase 2 Execute: Price History snapshots + API + real charts (Feature)
+
+**What changed:**
+- `backend/supabase-migration.sql` — Added `price_history` table (daily snapshots) with `UNIQUE(product_url, store, day)`.
+- `backend/src/services/db.service.ts` — Added price history helpers: `recordPriceSnapshot`, `recordPriceSnapshots`, `getPriceHistory`.
+- `backend/src/routes/search.routes.ts` — Best-effort snapshot recording for `POST /api/search` (batch upsert, capped) and `GET /api/search/product` (cache-hit + live).
+- `backend/src/routes/history.routes.ts` — Added `GET /api/history?url=...&store=...` returning ordered chart points.
+- `backend/src/server.ts` — Mounted `historyRoutes` at `/api/history`.
+- `webapp/app/product/[id]/page.tsx` — Replaced placeholder chart data with real fetch from `/api/history`.
+- `mobile/src/screens/ProductDetailScreen.tsx` — Replaced mock 30-day chart with real fetch from `/api/history` via `apiClient`.
+- `mobile/src/screens/HomeScreen.tsx` + `mobile/src/services/api/auth.service.ts` — Type fixes to keep mobile compiling (wishlist disabled for dummy products without URLs; auth fallback user matches type).
+- `.planning/*` — Marked Phase 2 plans executed and requirements complete; added 02-01/02-02/02-03 summaries.
+
+**Why:**
+- Phase 2 requirement: real price history charts (web + mobile) backed by persisted daily snapshots, not mock data.
+
+**Testing:**
+- `npm -C backend run build`
+- `npm -C webapp run build`
+- `cd mobile && npx tsc --noEmit`
+
+### [2026-04-21 17:08] — GSD: Plan Phase 2 (Price History) (Planning)
+
+**What changed:**
+- `.planning/phases/02-price-history/02-01-PLAN.md` — Snapshot persistence plan (Supabase `price_history` + recording on scrape).
+- `.planning/phases/02-price-history/02-02-PLAN.md` — Backend API plan for `GET /api/history`.
+- `.planning/phases/02-price-history/02-03-PLAN.md` — Web + mobile UI plan to render real price history charts.
+- `.planning/ROADMAP.md` — Phase 2 marked as planned (3 plans / 3 waves).
+- `.planning/STATE.md` — Current focus moved to Phase 2 and progress updated.
+
+**Why:**
+- Phase 2 requires a clear execution plan before implementing real price history storage and chart rendering across web and mobile.
+
+### [2026-04-21 16:56] — Enable graphify (gsd) for Codex without breaking Claude (Chore)
+
+**What changed:**
+- `AGENTS.md` — Installed the graphify section for Codex (kept existing code-review-graph rules intact).
+- `.codex/hooks.json` — Registered a lightweight PreToolUse hook so Codex is reminded to consult `graphify-out/` before raw file searching.
+
+**Why:**
+- You already had it working for Claude; this makes the same graph context available to Codex as well.
+
+### [2026-04-21 16:36] — Fix cross-store matching: pass product name to avoid re-scraping (Fix)
+
+**What changed:**
+- `backend/src/routes/search.routes.ts` — `/matches` endpoint now accepts optional `name` query param. If provided (from frontend), skips `scrapeProductDetail` call entirely and uses the name directly to build search query and fuzzy matching source. Replaced all remaining `sourceDetail` references with `sourceName`/`sourcePrice`/`sourceImage` variables.
+- `backend/src/services/product-matching.service.ts` — Added post-filter after fuse.js matching: extracts meaningful words from source name (length >= 3, excluding filler words like "official", "warranty", "gb") and requires at least one to appear in each match. This prevents "Samsung Galaxy S24 Ultra" from matching "Samsung Galaxy Watch Ultra" or "Samsung Galaxy Tab S11 Ultra".
+- `webapp/app/product/[id]/page.tsx` — Matches fetch now passes `&name=${encodeURIComponent(scrapedProduct.name)}` to `/matches` endpoint. Added "mega" and "priceoye" to `inferStoreFromUrl()` so products from those stores also trigger cross-store matching.
+
+**Why:**
+- `scrapeProductDetail` fails for Daraz/Telemart/Shophive due to urllib3 SSL warnings (LibreSSL vs OpenSSL incompatibility). The `/matches` endpoint was returning 404 before even attempting matching, so the "Compare Prices" section never appeared on product pages.
+
+**Technical details:**
+- The root cause: Python urllib3 v2 only supports OpenSSL 1.1.1+ but macOS ships with LibreSSL 2.8.3. This causes the scraper to exit non-zero when running in `--mode product`. Search mode works fine because it uses a different code path.
+- Word overlap filter uses a filler word set: `the, and, for, with, new, buy, best, official, warranty, free, delivery, price, gb, tb, ram, storage`. Remaining source words (>= 3 chars) must appear in match name.
+- fuse.js threshold 0.3 is kept as-is; the word overlap filter handles false positives at the semantic level.
+
+**Side effects:**
+- Any existing cached matches results (TTL 1hr) will be stale and use old matching behavior. No code change needed — cache expires naturally.
+- Products from Mega/Priceoye stores now participate in matching when their URLs are opened directly (not from search, since search results already have `store` field set).
+
+**Gotchas / Lessons learned:**
+- The product page works without matching because `getProductById` returns cached search results — but `/matches` fails silently (frontend `.catch(() => {})`), making it look like the feature simply wasn't implemented.
+- The "Searching other stores..." loading indicator also relies on this endpoint working, so users never saw it either.
+
+**Testing:**
+- Verified via `curl "http://localhost:3001/api/search/matches?url=https%3A%2F%2Ftest.com&store=daraz&name=Samsung%20Galaxy%20S24%20Ultra"` — returned 11 matches before word filter, needs backend restart to test filtered results.
+- TypeScript compilation passes (`tsc --noEmit` clean).
+
+**Related skills updated:**
+- None yet
+
 ### [2026-04-21 16:06] — Rich alert cards with live product data enrichment (Feature)
 
 **What changed:**
@@ -986,3 +1315,92 @@ Three new mechanisms added:
 
 **Related skills updated:**
 - N/A (initial implementation)
+
+## 2026-04-21 (Phase 4 - Mobile Integration)
+
+**Goal:**
+- Remove mobile dummy/placeholder flows and make the app use the real backend APIs (search, trending, wishlist, alerts, history).
+
+**Backend: Recently viewed**
+- Added Supabase schema + RLS for `recently_viewed` and exposed it via API:
+  - `GET /api/recently-viewed?limit=...`
+  - `POST /api/recently-viewed` (upsert per user + product URL)
+- Files:
+  - `backend/src/routes/recent.routes.ts`
+  - `backend/src/services/db.service.ts`
+  - `backend/supabase-migration.sql`
+
+**Mobile: remove dummy data + wire to backend**
+- Home:
+  - Trending: `GET /api/search/trending`
+  - Suggestions: debounced `POST /api/search`
+  - Recently viewed: `GET /api/recently-viewed` (auth)
+  - Wishlist toggles use the real wishlist API via `useWishlist()`
+  - File: `mobile/src/screens/HomeScreen.tsx`
+- Product detail:
+  - Live product page: `GET /api/search/product?url=...&store=...` (description/specs/reviews)
+  - Price history chart: `GET /api/history?url=...&store=...`
+  - Recently viewed recording: `POST /api/recently-viewed` (best-effort)
+  - Alerts: `POST /api/alerts` with `productUrl` + `targetPrice`
+  - File: `mobile/src/screens/ProductDetailScreen.tsx`
+- Alerts:
+  - List: `GET /api/alerts/enriched`
+  - Delete: `DELETE /api/alerts/:id`
+  - File: `mobile/src/screens/AlertsScreen.tsx`
+  - Hook: `mobile/src/hooks/useAlerts.ts`
+- Wishlist:
+  - Screen rewired to backend-backed `useWishlist()`; removed local storage + dummy product list usage.
+  - File: `mobile/src/screens/WishlistScreen.tsx`
+- Search:
+  - Switched mobile search requests to `apiClient` so auth header is included when logged in (keeps `search_history` + admin stats accurate).
+  - File: `mobile/src/screens/SearchScreen.tsx`
+- UI polish:
+  - Product cards no longer show a misleading `0.0` rating when the backend has no rating.
+  - File: `mobile/src/components/ProductCard.tsx`
+
+**Testing:**
+- `cd mobile && npx tsc --noEmit`
+
+## 2026-04-22 (Mobile parity with webapp - excluding admin)
+
+**Profile**
+- Removed hardcoded user + dummy counts; now uses real auth user + backend stats (`GET /api/auth/stats`) and shows real wishlist/alerts previews.
+- `mobile/src/screens/ProfileScreen.tsx`
+- `mobile/src/hooks/useUserStats.ts`
+
+**Search History**
+- Replaced dummy recent searches with backend-backed history:
+  - `GET /api/auth/history`
+  - `DELETE /api/auth/history`
+- `mobile/src/screens/SearchHistoryScreen.tsx`
+
+**Settings**
+- Wired settings actions to match web:
+  - Edit profile navigates to `EditProfile` and saves via `PUT /api/auth/profile`
+  - Clear history + Export My Data (shares JSON export)
+  - Change password (in-app, logged-in) via Supabase `auth.updateUser({ password })`
+- `mobile/src/screens/SettingsScreen.tsx`
+- `mobile/src/screens/ChangePasswordScreen.tsx`
+- `mobile/src/utils/passwordValidation.ts`
+
+**Edit Profile**
+- Removed placeholder fields (phone/address/photo) and implemented real save (`PUT /api/auth/profile`) + local user update.
+- `mobile/src/screens/EditProfileScreen.tsx`
+- `mobile/src/context/AuthContext.tsx`
+
+**Product detail**
+- Added cross-store comparisons via `GET /api/search/matches` with "BEST VALUE" highlighting.
+- `mobile/src/screens/ProductDetailScreen.tsx`
+
+**Wishlist + Alerts UI polish**
+- Wishlist now supports "Visit Store" action per item.
+- Alerts show store badge and "TARGET REACHED" status.
+- `mobile/src/screens/WishlistScreen.tsx`
+- `mobile/src/screens/AlertsScreen.tsx`
+
+**Search**
+- Store filter list now includes Mega + PriceOye.
+- `mobile/src/screens/SearchScreen.tsx`
+
+**Testing**
+- `cd mobile && npx tsc --noEmit`

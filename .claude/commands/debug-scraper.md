@@ -24,7 +24,7 @@ url = 'SEARCH_URL_HERE'
 r = requests.get(url, headers={
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
     'Accept-Encoding': 'gzip, deflate',
-}, timeout=15)
+}, timeout=15, verify=False)
 
 print(f'Status: {r.status_code}')
 print(f'Content-Type: {r.headers.get("content-type")}')
@@ -41,7 +41,7 @@ print(f'First 500 chars: {r.text[:500]}')
 | Empty `[]` with short HTML | JS-rendered page (CSR) | Find JSON API endpoint or use Selenium |
 | 404 error | Wrong search URL | Fetch homepage, find search form action URL |
 | 403 error | Bot blocked | Rotate User-Agent, add delays, check robots.txt |
-| SSL error | Old Python SSL | Upgrade Python or use `--break-system-packages` |
+| SSL error | Old Python SSL | `verify=False` is now set on base_scraper.py |
 | Timeout | Slow response | Increase timeout in base_scraper.py fetch() |
 | JSON parse error | Scraper outputting debug text to stdout | Use `print(..., file=sys.stderr)` for debug |
 
@@ -58,18 +58,21 @@ print(f'First 500 chars: {r.text[:500]}')
 - Old prices use `[data-price-type="oldPrice"]`
 
 ### Telemart
-- Uses Algolia for search (client-side). Traditional scraping returns 404
-- Would need Algolia API credentials or reverse-engineer the API
+- **Fixed**: Uses Algolia for search. Calls Algolia REST API directly with public credentials.
+- App ID: `7Z6UNQYQER`, API Key: `9b4c33f99e845fe1363fd4c6ceb0f467`, Index: `products`
+- Use plain hostname (`7Z6UNQYQER.algolia.net`), NOT `-dsn` variant (times out with old SSL)
+- Product URL pattern: `https://www.telemart.pk/product/{slug}`
+- Price fields: `sale_price` or `discounted_price` = current, `price` = original
 
 ### Mega.pk
+- **Fixed**: Changed URL from `/search/{keyword}` to `/catalogsearch/result/?q={keyword}` (Magento query parameter format)
 - Uses table-based layout, not standard product cards
-- Search URL `/search/KEYWORD` returns 404. Might need `/mobiles/?q=KEYWORD`
-- Products in `<table>` with `<td>` for price
+- Status: Untested after URL fix
 
 ### PriceOye
-- SSL error: `TLSV1_ALERT_PROTOCOL_VERSION`
-- Python 3.9's LibreSSL is too old for their TLS setup
-- Fix: upgrade Python to 3.11+ or install pyOpenSSL
+- **Fixed**: SSL error resolved globally — `verify=False` now set on base_scraper.py `fetch()` method
+- Uses `.product-card`, `.p-title`, `.p-price` selectors
+- Status: Untested after SSL fix
 
 ## After Fixing
 

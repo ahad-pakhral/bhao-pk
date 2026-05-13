@@ -1,9 +1,4 @@
-// Base API client with mock data fallback
-
-import { mockDataService } from '../mock/mockData.service';
-
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
-const USE_MOCK_DATA = process.env.EXPO_PUBLIC_USE_MOCK !== 'false'; // Default to true
 
 class ApiClient {
   private baseUrl: string;
@@ -29,12 +24,6 @@ class ApiClient {
     endpoint: string,
     options?: RequestInit
   ): Promise<T> {
-    // If mock mode, return mock data
-    if (USE_MOCK_DATA) {
-      console.log(`[API Mock] ${options?.method || 'GET'} ${endpoint}`);
-      return mockDataService.getData<T>(endpoint, options);
-    }
-
     // Real API call
     const headers: HeadersInit = {
       'Content-Type': 'application/json',

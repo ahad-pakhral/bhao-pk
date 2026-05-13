@@ -11,7 +11,7 @@ from utils.price_parser import parse_price
 class MegaScraper(BaseScraper):
     store_name = 'Mega'
     base_url = 'https://www.mega.pk'
-    search_url_template = 'https://www.mega.pk/search/{keyword}'
+    search_url_template = 'https://www.mega.pk/catalogsearch/result/?q={keyword}'
     rate_limit_seconds = 2.0
 
     def parse_search_results(self, html: str) -> list:
@@ -60,15 +60,58 @@ class MegaScraper(BaseScraper):
         html = self.fetch(url)
         soup = BeautifulSoup(html, 'lxml')
 
-        price = 0
-        in_stock = True
+        result = {
+            'price': 0,
+            'originalPrice': None,
+            'inStock': True,
+            'name': '',
+            'imageUrl': '',
+            'rating': 0,
+            'reviewsCount': 0,
+            'description': '',
+            'specs': [],
+            'reviews': [],
+        }
 
+        # Name
+        title_el = soup.select_one('.product-name, .pro-title, h1')
+        if title_el:
+            result['name'] = title_el.get_text(strip=True)
+
+        # Image
+        img_el = soup.select_one('.product-image img, .fotorama__img, .gallery-image img')
+        if img_el:
+            result['imageUrl'] = img_el.get('src') or img_el.get('data-src') or ''
+
+        # Price
         price_el = soup.select_one('.product-price, .price, .pro-price')
         if price_el:
-            price = parse_price(price_el.get_text(strip=True))
+            result['price'] = parse_price(price_el.get_text(strip=True))
 
+        # Original price
+        orig_el = soup.select_one('.old-price, .price-old')
+        if orig_el:
+            orig = parse_price(orig_el.get_text(strip=True))
+            if orig > result['price']:
+                result['originalPrice'] = orig
+
+        # Stock
         oos_el = soup.select_one('.out-of-stock, .sold-out, .unavailable')
         if oos_el:
-            in_stock = False
+            result['inStock'] = False
 
-        return {'price': price, 'inStock': in_stock}
+        # Description
+        desc_el = soup.select_one('.product-description, .std, .description')
+        if desc_el:
+            result['description'] = desc_el.get_text(strip=True)[:500]
+
+        # Specs
+        for row in soup.select('.data-table table tr, .product-attributes table tr, .specifications table tr'):
+            cells = row.select('th, td')
+            if len(cells) >= 2:
+                key = cells[0].get_text(strip=True).rstrip(':')
+                val = cells[1].get_text(strip=True)
+                if key and val:
+                    result['specs'].append({'key': key, 'value': val})
+
+        return result

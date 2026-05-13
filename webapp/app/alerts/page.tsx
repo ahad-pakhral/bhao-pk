@@ -6,14 +6,40 @@ import { useAuthStore } from "../../store/authStore";
 
 export const dynamic = 'force-dynamic';
 
-function deriveStoreFromUrl(url: string): string {
+function normalizeStoreKey(store: string | null | undefined): string | null {
+  if (!store) return null;
+  const s = String(store).trim().toLowerCase();
+  if (!s) return null;
+  if (s.includes('daraz')) return 'daraz';
+  if (s.includes('shophive')) return 'shophive';
+  if (s.includes('telemart')) return 'telemart';
+  if (s.includes('mega')) return 'mega';
+  if (s.includes('priceoye')) return 'priceoye';
+  return s;
+}
+
+function deriveStoreKeyFromUrl(url: string): string | null {
   try {
     const hostname = new URL(url).hostname.toLowerCase();
-    if (hostname.includes('daraz')) return 'Daraz';
-    if (hostname.includes('shophive')) return 'Shophive';
-    if (hostname.includes('telemart')) return 'Telemart';
+    if (hostname.includes('daraz')) return 'daraz';
+    if (hostname.includes('shophive')) return 'shophive';
+    if (hostname.includes('telemart')) return 'telemart';
+    if (hostname.includes('mega')) return 'mega';
+    if (hostname.includes('priceoye')) return 'priceoye';
   } catch {}
-  return 'Unknown';
+  return null;
+}
+
+function formatStoreLabel(storeKey: string | null): string {
+  if (!storeKey) return 'Unknown';
+  switch (storeKey) {
+    case 'daraz': return 'Daraz';
+    case 'shophive': return 'Shophive';
+    case 'telemart': return 'Telemart';
+    case 'mega': return 'Mega';
+    case 'priceoye': return 'PriceOye';
+    default: return storeKey;
+  }
 }
 
 function AlertCard({ alert, onRemove }: {
@@ -23,14 +49,15 @@ function AlertCard({ alert, onRemove }: {
     const displayTarget = Number.isFinite(alert.targetPrice) && alert.targetPrice > 0
         ? alert.targetPrice.toLocaleString()
         : '\u2014';
-    const storeName = alert.product?.store || (alert.productUrl ? deriveStoreFromUrl(alert.productUrl) : null);
+    const storeKey = normalizeStoreKey(alert.product?.store) || (alert.productUrl ? deriveStoreKeyFromUrl(alert.productUrl) : null);
+    const storeLabel = formatStoreLabel(storeKey);
     const productName = alert.product?.name || alert.keyword || alert.productUrl || 'Custom Alert';
     const currentPrice = alert.product?.price;
     const currentPriceDisplay = currentPrice ? `Rs. ${currentPrice.toLocaleString()}` : null;
     const targetReached = alert.isNotified || (currentPrice != null && currentPrice <= alert.targetPrice);
 
     const productHref = alert.productUrl
-        ? `/product/${encodeURIComponent(alert.productUrl)}?url=${encodeURIComponent(alert.productUrl)}&store=${encodeURIComponent(storeName || '')}`
+        ? `/product/${encodeURIComponent(alert.productUrl)}?url=${encodeURIComponent(alert.productUrl)}&store=${encodeURIComponent(storeKey || '')}`
         : null;
 
     const cardContent = (
@@ -86,7 +113,7 @@ function AlertCard({ alert, onRemove }: {
                 </h4>
 
                 {/* Store Badge */}
-                {storeName && (
+                {storeKey && (
                     <span style={{
                         display: 'inline-block',
                         fontSize: '11px',
@@ -98,7 +125,7 @@ function AlertCard({ alert, onRemove }: {
                         marginBottom: '6px',
                         textTransform: 'capitalize',
                     }}>
-                        {storeName}
+                        {storeLabel}
                     </span>
                 )}
 

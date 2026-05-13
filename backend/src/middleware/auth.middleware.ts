@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import { supabase } from '../services/supabase.service';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'bhao-super-secret-key';
-
-export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+/**
+ * Middleware to verify Supabase JWT token and attach user to request
+ */
+export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Unauthorized: Missing token' });
@@ -12,11 +13,19 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    // Verify token with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+
+    if (error || !user) {
+      return res.status(401).json({ error: 'Unauthorized: Invalid or expired token' });
+    }
+
+    // Attach user to request
     // @ts-ignore
-    req.user = decoded;
+    req.user = user;
     next();
   } catch (error) {
-    return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+    console.error('Auth Middleware Error:', error);
+    return res.status(401).json({ error: 'Unauthorized: Verification failed' });
   }
 };

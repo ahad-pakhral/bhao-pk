@@ -5,6 +5,7 @@ Each store scraper implements parse_search_results() and scrape_product_page().
 
 import time
 import random
+import urllib3
 from abc import ABC, abstractmethod
 from urllib.parse import quote
 
@@ -12,6 +13,9 @@ import requests
 from bs4 import BeautifulSoup
 
 from utils.rate_limiter import RateLimiter
+
+# Suppress SSL warnings for older Python SSL libs
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 # Rotate User-Agents to reduce ban risk
@@ -56,6 +60,7 @@ class BaseScraper(ABC):
                     url,
                     headers=self._get_headers(),
                     timeout=15,
+                    verify=False,
                 )
                 response.raise_for_status()
                 return response.text

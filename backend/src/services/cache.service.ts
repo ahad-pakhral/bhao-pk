@@ -31,6 +31,10 @@ redis.connect().catch(() => {
   console.warn('Redis not available — cache disabled, all searches will be live');
 });
 
+export function cacheStatus() {
+  return { connected, redisUrl: process.env.REDIS_URL || 'redis://localhost:6379' };
+}
+
 /**
  * Get cached value. Returns null on cache miss or Redis unavailable.
  */

@@ -1,0 +1,28 @@
+
+> bhao-webapp@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.18
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 3s
+ ○ Compiling / ...
+ ✓ Compiled / in 6.1s (525 modules)
+ GET / 200 in 6633ms
+ ○ Compiling /login ...
+ ✓ Compiled /login in 1424ms (517 modules)
+ ○ Compiling /signup ...
+ ✓ Compiled /signup in 2.2s (523 modules)
+ GET /signup? 200 in 2672ms
+ GET / 200 in 179ms
+ ✓ Compiled in 654ms (523 modules)
+ ✓ Compiled in 266ms (523 modules)
+ GET /signup 200 in 784ms
+ GET /signup 200 in 139ms
+ GET /login 200 in 161ms
+ GET /signup 200 in 104ms
+ GET /login 200 in 145ms
+ ✓ Compiled in 823ms (523 modules)
+ ✓ Compiled in 647ms (537 modules)

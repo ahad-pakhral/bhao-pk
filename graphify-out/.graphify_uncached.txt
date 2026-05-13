@@ -1,0 +1,265 @@
+webapp/next.config.mjs
+webapp/next-env.d.ts
+webapp/types/api.ts
+webapp/types/ui.ts
+webapp/types/index.ts
+webapp/types/models.ts
+webapp/context/AuthContext.tsx
+webapp/app/layout.tsx
+webapp/app/page.tsx
+webapp/app/not-found.tsx
+webapp/app/settings/page.tsx
+webapp/app/privacy/page.tsx
+webapp/app/signup/page.tsx
+webapp/app/admin/dashboard/page.tsx
+webapp/app/admin/login/page.tsx
+webapp/app/about/page.tsx
+webapp/app/product/[id]/page.tsx
+webapp/app/search/page.tsx
+webapp/app/alerts/page.tsx
+webapp/app/profile/page.tsx
+webapp/app/history/page.tsx
+webapp/app/login/page.tsx
+webapp/app/wishlist/page.tsx
+webapp/constants/dummyData.ts
+webapp/utils/validation.ts
+webapp/utils/smartAlerts.ts
+webapp/utils/ranking.ts
+webapp/utils/supabase.ts
+webapp/components/PriceHistoryChart.tsx
+webapp/components/Logo.tsx
+webapp/components/Toast.tsx
+webapp/hooks/useWishlist.ts
+webapp/hooks/useSearch.ts
+webapp/hooks/useSmartAlerts.ts
+webapp/services/storage.service.ts
+webapp/services/mock/mockData.service.ts
+webapp/services/api/auth.service.ts
+webapp/services/api/wishlist.service.ts
+webapp/services/api/alert.service.ts
+webapp/services/api/client.ts
+webapp/services/api/index.ts
+webapp/services/api/product.service.ts
+webapp/store/authStore.ts
+webapp/store/searchStore.ts
+mobile/src/types/navigation.ts
+mobile/src/types/api.ts
+mobile/src/types/ui.ts
+mobile/src/types/index.ts
+mobile/src/types/models.ts
+mobile/src/context/AuthContext.tsx
+mobile/src/constants/dummyData.ts
+mobile/src/navigation/AppNavigator.tsx
+mobile/src/utils/validation.ts
+mobile/src/utils/smartAlerts.ts
+mobile/src/utils/ranking.ts
+mobile/src/utils/supabase.ts
+mobile/src/screens/ProductDetailScreen.tsx
+mobile/src/screens/SignupScreen.tsx
+mobile/src/screens/AdminLoginScreen.tsx
+mobile/src/screens/WishlistScreen.tsx
+mobile/src/screens/ProfileScreen.tsx
+mobile/src/screens/AlertsScreen.tsx
+mobile/src/screens/SearchScreen.tsx
+mobile/src/screens/AdminDashboardScreen.tsx
+mobile/src/screens/EditProfileScreen.tsx
+mobile/src/screens/SettingsScreen.tsx
+mobile/src/screens/HomeScreen.tsx
+mobile/src/screens/SearchHistoryScreen.tsx
+mobile/src/screens/LoginScreen.tsx
+mobile/src/components/PriceHistoryChart.tsx
+mobile/src/components/ErrorState.tsx
+mobile/src/components/Typography.tsx
+mobile/src/components/ProductCard.tsx
+mobile/src/components/SmartAlertCard.tsx
+mobile/src/components/LoadingSpinner.tsx
+mobile/src/components/Logo.tsx
+mobile/src/components/index.ts
+mobile/src/components/Button.tsx
+mobile/src/components/EmptyState.tsx
+mobile/src/components/Input.tsx
+mobile/src/theme/index.ts
+mobile/src/hooks/useWishlist.ts
+mobile/src/hooks/useSearch.ts
+mobile/src/hooks/useSmartAlerts.ts
+mobile/src/services/storage.service.ts
+mobile/src/services/mock/mockData.service.ts
+mobile/src/services/api/auth.service.ts
+mobile/src/services/api/wishlist.service.ts
+mobile/src/services/api/alert.service.ts
+mobile/src/services/api/client.ts
+mobile/src/services/api/index.ts
+mobile/src/services/api/product.service.ts
+report.txt
+GEMINI.md
+AGENTS.md
+PDFSKILL.md
+CLAUDE.md
+webapp/DOCUMENTATION.md
+backend/scrapers/telemart_test.html
+backend/scrapers/requirements.txt
+docs/DEVLOG.md
+mobile/DOCUMENTATION.md
+BhaoPresentation/index.html
+BhaoPresentation/BhaoWebApp/mobile-admin-dashboard.html
+BhaoPresentation/BhaoWebApp/profile.html
+BhaoPresentation/BhaoWebApp/mobile-error.html
+BhaoPresentation/BhaoWebApp/mobile-home.html
+BhaoPresentation/BhaoWebApp/index.html
+BhaoPresentation/BhaoWebApp/product.html
+BhaoPresentation/BhaoWebApp/mobile-dashboard.html
+BhaoPresentation/BhaoWebApp/mobile-loading.html
+BhaoPresentation/BhaoWebApp/mobile-wishlist.html
+BhaoPresentation/BhaoWebApp/register.html
+BhaoPresentation/BhaoWebApp/404.html
+BhaoPresentation/BhaoWebApp/login.html
+BhaoPresentation/BhaoWebApp/admin-dashboard.html
+BhaoPresentation/BhaoWebApp/mobile-settings.html
+BhaoPresentation/BhaoWebApp/dashboard.html
+BhaoPresentation/BhaoWebApp/mobile-profile.html
+BhaoPresentation/BhaoWebApp/mobile-login.html
+BhaoPresentation/BhaoWebApp/mobile-search.html
+BhaoPresentation/BhaoWebApp/mobile-product.html
+BhaoPresentation/BhaoWebApp/mobile-signup.html
+BhaoPresentation/BhaoWebApp/mobile-alerts.html
+BhaoPresentation/BhaoWebApp/loading.html
+BhaoPresentation/BhaoWebApp/search.html
+BhaoPresentation/BhaoWebApp/settings.html
+BhaoPresentation/BhaoWebApp/mobile-404.html
+BhaoPresentation/BhaoWebApp/admin-login.html
+BhaoPresentation/BhaoWebApp/error.html
+BhaoPresentation/BhaoWebApp/alerts.html
+BhaoPresentation/BhaoWebApp/mobile-admin-login.html
+BhaoPresentation/BhaoWebApp/wishlist.html
+BhaoPresentation/BhaoWebApp/assets/Diagrams/Database Schema/DiagramsContents.txt
+BhaoPresentation/BhaoWebApp/assets/Diagrams/Domain Model Diagram/DiagramsContents.txt
+BhaoPresentation/BhaoWebApp/assets/Diagrams/Software Architecture Diagram/DiagramsContents.txt
+BhaoPresentation/BhaoWebApp/assets/Diagrams/System Sequence Diagrams/DiagramsContents.txt
+BhaoPresentation/BhaoWebApp/assets/Diagrams/Class Diagram/DiagramsContents.txt
+BhaoPresentation/BhaoWebApp/assets/Diagrams/Entity Relation Diagram/DiagramsContents.txt
+BhaoPresentation/BhaoWebApp/assets/Diagrams/Usecase Diagram/DiagramsContents.txt
+BhaoPresentation/BhaoWebApp/assets/Diagrams/SequenceDiagrams/DiagramsContents.txt
+BhaoPresentation/assets/Diagrams/Database Schema/DiagramsContents.txt
+BhaoPresentation/assets/Diagrams/Domain Model Diagram/DiagramsContents.txt
+BhaoPresentation/assets/Diagrams/Software Architecture Diagram/DiagramsContents.txt
+BhaoPresentation/assets/Diagrams/System Sequence Diagrams/DiagramsContents.txt
+BhaoPresentation/assets/Diagrams/Class Diagram/DiagramsContents.txt
+BhaoPresentation/assets/Diagrams/Entity Relation Diagram/DiagramsContents.txt
+BhaoPresentation/assets/Diagrams/Usecase Diagram/DiagramsContents.txt
+BhaoPresentation/assets/Diagrams/SequenceDiagrams/DiagramsContents.txt
+BhaoPart1Final.pdf
+template.pdf
+mobile/Bhao.pk-compressed.pdf
+logomark.svg
+Bhao-Poster.png
+Chapter4imgs/4.4-Filter modal .png
+Chapter4imgs/4.12-Set price alert .png
+Chapter4imgs/4.7-Login screen.png
+Chapter4imgs/4.2-Search results  .png
+Chapter4imgs/4.8-Profile screen.png
+Chapter4imgs/4.9-Logout dialog.png
+Chapter4imgs/4.1-Search screen.png
+Chapter4imgs/4.5-Signup screen  .png
+Chapter4imgs/4.3-Sort modal.png
+Chapter4imgs/4.11-Wishlist screen.png
+Chapter4imgs/4.6-Signup with errors.png
+Chapter4imgs/4.13-Alerts screen .png
+Chapter4imgs/4.10-Product card.png
+Chapter5imgs/5.7-Wishlist screen.png
+Chapter5imgs/5.8-Alerts screen .png
+Chapter5imgs/5.5-Login screen.png
+Chapter5imgs/5.2-Sorted by price.png
+Chapter5imgs/5.1-Search results  .png
+Chapter5imgs/5.4-Signup with errors.png
+Chapter5imgs/5.6-Logout dialog.png
+Chapter5imgs/5.3-Filtered by store .png
+webapp/logomark.svg
+webapp/public/logomark.svg
+webapp/public/images/airpods-pro.png
+webapp/public/images/iphone-15-pro.png
+webapp/public/images/macbook-air.png
+webapp/public/images/sony-xm5.png
+webapp/public/images/galaxy-watch-6.png
+webapp/public/images/samsung-s24.png
+webapp/public/images/ipad-pro.png
+mobile/BHAO-PK-Intelligent-Price-Discovery.png
+mobile/logomark.svg
+mobile/android/app/src/main/res/mipmap-mdpi/ic_launcher.webp
+mobile/android/app/src/main/res/mipmap-mdpi/ic_launcher_round.webp
+mobile/android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.webp
+mobile/android/app/src/main/res/mipmap-hdpi/ic_launcher.webp
+mobile/android/app/src/main/res/mipmap-hdpi/ic_launcher_round.webp
+mobile/android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.webp
+mobile/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp
+mobile/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp
+mobile/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.webp
+mobile/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.webp
+mobile/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp
+mobile/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.webp
+mobile/android/app/src/main/res/drawable-xhdpi/splashscreen_logo.png
+mobile/android/app/src/main/res/drawable-xxhdpi/splashscreen_logo.png
+mobile/android/app/src/main/res/drawable-hdpi/splashscreen_logo.png
+mobile/android/app/src/main/res/drawable-mdpi/splashscreen_logo.png
+mobile/android/app/src/main/res/mipmap-xhdpi/ic_launcher.webp
+mobile/android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.webp
+mobile/android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.webp
+mobile/android/app/src/main/res/drawable-xxxhdpi/splashscreen_logo.png
+mobile/assets/icon.png
+mobile/assets/logomark.svg
+mobile/assets/favicon.png
+mobile/assets/adaptive-icon.png
+mobile/assets/splash-icon.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/Database Schema/DBSchema.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/Domain Model Diagram/domainmodel.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/Software Architecture Diagram/softwareArchitectureDiagram.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/System Sequence Diagrams/ssd7ManageWishlist.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/System Sequence Diagrams/ssd5SetPriceAlert.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/System Sequence Diagrams/ssd10AdminStats.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/System Sequence Diagrams/ssd3ViewProductDetails.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/System Sequence Diagrams/ssd8SignUp.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/System Sequence Diagrams/ssd2FilterAndSort.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/System Sequence Diagrams/ssd1SearchProducts.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/System Sequence Diagrams/ssd4ViewPriceHistory.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/System Sequence Diagrams/ssd9Login.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/System Sequence Diagrams/ssd6Recommendations.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/Class Diagram/classDiagramUpdated.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/Entity Relation Diagram/ERD.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/Usecase Diagram/UsecaseDiagram.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/SequenceDiagrams/SequenceDiagram3ViewProductDetails.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/SequenceDiagrams/SequenceDiagram2FilterAndSort.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/SequenceDiagrams/SequenceDiagram10AdminDasboard.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/SequenceDiagrams/SequenceDiagram8SignUp.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/SequenceDiagrams/SequenceDiagram7AddToWishlist.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/SequenceDiagrams/SequenceDiagram4PriceHistory.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/SequenceDiagrams/SequenceDiagram6Recommendations.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/SequenceDiagrams/SequenceDiagram1SearchProducts.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/SequenceDiagrams/SequenceDiagram9Login.png
+BhaoPresentation/BhaoWebApp/assets/Diagrams/SequenceDiagrams/SequenceDiagram5SetPriceAlert.png
+BhaoPresentation/BhaoWebApp/assets/img/logomark.svg
+BhaoPresentation/assets/Diagrams/Database Schema/DBSchema.png
+BhaoPresentation/assets/Diagrams/Domain Model Diagram/domainmodel.png
+BhaoPresentation/assets/Diagrams/Software Architecture Diagram/softwareArchitectureDiagram.png
+BhaoPresentation/assets/Diagrams/System Sequence Diagrams/ssd7ManageWishlist.png
+BhaoPresentation/assets/Diagrams/System Sequence Diagrams/ssd5SetPriceAlert.png
+BhaoPresentation/assets/Diagrams/System Sequence Diagrams/ssd10AdminStats.png
+BhaoPresentation/assets/Diagrams/System Sequence Diagrams/ssd3ViewProductDetails.png
+BhaoPresentation/assets/Diagrams/System Sequence Diagrams/ssd8SignUp.png
+BhaoPresentation/assets/Diagrams/System Sequence Diagrams/ssd2FilterAndSort.png
+BhaoPresentation/assets/Diagrams/System Sequence Diagrams/ssd1SearchProducts.png
+BhaoPresentation/assets/Diagrams/System Sequence Diagrams/ssd4ViewPriceHistory.png
+BhaoPresentation/assets/Diagrams/System Sequence Diagrams/ssd9Login.png
+BhaoPresentation/assets/Diagrams/System Sequence Diagrams/ssd6Recommendations.png
+BhaoPresentation/assets/Diagrams/Class Diagram/classDiagramUpdated.png
+BhaoPresentation/assets/Diagrams/Entity Relation Diagram/ERD.png
+BhaoPresentation/assets/Diagrams/Usecase Diagram/UsecaseDiagram.png
+BhaoPresentation/assets/Diagrams/SequenceDiagrams/SequenceDiagram3ViewProductDetails.png
+BhaoPresentation/assets/Diagrams/SequenceDiagrams/SequenceDiagram2FilterAndSort.png
+BhaoPresentation/assets/Diagrams/SequenceDiagrams/SequenceDiagram10AdminDasboard.png
+BhaoPresentation/assets/Diagrams/SequenceDiagrams/SequenceDiagram8SignUp.png
+BhaoPresentation/assets/Diagrams/SequenceDiagrams/SequenceDiagram7AddToWishlist.png
+BhaoPresentation/assets/Diagrams/SequenceDiagrams/SequenceDiagram4PriceHistory.png
+BhaoPresentation/assets/Diagrams/SequenceDiagrams/SequenceDiagram6Recommendations.png
+BhaoPresentation/assets/Diagrams/SequenceDiagrams/SequenceDiagram1SearchProducts.png
+BhaoPresentation/assets/Diagrams/SequenceDiagrams/SequenceDiagram9Login.png
+BhaoPresentation/assets/Diagrams/SequenceDiagrams/SequenceDiagram5SetPriceAlert.png
+BhaoPresentation/assets/img/logomark.svg

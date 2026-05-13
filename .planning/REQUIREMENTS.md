@@ -20,22 +20,22 @@ Requirements for completing the MVP. Each maps to roadmap phases.
 
 ### Price History
 
-- [ ] **HIST-01**: Backend stores daily price snapshots in Supabase (new price_history table with product_url, price, store, date)
-- [ ] **HIST-02**: Backend tracks price changes when search results are scraped (automatic snapshot on each search)
-- [ ] **HIST-03**: Product detail page chart displays real historical price data from the stored snapshots
-- [ ] **HIST-04**: Mobile product detail page displays real historical price data (replaces mock data)
+- [x] **HIST-01**: Backend stores daily price snapshots in Supabase (new price_history table with product_url, price, store, date)
+- [x] **HIST-02**: Backend tracks price changes when search results are scraped (automatic snapshot on each search)
+- [x] **HIST-03**: Product detail page chart displays real historical price data from the stored snapshots
+- [x] **HIST-04**: Mobile product detail page displays real historical price data (replaces mock data)
 
 ### Notifications
 
-- [ ] **NOTF-01**: Backend sends email notification when a tracked product's price drops below the alert's target price
-- [ ] **NOTF-02**: Email includes product name, old price, new price, and link to the Bhao product page
-- [ ] **NOTF-03**: Notification is marked as sent to prevent duplicate emails
+- [x] **NOTF-01**: Backend sends email notification when a tracked product's price drops below the alert's target price
+- [x] **NOTF-02**: Email includes product name, old price, new price, and link to the Bhao product page
+- [x] **NOTF-03**: Notification is marked as sent to prevent duplicate emails
 
 ### Admin Panel (Web Only)
 
-- [ ] **ADMN-01**: Admin can log in with a separate admin role (role='ADMIN' in users table)
-- [ ] **ADMN-02**: Admin dashboard displays real stats: total users, active alerts, searches today, wishlist items, scraper health
-- [ ] **ADMN-03**: Admin dashboard fetches stats from a dedicated backend endpoint (not hardcoded)
+- [x] **ADMN-01**: Admin can log in with a separate admin role (role='ADMIN' in users table)
+- [x] **ADMN-02**: Admin dashboard displays real stats: total users, active alerts, searches today, wishlist items, scraper health
+- [x] **ADMN-03**: Admin dashboard fetches stats from a dedicated backend endpoint (not hardcoded)
 
 ### Mobile Data Integration
 
@@ -87,16 +87,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PROD-01 | Phase 1 | Complete |
 | PROD-02 | Phase 1 | Complete |
 | PROD-03 | Phase 1 | Complete |
-| HIST-01 | Phase 2 | Pending |
-| HIST-02 | Phase 2 | Pending |
-| HIST-03 | Phase 2 | Pending |
-| HIST-04 | Phase 2 | Pending |
-| NOTF-01 | Phase 3 | Pending |
-| NOTF-02 | Phase 3 | Pending |
-| NOTF-03 | Phase 3 | Pending |
-| ADMN-01 | Phase 3 | Pending |
-| ADMN-02 | Phase 3 | Pending |
-| ADMN-03 | Phase 3 | Pending |
+| HIST-01 | Phase 2 | Complete |
+| HIST-02 | Phase 2 | Complete |
+| HIST-03 | Phase 2 | Complete |
+| HIST-04 | Phase 2 | Complete |
+| NOTF-01 | Phase 3 | Complete |
+| NOTF-02 | Phase 3 | Complete |
+| NOTF-03 | Phase 3 | Complete |
+| ADMN-01 | Phase 3 | Complete |
+| ADMN-02 | Phase 3 | Complete |
+| ADMN-03 | Phase 3 | Complete |
 | MOBL-01 | Phase 4 | Pending |
 | MOBL-02 | Phase 4 | Pending |
 | MOBL-03 | Phase 4 | Pending |
@@ -109,4 +109,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-04-21*
-*Last updated: 2026-04-21 after roadmap creation*
+*Last updated: 2026-04-21 after Phase 3 execution*

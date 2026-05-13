@@ -1,31 +1,74 @@
-import React from 'react';
-import { View, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Switch } from 'react-native';
-import { User, Bell, Moon, Globe, Shield, Info, ChevronRight, ArrowLeft } from 'lucide-react-native';
+import React, { useEffect } from 'react';
+import { View, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Switch, Alert, Share, Linking } from 'react-native';
+import { User, Bell, Globe, Shield, Info, ChevronRight, ArrowLeft, Download, Trash2, Lock } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS, SPACING, BORDER_RADIUS } from '../theme';
 import { Typography } from '../components';
 import { useAuth } from '../context/AuthContext';
+import { apiClient } from '../services/api/client';
+import Toast from 'react-native-toast-message';
+
+const WEBAPP_BASE = process.env.EXPO_PUBLIC_WEBAPP_BASE_URL || 'http://localhost:3000';
 
 export const SettingsScreen = ({ navigation }: any) => {
-  const { user } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
-  const [darkModeEnabled, setDarkModeEnabled] = React.useState(true);
 
-  const settingSections = [
+  // Load notification preference from storage
+  useEffect(() => {
+    AsyncStorage.getItem('notifications_enabled').then((val) => {
+      if (val !== null) setNotificationsEnabled(val === 'true');
+    });
+  }, []);
+
+  const handleNotificationToggle = async (value: boolean) => {
+    setNotificationsEnabled(value);
+    await AsyncStorage.setItem('notifications_enabled', String(value));
+    Toast.show({
+      type: 'success',
+      text1: value ? 'Notifications enabled' : 'Notifications disabled',
+    });
+  };
+
+  const handleLogout = () => {
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: async () => {
+          await logout();
+          navigation.replace('Login');
+        },
+      },
+    ]);
+  };
+
+  type SettingItem = {
+    icon: React.ReactNode;
+    label: string;
+    value?: string | boolean;
+    onPress?: () => void;
+    toggle?: boolean;
+    onToggle?: (value: boolean) => void;
+  };
+
+  const settingSections: { title: string, items: SettingItem[] }[] = [
     {
       title: 'ACCOUNT',
       items: [
         {
           icon: <User color={COLORS.primary} size={20} />,
           label: 'Profile Information',
-          value: user?.name || 'Guest',
-          onPress: () => {},
+          value: user?.name || user?.email || 'Guest',
+          onPress: () => navigation.navigate('EditProfile'),
         },
         {
           icon: <Bell color={COLORS.primary} size={20} />,
-          label: 'Notifications',
+          label: 'Push Notifications',
           toggle: true,
           value: notificationsEnabled,
-          onToggle: setNotificationsEnabled,
+          onToggle: handleNotificationToggle,
         },
       ],
     },
@@ -33,17 +76,86 @@ export const SettingsScreen = ({ navigation }: any) => {
       title: 'PREFERENCES',
       items: [
         {
-          icon: <Moon color={COLORS.primary} size={20} />,
-          label: 'Dark Mode',
-          toggle: true,
-          value: darkModeEnabled,
-          onToggle: setDarkModeEnabled,
-        },
-        {
           icon: <Globe color={COLORS.primary} size={20} />,
           label: 'Language',
           value: 'English',
-          onPress: () => {},
+          onPress: () => Toast.show({ type: 'info', text1: 'Coming soon' }),
+        },
+      ],
+    },
+    {
+      title: 'PRIVACY & SECURITY',
+      items: [
+        {
+          icon: <Lock color={COLORS.primary} size={20} />,
+          label: 'Change Password',
+          onPress: () => navigation.navigate('ChangePassword'),
+        },
+        {
+          icon: <Trash2 color={COLORS.primary} size={20} />,
+          label: 'Clear Search History',
+          onPress: () => {
+            if (!isAuthenticated) {
+              Toast.show({ type: 'info', text1: 'Login required' });
+              return;
+            }
+            Alert.alert('Clear History', 'Clear all your search history? This cannot be undone.', [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Clear',
+                style: 'destructive',
+                onPress: async () => {
+                  try {
+                    await apiClient.delete<any>('/auth/history');
+                    Toast.show({ type: 'success', text1: 'History cleared' });
+                  } catch (e: any) {
+                    Toast.show({ type: 'error', text1: 'Failed to clear', text2: e?.message || 'Please try again' });
+                  }
+                },
+              },
+            ]);
+          },
+        },
+        {
+          icon: <Download color={COLORS.primary} size={20} />,
+          label: 'Export My Data',
+          onPress: async () => {
+            if (!isAuthenticated) {
+              Toast.show({ type: 'info', text1: 'Login required' });
+              return;
+            }
+            try {
+              const [wishlistRes, alertsRes, historyRes] = await Promise.all([
+                apiClient.get<any>('/wishlist'),
+                apiClient.get<any>('/alerts'),
+                apiClient.get<any>('/auth/history'),
+              ]);
+              const exportData = {
+                user,
+                wishlist: wishlistRes?.wishlist || [],
+                alerts: alertsRes?.alerts || [],
+                history: historyRes?.history || [],
+                exportedAt: new Date().toISOString(),
+              };
+              await Share.share({ message: JSON.stringify(exportData, null, 2) });
+            } catch (e: any) {
+              Toast.show({ type: 'error', text1: 'Export failed', text2: e?.message || 'Please try again' });
+            }
+          },
+        },
+        {
+          icon: <Shield color={COLORS.error} size={20} />,
+          label: 'Delete Account',
+          onPress: () => {
+            Alert.alert('Delete Account', 'This action cannot be undone. Are you sure you want to delete your account and all associated data?', [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Logout',
+                style: 'destructive',
+                onPress: handleLogout,
+              },
+            ]);
+          },
         },
       ],
     },
@@ -54,12 +166,22 @@ export const SettingsScreen = ({ navigation }: any) => {
           icon: <Info color={COLORS.primary} size={20} />,
           label: 'About BHAO.PK',
           value: 'Version 1.0.0',
-          onPress: () => {},
+          onPress: () => {
+            Alert.alert(
+              'About BHAO.PK',
+              'BHAO.PK - Pakistan\'s Price Comparison Engine\n\nCompare prices across Daraz, Shophive, Telemart, Mega.pk, and PriceOye.\n\nVersion 1.0.0',
+              [{ text: 'OK' }]
+            );
+          },
         },
         {
           icon: <Shield color={COLORS.primary} size={20} />,
           label: 'Privacy Policy',
-          onPress: () => {},
+          onPress: () => {
+            Linking.openURL(`${WEBAPP_BASE}/privacy`).catch(() => {
+              Toast.show({ type: 'info', text1: 'Privacy policy page not available yet' });
+            });
+          },
         },
       ],
     },
@@ -102,15 +224,15 @@ export const SettingsScreen = ({ navigation }: any) => {
                       <Typography>{item.label}</Typography>
                       {item.value && !item.toggle && (
                         <Typography variant="caption" color={COLORS.textSecondary}>
-                          {item.value}
+                          {String(item.value)}
                         </Typography>
                       )}
                     </View>
                   </View>
                   {item.toggle ? (
                     <Switch
-                      value={item.value}
-                      onValueChange={item.onToggle}
+                      value={!!item.value}
+                      onValueChange={item.onToggle ? (v) => item.onToggle!(v) : undefined}
                       trackColor={{ false: COLORS.border, true: COLORS.primary }}
                       thumbColor={COLORS.surface}
                     />
@@ -122,6 +244,13 @@ export const SettingsScreen = ({ navigation }: any) => {
             </View>
           </View>
         ))}
+
+        {/* Logout button */}
+        {isAuthenticated && (
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.7}>
+            <Typography color={COLORS.error} style={{ fontWeight: '600' }}>Logout</Typography>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -143,6 +272,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: SPACING.lg,
+    paddingBottom: SPACING.xl,
   },
   section: {
     marginBottom: SPACING.xl,
@@ -178,5 +308,14 @@ const styles = StyleSheet.create({
   },
   settingText: {
     flex: 1,
+  },
+  logoutButton: {
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.lg,
+    borderWidth: 1,
+    borderColor: COLORS.error,
+    padding: SPACING.md,
+    alignItems: 'center',
+    marginTop: SPACING.sm,
   },
 });

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { Heart } from 'lucide-react-native';
+import { Heart, Package } from 'lucide-react-native';
 import { COLORS, SPACING, BORDER_RADIUS } from '../theme';
 import { Typography } from './Typography';
 import { Button } from './Button';
@@ -15,6 +15,7 @@ interface ProductCardProps {
   onPress: () => void;
   onTrackPress?: () => void;
   badge?: string;
+  originalPrice?: number;
   specs?: string;
   isWishlisted?: boolean;
   onWishlistToggle?: () => void;
@@ -29,11 +30,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onPress,
   onTrackPress,
   badge,
+  originalPrice,
   specs,
   isWishlisted,
   onWishlistToggle,
 }) => {
   const [imageError, setImageError] = React.useState(false);
+
+  const priceNum = parseInt(String(price || '0').replace(/[^\d]/g, ''), 10) || 0;
+  const discount = originalPrice && originalPrice > priceNum
+    ? Math.round((1 - priceNum / originalPrice) * 100)
+    : 0;
 
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.9}>
@@ -42,23 +49,27 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <Image
             source={{ uri: image }}
             style={styles.image}
+            resizeMode="contain"
             onError={() => setImageError(true)}
           />
         ) : (
           <View style={styles.placeholderImage}>
-            <Typography variant="caption" color={COLORS.textSecondary}>📦</Typography>
-            <Typography variant="caption" color={COLORS.textSecondary} style={{ marginTop: 4 }}>
-              {name.split(' ')[0]}
-            </Typography>
+            <Package color={COLORS.textSecondary} size={32} />
           </View>
         )}
-        {badge && (
+        {discount > 0 ? (
+          <View style={[styles.badge, styles.discountBadge]}>
+            <Typography variant="caption" color="#FFFFFF" style={styles.badgeText}>
+              -{discount}%
+            </Typography>
+          </View>
+        ) : badge ? (
           <View style={styles.badge}>
             <Typography variant="caption" color={COLORS.background} style={styles.badgeText}>
               {badge}
             </Typography>
           </View>
-        )}
+        ) : null}
         {onWishlistToggle && (
           <TouchableOpacity
             style={styles.wishlistButton}
@@ -82,9 +93,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <Typography variant="bodySmall" color={COLORS.textSecondary} numberOfLines={1}>
             {store}
           </Typography>
-          <Typography variant="bodySmall" color={COLORS.primary}>
-            ★ {rating.toFixed(1)}
-          </Typography>
+          {rating > 0 ? (
+            <Typography variant="bodySmall" color={COLORS.primary}>
+              ★ {rating.toFixed(1)}
+            </Typography>
+          ) : null}
         </View>
 
         <Typography variant="h3" style={styles.name} numberOfLines={2}>
@@ -150,6 +163,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.sm,
     paddingVertical: 2,
     borderRadius: BORDER_RADIUS.sm,
+  },
+  discountBadge: {
+    backgroundColor: '#FF0055',
   },
   wishlistButton: {
     position: 'absolute',

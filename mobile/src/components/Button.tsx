@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
   },
   lg: {
-    paddingVertical: SPACING.md,
+    paddingVertical: SPACING.sm,
     paddingHorizontal: SPACING.xl,
   },
   disabled: {

@@ -1,0 +1,353 @@
+{
+  "nodes": [
+    {
+      "id": "smartalerts_createSmartAlert",
+      "label": "Create Smart Alert",
+      "file_type": "code",
+      "source_file": "webapp/utils/smartAlerts.ts",
+      "source_location": {
+        "line": 42
+      },
+      "confidence_score": 1.0
+    },
+    {
+      "id": "smartalerts_findAlternatives",
+      "label": "Find Alternative Products",
+      "file_type": "code",
+      "source_file": "webapp/utils/smartAlerts.ts",
+      "source_location": {
+        "line": 28
+      },
+      "confidence_score": 1.0
+    },
+    {
+      "id": "ranking_rankByRelevance",
+      "label": "Rank Products by Relevance",
+      "file_type": "code",
+      "source_file": "webapp/utils/ranking.ts",
+      "source_location": {
+        "line": 56
+      },
+      "confidence_score": 1.0
+    },
+    {
+      "id": "supabase_supabase",
+      "label": "Supabase Client",
+      "file_type": "code",
+      "source_file": "webapp/utils/supabase.ts",
+      "source_location": {
+        "line": 5
+      },
+      "confidence_score": 1.0
+    },
+    {
+      "id": "pricehistorychart_PriceHistoryChart",
+      "label": "Price History Chart Component",
+      "file_type": "code",
+      "source_file": "webapp/components/PriceHistoryChart.tsx",
+      "source_location": {
+        "line": 15
+      },
+      "confidence_score": 1.0
+    },
+    {
+      "id": "logo_Logo",
+      "label": "Bhao.pk Logo Component",
+      "file_type": "code",
+      "source_file": "webapp/components/Logo.tsx",
+      "source_location": {
+        "line": 8
+      },
+      "confidence_score": 1.0
+    },
+    {
+      "id": "toast_ToastProvider",
+      "label": "Toast Notification Provider",
+      "file_type": "code",
+      "source_file": "webapp/components/Toast.tsx",
+      "source_location": {
+        "line": 32
+      },
+      "confidence_score": 1.0
+    },
+    {
+      "id": "usewishlist_useWishlist",
+      "label": "Wishlist Management Hook",
+      "file_type": "code",
+      "source_file": "webapp/hooks/useWishlist.ts",
+      "source_location": {
+        "line": 12
+      },
+      "confidence_score": 1.0
+    },
+    {
+      "id": "usesearch_useSearch",
+      "label": "Product Search Hook",
+      "file_type": "code",
+      "source_file": "webapp/hooks/useSearch.ts",
+      "source_location": {
+        "line": 10
+      },
+      "confidence_score": 1.0
+    },
+    {
+      "id": "usesmartalerts_useSmartAlerts",
+      "label": "Smart Alerts Management Hook",
+      "file_type": "code",
+      "source_file": "webapp/hooks/useSmartAlerts.ts",
+      "source_location": {
+        "line": 8
+      },
+      "confidence_score": 1.0
+    },
+    {
+      "id": "storage_service_storageService",
+      "label": "Local Storage Service Singleton",
+      "file_type": "code",
+      "source_file": "webapp/services/storage.service.ts",
+      "source_location": {
+        "line": 78
+      },
+      "confidence_score": 1.0
+    },
+    {
+      "id": "mockdata_service_mockDataService",
+      "label": "Mock Data Service Singleton",
+      "file_type": "code",
+      "source_file": "webapp/services/mock/mockData.service.ts",
+      "source_location": {
+        "line": 156
+      },
+      "confidence_score": 1.0
+    },
+    {
+      "id": "auth_service_authService",
+      "label": "Authentication API Service",
+      "file_type": "code",
+      "source_file": "webapp/services/api/auth.service.ts",
+      "source_location": {
+        "line": 5
+      },
+      "confidence_score": 1.0
+    },
+    {
+      "id": "wishlist_service_wishlistService",
+      "label": "Wishlist API Service",
+      "file_type": "code",
+      "source_file": "webapp/services/api/wishlist.service.ts",
+      "source_location": {
+        "line": 4
+      },
+      "confidence_score": 1.0
+    },
+    {
+      "id": "alert_service_alertService",
+      "label": "Alert API Service",
+      "file_type": "code",
+      "source_file": "webapp/services/api/alert.service.ts",
+      "source_location": {
+        "line": 5
+      },
+      "confidence_score": 1.0
+    },
+    {
+      "id": "client_apiClient",
+      "label": "Generic API Client",
+      "file_type": "code",
+      "source_file": "webapp/services/api/client.ts",
+      "source_location": {
+        "line": 4
+      },
+      "confidence_score": 1.0
+    },
+    {
+      "id": "product_service_productService",
+      "label": "Product API Service",
+      "file_type": "code",
+      "source_file": "webapp/services/api/product.service.ts",
+      "source_location": {
+        "line": 4
+      },
+      "confidence_score": 1.0
+    },
+    {
+      "id": "authstore_useAuthStore",
+      "label": "Auth State Store (Zustand)",
+      "file_type": "code",
+      "source_file": "webapp/store/authStore.ts",
+      "source_location": {
+        "line": 15
+      },
+      "confidence_score": 1.0
+    },
+    {
+      "id": "searchstore_useSearchStore",
+      "label": "Search State Store (Zustand)",
+      "file_type": "code",
+      "source_file": "webapp/store/searchStore.ts",
+      "source_location": {
+        "line": 12
+      },
+      "confidence_score": 1.0
+    },
+    {
+      "id": "navigation_RootStackParamList",
+      "label": "Mobile Navigation Root Types",
+      "file_type": "code",
+      "source_file": "mobile/src/types/navigation.ts",
+      "source_location": {
+        "line": 5
+      },
+      "confidence_score": 1.0
+    },
+    {
+      "id": "mobile_api_SearchFilters",
+      "label": "Mobile API Search Filter types",
+      "file_type": "code",
+      "source_file": "mobile/src/types/api.ts",
+      "source_location": {
+        "line": 15
+      },
+      "confidence_score": 1.0
+    },
+    {
+      "id": "mobile_ui_LoadingState",
+      "label": "Mobile UI State Types",
+      "file_type": "code",
+      "source_file": "mobile/src/types/ui.ts",
+      "source_location": {
+        "line": 2
+      },
+      "confidence_score": 1.0
+    },
+    {
+      "id": "mobile_models_ProductWithListings",
+      "label": "Mobile Product Model with Listings",
+      "file_type": "code",
+      "source_file": "mobile/src/types/models.ts",
+      "source_location": {
+        "line": 42
+      },
+      "confidence_score": 1.0
+    },
+    {
+      "id": "authcontext_AuthProvider",
+      "label": "Mobile Auth Context Provider",
+      "file_type": "code",
+      "source_file": "mobile/src/context/AuthContext.tsx",
+      "source_location": {
+        "line": 18
+      },
+      "confidence_score": 1.0
+    }
+  ],
+  "edges": [
+    {
+      "source": "smartalerts_createSmartAlert",
+      "target": "smartalerts_findAlternatives",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "webapp/utils/smartAlerts.ts"
+    },
+    {
+      "source": "smartalerts_findAlternatives",
+      "target": "ranking_rankByRelevance",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "webapp/utils/smartAlerts.ts"
+    },
+    {
+      "source": "usewishlist_useWishlist",
+      "target": "authstore_useAuthStore",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "webapp/hooks/useWishlist.ts"
+    },
+    {
+      "source": "usesearch_useSearch",
+      "target": "ranking_rankByRelevance",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "webapp/hooks/useSearch.ts"
+    },
+    {
+      "source": "auth_service_authService",
+      "target": "client_apiClient",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "webapp/services/api/auth.service.ts"
+    },
+    {
+      "source": "authstore_useAuthStore",
+      "target": "supabase_supabase",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "webapp/store/authStore.ts"
+    },
+    {
+      "source": "authcontext_AuthProvider",
+      "target": "supabase_supabase",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "mobile/src/context/AuthContext.tsx"
+    },
+    {
+      "source": "authcontext_AuthProvider",
+      "target": "auth_service_authService",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "mobile/src/context/AuthContext.tsx"
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "cross_platform_auth_flow",
+      "label": "Shared Authentication logic",
+      "nodes": [
+        "auth_service_authService",
+        "authstore_useAuthStore",
+        "authcontext_AuthProvider"
+      ],
+      "relation": "implement",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "webapp/services/api/auth.service.ts"
+    },
+    {
+      "id": "smart_recommendation_engine",
+      "label": "Smart Product Recommendation System",
+      "nodes": [
+        "smartalerts_findAlternatives",
+        "ranking_rankByRelevance",
+        "usesearch_useSearch"
+      ],
+      "relation": "form",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "webapp/utils/smartAlerts.ts"
+    },
+    {
+      "id": "data_persistence_layer",
+      "label": "Application Persistence Strategy",
+      "nodes": [
+        "storage_service_storageService",
+        "supabase_supabase",
+        "mockdata_service_mockDataService"
+      ],
+      "relation": "participate_in",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "webapp/services/storage.service.ts"
+    }
+  ],
+  "input_tokens": 45000,
+  "output_tokens": 1200
+}

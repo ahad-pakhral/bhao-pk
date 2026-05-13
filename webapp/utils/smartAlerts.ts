@@ -1,7 +1,7 @@
 // Smart alerts: cross-store price tracking with alternative discovery
 
 import { SmartAlert, StoreSnapshot, AlternativeProduct } from '../types/models';
-import { calculateProductScore, computeGlobalAverage, parsePrice, rankByRelevance } from './ranking';
+import { parsePrice, rankByRelevance } from './ranking';
 
 /**
  * Build store snapshots for products with the same name across different stores.
@@ -31,7 +31,7 @@ export function buildStoreSnapshots(
 }
 
 function generateReason(
-  alt: { price?: string; rating?: number; reviewsCount?: number },
+  alt: { price?: string | number; rating?: number; reviewsCount?: number },
   originalPrice: number,
   originalRating?: number
 ): string {
@@ -86,7 +86,19 @@ export function findAlternatives(
 
   if (candidates.length === 0) return [];
 
-  const ranked = rankByRelevance(candidates);
+  const mappedCandidates = candidates.map(p => ({
+    ...p,
+    id: p.id,
+    name: p.name,
+    image: p.image,
+    store: p.store || "",
+    price: p.price ? p.price.toString() : "0",
+    rating: p.rating || 0,
+    inStock: (p as any).inStock ?? true,
+    originalPrice: (p as any).originalPrice || 0,
+    reviewsCount: p.reviewsCount || 0
+  }));
+  const ranked = rankByRelevance(mappedCandidates) as unknown as AlternativeProduct[];
   const alternatives: AlternativeProduct[] = [];
 
   for (const candidate of ranked) {
@@ -98,9 +110,9 @@ export function findAlternatives(
 
     if (isCheaper || isHigherRated) {
       alternatives.push({
-        productId: candidate.id,
-        productName: candidate.name,
-        productImage: candidate.image,
+        productId: (candidate as any).id,
+        productName: (candidate as any).name,
+        productImage: (candidate as any).image,
         price: candidatePrice,
         store: candidate.store || '',
         url: '',

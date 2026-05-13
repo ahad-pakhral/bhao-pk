@@ -15,6 +15,7 @@ export type RootStackParamList = {
   Wishlist: undefined;
   Alerts: undefined;
   Settings: undefined;
+  ChangePassword: undefined;
   SearchHistory: undefined;
   EditProfile: undefined;
   AdminLogin: undefined;

@@ -5,7 +5,7 @@ import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 
-interface ScrapedProduct {
+export interface ScrapedProduct {
   name: string;
   price: number;
   originalPrice?: number;
@@ -18,19 +18,28 @@ interface ScrapedProduct {
   category?: string;
 }
 
+export interface ProductDetail {
+  price: number;
+  originalPrice?: number;
+  inStock: boolean;
+  name: string;
+  imageUrl: string;
+  rating: number;
+  reviewsCount: number;
+  description: string;
+  specs: { key: string; value: string }[];
+  reviews: { author: string; rating: number; text: string; date: string }[];
+  store?: string;
+}
+
 const SCRAPERS_DIR = path.join(__dirname, '../../scrapers');
 const VENV_PYTHON = path.join(SCRAPERS_DIR, '.venv', 'bin', 'python3');
-// Use venv python if available, fall back to system python3
 const PYTHON_BIN = fs.existsSync(VENV_PYTHON) ? VENV_PYTHON : 'python3';
-const STORES = ['daraz', 'shophive', 'mega', 'priceoye'];
-const SCRAPER_TIMEOUT = 30000; // 30s per store
+const STORES = ['daraz', 'shophive', 'telemart'];
+const SCRAPER_TIMEOUT = 30000;
 
-/**
- * Scrape a single store for a keyword.
- * Spawns the Python scraper as a child process, reads JSON from stdout.
- */
 function scrapeStore(keyword: string, store: string): Promise<ScrapedProduct[]> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const proc = spawn(PYTHON_BIN, [
       path.join(SCRAPERS_DIR, 'run_search.py'),
       '--keyword', keyword,
@@ -53,11 +62,11 @@ function scrapeStore(keyword: string, store: string): Promise<ScrapedProduct[]> 
           resolve(products);
         } catch (e) {
           console.error(`Failed to parse ${store} scraper output:`, stdout.slice(0, 200));
-          resolve([]); // Don't fail the whole search for one store
+          resolve([]);
         }
       } else {
         if (stderr) console.error(`${store} scraper error:`, stderr.slice(0, 300));
-        resolve([]); // Graceful degradation — skip failed stores
+        resolve([]);
       }
     });
 
@@ -68,17 +77,12 @@ function scrapeStore(keyword: string, store: string): Promise<ScrapedProduct[]> 
   });
 }
 
-/**
- * Scrape all stores in parallel for a keyword.
- * Uses Promise.allSettled so one store failure doesn't block others.
- */
 export async function searchAllStores(keyword: string): Promise<ScrapedProduct[]> {
   const results = await Promise.allSettled(
     STORES.map(store => scrapeStore(keyword, store))
   );
 
   const allProducts: ScrapedProduct[] = [];
-
   for (const result of results) {
     if (result.status === 'fulfilled' && result.value.length > 0) {
       allProducts.push(...result.value);
@@ -89,9 +93,9 @@ export async function searchAllStores(keyword: string): Promise<ScrapedProduct[]
 }
 
 /**
- * Scrape a single product page to get current price (used by alert checker).
+ * Scrape a single product page for full details.
  */
-export function scrapeProductPage(url: string, store: string): Promise<{ price: number; inStock: boolean } | null> {
+export function scrapeProductDetail(url: string, store: string): Promise<ProductDetail | null> {
   return new Promise((resolve) => {
     const proc = spawn(PYTHON_BIN, [
       path.join(SCRAPERS_DIR, 'run_search.py'),
@@ -104,19 +108,32 @@ export function scrapeProductPage(url: string, store: string): Promise<{ price: 
     });
 
     let stdout = '';
+    let stderr = '';
 
     proc.stdout.on('data', (data) => { stdout += data.toString(); });
+    proc.stderr.on('data', (data) => { stderr += data.toString(); });
+
     proc.on('close', (code) => {
       if (code === 0 && stdout.trim()) {
         try {
-          resolve(JSON.parse(stdout));
-        } catch {
+          const data: ProductDetail = JSON.parse(stdout);
+          data.store = data.store || store;
+          resolve(data);
+        } catch (e) {
+          console.error('Failed to parse product detail:', stdout.slice(0, 200));
           resolve(null);
         }
       } else {
+        if (stderr) console.error(`Product detail error (${store}):`, stderr.slice(0, 300));
         resolve(null);
       }
     });
-    proc.on('error', () => resolve(null));
+    proc.on('error', (err) => {
+      console.error(`Failed to spawn product detail scraper:`, err.message);
+      resolve(null);
+    });
   });
 }
+
+// Backward compat
+export const scrapeProductPage = scrapeProductDetail;

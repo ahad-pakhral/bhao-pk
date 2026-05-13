@@ -1,0 +1,374 @@
+{
+  "nodes": [
+    {
+      "id": "dummydata_trending_products",
+      "label": "TRENDING_PRODUCTS",
+      "file_type": "code",
+      "source_file": "mobile/src/constants/dummyData.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "dummydata_all_products",
+      "label": "ALL_PRODUCTS",
+      "file_type": "code",
+      "source_file": "mobile/src/constants/dummyData.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "appnavigator_tabnavigator",
+      "label": "TabNavigator",
+      "file_type": "code",
+      "source_file": "mobile/src/navigation/AppNavigator.tsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "appnavigator_appnavigator",
+      "label": "AppNavigator",
+      "file_type": "code",
+      "source_file": "mobile/src/navigation/AppNavigator.tsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "validation_validators",
+      "label": "validators",
+      "file_type": "code",
+      "source_file": "mobile/src/utils/validation.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "validation_validateform",
+      "label": "validateForm",
+      "file_type": "code",
+      "source_file": "mobile/src/utils/validation.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "smartalerts_buildstoresnapshots",
+      "label": "buildStoreSnapshots",
+      "file_type": "code",
+      "source_file": "mobile/src/utils/smartAlerts.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "smartalerts_findalternatives",
+      "label": "findAlternatives",
+      "file_type": "code",
+      "source_file": "mobile/src/utils/smartAlerts.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "smartalerts_createsmartalert",
+      "label": "createSmartAlert",
+      "file_type": "code",
+      "source_file": "mobile/src/utils/smartAlerts.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "ranking_rankbyrelevance",
+      "label": "rankByRelevance",
+      "file_type": "code",
+      "source_file": "mobile/src/utils/ranking.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "supabase_supabase",
+      "label": "supabase",
+      "file_type": "code",
+      "source_file": "mobile/src/utils/supabase.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "searchscreen_searchscreen",
+      "label": "SearchScreen",
+      "file_type": "code",
+      "source_file": "mobile/src/screens/SearchScreen.tsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "alertsscreen_alertsscreen",
+      "label": "AlertsScreen",
+      "file_type": "code",
+      "source_file": "mobile/src/screens/AlertsScreen.tsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "profilescreen_profilescreen",
+      "label": "ProfileScreen",
+      "file_type": "code",
+      "source_file": "mobile/src/screens/ProfileScreen.tsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "homescreen_homescreen",
+      "label": "HomeScreen",
+      "file_type": "code",
+      "source_file": "mobile/src/screens/HomeScreen.tsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "loginscreen_loginscreen",
+      "label": "LoginScreen",
+      "file_type": "code",
+      "source_file": "mobile/src/screens/LoginScreen.tsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "signupscreen_signupscreen",
+      "label": "SignupScreen",
+      "file_type": "code",
+      "source_file": "mobile/src/screens/SignupScreen.tsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "wishlistscreen_wishlistscreen",
+      "label": "WishlistScreen",
+      "file_type": "code",
+      "source_file": "mobile/src/screens/WishlistScreen.tsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "pricehistorychart_pricehistorychart",
+      "label": "PriceHistoryChart",
+      "file_type": "code",
+      "source_file": "mobile/src/components/PriceHistoryChart.tsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "productcard_productcard",
+      "label": "ProductCard",
+      "file_type": "code",
+      "source_file": "mobile/src/components/ProductCard.tsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "smartalertcard_smartalertcard",
+      "label": "SmartAlertCard",
+      "file_type": "code",
+      "source_file": "mobile/src/components/SmartAlertCard.tsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "loadingspinner_loadingspinner",
+      "label": "LoadingSpinner",
+      "file_type": "code",
+      "source_file": "mobile/src/components/LoadingSpinner.tsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "typography_typography",
+      "label": "Typography",
+      "file_type": "code",
+      "source_file": "mobile/src/components/Typography.tsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "appnavigator_tabnavigator",
+      "target": "homescreen_homescreen",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "mobile/src/navigation/AppNavigator.tsx"
+    },
+    {
+      "source": "appnavigator_tabnavigator",
+      "target": "searchscreen_searchscreen",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "mobile/src/navigation/AppNavigator.tsx"
+    },
+    {
+      "source": "appnavigator_tabnavigator",
+      "target": "profilescreen_profilescreen",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "mobile/src/navigation/AppNavigator.tsx"
+    },
+    {
+      "source": "appnavigator_appnavigator",
+      "target": "loginscreen_loginscreen",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "mobile/src/navigation/AppNavigator.tsx"
+    },
+    {
+      "source": "appnavigator_appnavigator",
+      "target": "signupscreen_signupscreen",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "mobile/src/navigation/AppNavigator.tsx"
+    },
+    {
+      "source": "appnavigator_appnavigator",
+      "target": "appnavigator_tabnavigator",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "mobile/src/navigation/AppNavigator.tsx"
+    },
+    {
+      "source": "smartalerts_createsmartalert",
+      "target": "smartalerts_buildstoresnapshots",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "mobile/src/utils/smartAlerts.ts"
+    },
+    {
+      "source": "smartalerts_createsmartalert",
+      "target": "smartalerts_findalternatives",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "mobile/src/utils/smartAlerts.ts"
+    },
+    {
+      "source": "smartalerts_findalternatives",
+      "target": "ranking_rankbyrelevance",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "mobile/src/utils/smartAlerts.ts"
+    },
+    {
+      "source": "loginscreen_loginscreen",
+      "target": "validation_validateform",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "mobile/src/screens/LoginScreen.tsx"
+    },
+    {
+      "source": "signupscreen_signupscreen",
+      "target": "validation_validateform",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "mobile/src/screens/SignupScreen.tsx"
+    },
+    {
+      "source": "alertsscreen_alertsscreen",
+      "target": "smartalertcard_smartalertcard",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "mobile/src/screens/AlertsScreen.tsx"
+    },
+    {
+      "source": "searchscreen_searchscreen",
+      "target": "productcard_productcard",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "mobile/src/screens/SearchScreen.tsx"
+    },
+    {
+      "source": "homescreen_homescreen",
+      "target": "productcard_productcard",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "mobile/src/screens/HomeScreen.tsx"
+    }
+  ],
+  "hyperedges": [],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

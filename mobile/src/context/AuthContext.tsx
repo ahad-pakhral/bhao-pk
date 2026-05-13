@@ -1,7 +1,5 @@
-// Authentication Context for Mobile
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '../utils/supabase';
 import { authService, apiClient } from '../services/api';
 import { User } from '../types/models';
 import { SignupRequest } from '../types/api';
@@ -15,81 +13,120 @@ interface AuthContextType {
   signup: (data: SignupRequest) => Promise<void>;
   logout: () => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
+  updateLocalUser: (patch: Partial<User>) => void;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadStoredAuth();
+    // Check for existing session and listen for changes
+    refreshSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        syncProfile(session.access_token);
+      } else {
+        setUser(null);
+        apiClient.clearAuthToken();
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const loadStoredAuth = async () => {
+  const refreshSession = async () => {
     try {
-      const storedUser = await AsyncStorage.getItem('@auth_user');
-      const storedToken = await AsyncStorage.getItem('@auth_token');
-      if (storedUser && storedToken) {
-        setUser(JSON.parse(storedUser));
-        apiClient.setAuthToken(storedToken);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        await syncProfile(session.access_token);
       }
     } catch (error) {
-      console.error('Failed to load auth:', error);
+      console.error('Failed to refresh session:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const syncProfile = async (token: string) => {
+    try {
+      apiClient.setAuthToken(token);
+      const res = await fetch(`${API_BASE}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const { user } = await res.json();
+        setUser(user);
+      }
+    } catch (err) {
+      console.error('Sync profile failed:', err);
+    }
+  };
+
   const login = async (email: string, password: string) => {
     try {
+      setIsLoading(true);
       const response = await authService.login(email, password);
-      await AsyncStorage.setItem('@auth_user', JSON.stringify(response.user));
-      await AsyncStorage.setItem('@auth_token', response.token);
-      apiClient.setAuthToken(response.token);
       setUser(response.user);
       Toast.show({
         type: 'success',
         text1: 'Welcome back!',
         text2: `Logged in as ${response.user.email}`,
       });
-    } catch (error) {
+    } catch (error: any) {
       Toast.show({
         type: 'error',
         text1: 'Login failed',
-        text2: 'Invalid email or password',
+        text2: error.message || 'Invalid email or password',
       });
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const signup = async (data: SignupRequest) => {
     try {
+      setIsLoading(true);
       const response = await authService.signup(data);
-      await AsyncStorage.setItem('@auth_user', JSON.stringify(response.user));
-      await AsyncStorage.setItem('@auth_token', response.token);
-      apiClient.setAuthToken(response.token);
-      setUser(response.user);
-      Toast.show({
-        type: 'success',
-        text1: 'Account created!',
-        text2: 'Welcome to BHAO.PK',
-      });
-    } catch (error) {
+      if (response.user && response.token) {
+        setUser(response.user);
+        apiClient.setAuthToken(response.token);
+        Toast.show({
+          type: 'success',
+          text1: 'Account created!',
+          text2: 'Welcome to BHAO.PK',
+        });
+      } else {
+        // Email confirmation required — session will be null
+        Toast.show({
+          type: 'info',
+          text1: 'Check your email',
+          text2: 'We sent a verification link to your email address',
+        });
+      }
+    } catch (error: any) {
       Toast.show({
         type: 'error',
         text1: 'Signup failed',
-        text2: 'Please try again',
+        text2: error.message || 'Please try again',
       });
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const logout = async () => {
-    await AsyncStorage.removeItem('@auth_user');
-    await AsyncStorage.removeItem('@auth_token');
-    apiClient.clearAuthToken();
+    await authService.logout();
     setUser(null);
     Toast.show({
       type: 'info',
@@ -99,20 +136,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const forgotPassword = async (email: string) => {
-    try {
-      await authService.forgotPassword(email);
-      Toast.show({
-        type: 'success',
-        text1: 'Email sent!',
-        text2: 'Check your inbox for reset instructions',
-      });
-    } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Failed to send email',
-        text2: 'Please try again',
-      });
-      throw error;
+    await authService.forgotPassword(email);
+    Toast.show({
+      type: 'success',
+      text1: 'Check your email',
+      text2: 'Password reset link sent if account exists',
+    });
+  };
+
+  const updateLocalUser = (patch: Partial<User>) => {
+    setUser((prev) => (prev ? { ...prev, ...patch } : prev));
+  };
+
+  const refreshProfile = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      await syncProfile(session.access_token);
     }
   };
 
@@ -126,6 +165,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signup,
         logout,
         forgotPassword,
+        updateLocalUser,
+        refreshProfile,
       }}
     >
       {children}

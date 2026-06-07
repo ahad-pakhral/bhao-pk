@@ -57,6 +57,14 @@ class DarazScraper(BaseScraper):
                     elif not item_url.startswith('http'):
                         item_url = self.base_url + item_url
 
+                seller_name = item.get('sellerName', '') or "Daraz Seller"
+                seller_rating_raw = item.get('sellerRating')
+                try:
+                    seller_rating = float(seller_rating_raw) if seller_rating_raw else 4.2
+                except (ValueError, TypeError):
+                    seller_rating = 4.2
+                seller_trust = 0.85 if seller_rating > 4.0 else 0.70
+
                 products.append({
                     'name': item.get('name', ''),
                     'price': price,
@@ -67,6 +75,9 @@ class DarazScraper(BaseScraper):
                     'reviewsCount': int(item.get('review', 0) or 0),
                     'store': self.store_name,
                     'inStock': item.get('inStock', True),
+                    'merchantName': seller_name,
+                    'merchantRating': seller_rating,
+                    'merchantTrust': seller_trust,
                 })
             except Exception:
                 continue

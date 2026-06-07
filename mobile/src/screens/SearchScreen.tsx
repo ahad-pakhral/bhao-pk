@@ -22,6 +22,8 @@ function normalizeProduct(p: any, idx: number): ProductCardData {
     image: p.imageUrl || undefined,
     store: p.store || 'Unknown',
     inStock: p.inStock !== false,
+    brand: p.brand || 'Unknown',
+    isOutlier: p.isOutlier === true,
   } as ProductCardData;
 }
 
@@ -34,6 +36,19 @@ export const SearchScreen = ({ route, navigation }: any) => {
   const [hasSearched, setHasSearched] = useState(!!query);
   const [liveProducts, setLiveProducts] = useState<ProductCardData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [interpretedQuery, setInterpretedQuery] = useState<string | null>(null);
+
+  // Collect unique brands dynamically from active search results
+  const availableBrands = React.useMemo(() => {
+    const brandSet = new Set<string>();
+    liveProducts.forEach(p => {
+      const b = (p as any).brand;
+      if (b && b !== 'Unknown' && b !== 'Generic' && b !== 'Other') {
+        brandSet.add(b);
+      }
+    });
+    return Array.from(brandSet).sort();
+  }, [liveProducts]);
 
   // Enforce real products from API
   const productsSource = liveProducts as unknown as ProductWithListings[];
@@ -55,9 +70,12 @@ export const SearchScreen = ({ route, navigation }: any) => {
       const data = await apiClient.post<any>('/search', { keyword });
       const normalized = (data.results || []).map(normalizeProduct);
       setLiveProducts(normalized);
+      const hasInterpreted = data.interpretedQuery && data.interpretedQuery.toLowerCase() !== keyword.toLowerCase();
+      setInterpretedQuery(hasInterpreted ? data.interpretedQuery : null);
     } catch (err) {
       console.warn('[Search] Backend unavailable:', err);
       setLiveProducts([]);
+      setInterpretedQuery(null);
     } finally {
       setIsLoading(false);
     }
@@ -125,6 +143,7 @@ export const SearchScreen = ({ route, navigation }: any) => {
                 setSearchQuery('');
                 setHasSearched(false);
                 setShowSuggestions(false);
+                setInterpretedQuery(null);
               }}
               style={styles.clearSearchButton}
             >
@@ -185,6 +204,17 @@ export const SearchScreen = ({ route, navigation }: any) => {
               </Typography>
             </TouchableOpacity>
           </View>
+
+          {interpretedQuery && (
+            <View style={styles.aiBanner}>
+              <Typography variant="bodySmall" color={COLORS.primary} style={{ fontWeight: 'bold', marginRight: 4 }}>
+                ✨ AI Search:
+              </Typography>
+              <Typography variant="bodySmall" color={COLORS.text} style={{ flex: 1 }}>
+                Showing results for "{interpretedQuery}" (interpreted from "{query || searchQuery}")
+              </Typography>
+            </View>
+          )}
 
           <ScrollView contentContainerStyle={styles.resultsList}>
             {filteredProducts.map((product) => (
@@ -260,6 +290,59 @@ export const SearchScreen = ({ route, navigation }: any) => {
                   <Typography>{store}</Typography>
                 </TouchableOpacity>
               ))}
+
+              {/* Brand Filter */}
+              {availableBrands.length > 0 && (
+                <>
+                  <Typography variant="bodySmall" color={COLORS.textSecondary} style={styles.filterLabel}>
+                    BRAND
+                  </Typography>
+                  {availableBrands.map((brand) => (
+                    <TouchableOpacity
+                      key={brand}
+                      style={styles.checkboxRow}
+                      onPress={() => {
+                        const currentBrands = filters.brands || [];
+                        const newBrands = currentBrands.includes(brand)
+                          ? currentBrands.filter(b => b !== brand)
+                          : [...currentBrands, brand];
+                        updateFilters({ brands: newBrands });
+                      }}
+                    >
+                      <View style={[
+                        styles.checkbox,
+                        (filters.brands || []).includes(brand) && styles.checkboxChecked
+                      ]}>
+                        {(filters.brands || []).includes(brand) && (
+                          <View style={styles.checkboxInner} />
+                        )}
+                      </View>
+                      <Typography>{brand}</Typography>
+                    </TouchableOpacity>
+                  ))}
+                </>
+              )}
+
+              {/* Options Filter */}
+              <Typography variant="bodySmall" color={COLORS.textSecondary} style={styles.filterLabel}>
+                OPTIONS
+              </Typography>
+              <TouchableOpacity
+                style={styles.checkboxRow}
+                onPress={() => {
+                  updateFilters({ hideOutliers: !filters.hideOutliers });
+                }}
+              >
+                <View style={[
+                  styles.checkbox,
+                  filters.hideOutliers && styles.checkboxChecked
+                ]}>
+                  {filters.hideOutliers && (
+                    <View style={styles.checkboxInner} />
+                  )}
+                </View>
+                <Typography>Hide Price Outliers</Typography>
+              </TouchableOpacity>
 
               {/* Price Range Filter */}
               <Typography variant="bodySmall" color={COLORS.textSecondary} style={styles.filterLabel}>
@@ -541,5 +624,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
+  },
+  aiBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(99, 102, 241, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.4)',
+    borderRadius: 8,
+    padding: SPACING.md,
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.md,
   },
 });

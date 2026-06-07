@@ -29,6 +29,8 @@ export interface SearchProduct {
   url?: string;
   inStock?: boolean;
   originalPrice?: string;
+  brand?: string;
+  isOutlier?: boolean;
 }
 
 
@@ -54,6 +56,8 @@ function normalizeProduct(p: any, idx: number): SearchProduct {
     priceDrop: p.originalPrice && p.originalPrice > price
       ? `-${Math.round(((p.originalPrice - price) / p.originalPrice) * 100)}%`
       : undefined,
+    brand: p.brand || "Unknown",
+    isOutlier: p.isOutlier === true,
   };
 }
 
@@ -64,30 +68,22 @@ function SearchContent() {
   const searchParams = useSearchParams();
   const queryParam = searchParams?.get("q") || "";
 
-  const [searchInput, setSearchInput] = useState(queryParam);
   const [sort, setSort] = useState("Relevance");
   const [selectedStores, setSelectedStores] = useState<string[]>([]);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [hideOutliers, setHideOutliers] = useState(true);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [liveProducts, setLiveProducts] = useState<SearchProduct[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [dataSource, setDataSource] = useState<"live" | "cache" | "error" | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [interpretedQuery, setInterpretedQuery] = useState<string | null>(null);
 
   // Global search cache
-  const { lastQuery, lastResults, lastFetchTime, setSearchResults } = useSearchStore();
+  const { lastQuery, lastResults, lastInterpretedQuery, lastFetchTime, setSearchResults } = useSearchStore();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { showToast } = useToast();
-
-  useEffect(() => {
-    if (queryParam) {
-      setSearchInput(queryParam);
-      fetchFromAPI(queryParam);
-    } else {
-      setSearchInput("");
-      fetchFromAPI("");
-    }
-  }, [queryParam]);
 
   // Fetch from backend API
   const fetchFromAPI = useCallback(async (keyword: string) => {
@@ -98,15 +94,18 @@ function SearchContent() {
     }
 
     // Check frontend cache to prevent re-scraping on back navigation
-    const { lastQuery, lastResults, lastFetchTime } = useSearchStore.getState();
+    const { lastQuery, lastResults, lastInterpretedQuery, lastFetchTime } = useSearchStore.getState();
     if (lastQuery === keyword && lastResults.length > 0 && Date.now() - lastFetchTime < 30 * 60 * 1000) {
       console.log("[Search] Using frontend cache for:", keyword);
       setLiveProducts(lastResults);
+      setInterpretedQuery(lastInterpretedQuery);
       setDataSource("cache");
       return;
     }
 
     setIsLoading(true);
+    setLiveProducts([]);
+    setInterpretedQuery(null);
     try {
       // Include auth token (if logged in) so backend can log search_history for admin stats.
       const token = useAuthStore.getState().token;
@@ -122,20 +121,50 @@ function SearchContent() {
       if (!res.ok) throw new Error(`API error: ${res.status}`);
 
       const data = await res.json();
+      
+      // Log classification details to browser console
+      if (data.routeLabel) {
+        console.log(
+          `%c[QueryRouter]%c Routed query "${keyword}" to %c${data.routeLabel}%c (Accuracy: ${(data.routingAccuracy * 100).toFixed(0)}%)`,
+          "color: #6366f1; font-weight: bold;",
+          "color: inherit;",
+          `color: ${data.routeLabel === 'NL' ? '#f43f5e' : '#10b981'}; font-weight: bold;`,
+          "color: inherit;"
+        );
+        if (data.routeLabel === 'NL') {
+          console.log(
+            `%c[QueryRouter]%c Gemini inferred query: "%c${data.interpretedQuery || 'None'}%c"`,
+            "color: #6366f1; font-weight: bold;",
+            "color: inherit;",
+            "color: #a855f7; font-weight: bold;",
+            "color: inherit;"
+          );
+        }
+      }
+
       const normalized = (data.results || []).map(normalizeProduct);
       setLiveProducts(normalized);
       setDataSource(data.source === "cache" ? "cache" : "live");
 
+      const hasInterpreted = data.interpretedQuery && data.interpretedQuery.toLowerCase() !== keyword.toLowerCase();
+      const finalInterpreted = hasInterpreted ? data.interpretedQuery : null;
+      setInterpretedQuery(finalInterpreted);
+
       // Save results to frontend cache
-      setSearchResults(keyword, normalized);
+      setSearchResults(keyword, normalized, finalInterpreted);
     } catch (err) {
       console.warn("[Search] Backend unavailable:", err);
       setLiveProducts([]);
+      setInterpretedQuery(null);
       setDataSource("error");
     } finally {
       setIsLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    fetchFromAPI(queryParam);
+  }, [queryParam, fetchFromAPI]);
 
   const toggleStore = (store: string) => {
     setSelectedStores(prev =>
@@ -145,6 +174,8 @@ function SearchContent() {
 
   const clearAll = () => {
     setSelectedStores([]);
+    setSelectedBrands([]);
+    setHideOutliers(true);
     setMinPrice("");
     setMaxPrice("");
     setSort("Relevance");
@@ -156,6 +187,16 @@ function SearchContent() {
     // Filter by stores
     if (selectedStores.length > 0) {
       filtered = filtered.filter(p => selectedStores.includes(p.store));
+    }
+
+    // Filter by brands
+    if (selectedBrands.length > 0) {
+      filtered = filtered.filter(p => p.brand && selectedBrands.includes(p.brand));
+    }
+
+    // Filter by outliers
+    if (hideOutliers) {
+      filtered = filtered.filter(p => !p.isOutlier);
     }
 
     // Filter by price range
@@ -172,13 +213,10 @@ function SearchContent() {
       filtered.sort((a, b) => b.priceValue - a.priceValue);
     } else if (sort === "Top Rated") {
       filtered.sort((a, b) => b.rating - a.rating);
-    } else {
-      // Relevance — backend already ranks by Bayesian composite
-      // Add client-side ranking fallback here if needed in future
     }
 
     return filtered;
-  }, [queryParam, selectedStores, minPrice, maxPrice, sort, liveProducts]);
+  }, [selectedStores, selectedBrands, hideOutliers, minPrice, maxPrice, sort, liveProducts]);
 
   // Collect unique stores from base results for the filter sidebar so filters don't disappear
   const availableStores = useMemo(() => {
@@ -186,13 +224,34 @@ function SearchContent() {
     return stores.filter(s => storeSet.has(s));
   }, [liveProducts]);
 
+  // Collect unique brands dynamically from active search results
+  const availableBrands = useMemo(() => {
+    const brandSet = new Set<string>();
+    liveProducts.forEach(p => {
+      if (p.brand && p.brand !== "Unknown" && p.brand !== "Generic" && p.brand !== "Other") {
+        brandSet.add(p.brand);
+      }
+    });
+    return Array.from(brandSet).sort();
+  }, [liveProducts]);
+
   return (
     <div style={{ padding: '20px 40px', maxWidth: '100%' }}>
       <div style={{ display: 'flex', gap: '40px' }}>
         {/* Filters Sidebar */}
-        <aside style={{ width: '280px', flexShrink: 0 }}>
+        <aside style={{
+          width: '280px',
+          flexShrink: 0,
+          position: 'sticky',
+          top: '24px',
+          alignSelf: 'flex-start',
+          maxHeight: 'calc(100vh - 48px)',
+          overflowY: 'auto',
+          paddingRight: '8px'
+        }}>
           <div className="section-title"><h3>Filters</h3></div>
 
+          {/* Store Filter */}
           <div style={{ marginBottom: '32px' }}>
             <h5 style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Store</h5>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -208,7 +267,40 @@ function SearchContent() {
             </div>
           </div>
 
+          {/* Brand Filter */}
+          {availableBrands.length > 0 && (
+            <div style={{ marginBottom: '32px' }}>
+              <h5 style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Brand</h5>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '200px', overflowY: 'auto', paddingRight: '8px' }}>
+                {availableBrands.map(brand => (
+                  <label key={brand} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedBrands.includes(brand)}
+                      onChange={() => {
+                        setSelectedBrands(prev =>
+                          prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]
+                        );
+                      }}
+                    /> {brand}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Price Options & Range */}
           <div style={{ marginBottom: '32px' }}>
+            <h5 style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Price Options</h5>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={hideOutliers}
+                  onChange={(e) => setHideOutliers(e.target.checked)}
+                /> Hide Price Outliers
+              </label>
+            </div>
             <h5 style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Price Range</h5>
             <div style={{ display: 'flex', gap: '8px' }}>
               <input
@@ -236,31 +328,6 @@ function SearchContent() {
         {/* Results Area */}
         <div style={{ flex: 1 }}>
           <div style={{ marginBottom: '24px' }}>
-            <div style={{ position: 'relative', width: '100%', marginBottom: '16px' }}>
-              <input
-                type="text"
-                placeholder="Search products across all Pakistani stores..."
-                className="input-field"
-                style={{ width: '100%', paddingRight: '48px' }}
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && searchInput.trim()) {
-                    router.push(`/search?q=${encodeURIComponent(searchInput.trim())}`);
-                  }
-                }}
-              />
-              <button
-                style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
-                onClick={() => {
-                  if (searchInput.trim()) {
-                    router.push(`/search?q=${encodeURIComponent(searchInput.trim())}`);
-                  }
-                }}
-              >
-                <Search size={20} />
-              </button>
-            </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <h2 style={{ fontSize: '24px' }}>
@@ -268,7 +335,7 @@ function SearchContent() {
                   {isLoading && <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginLeft: '12px' }}>Scraping stores...</span>}
                 </h2>
                 <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
-                  Found {results.length} items{queryParam && ` for "${queryParam}"`}
+                  Found {results.length} items{(interpretedQuery || queryParam) && ` for "${interpretedQuery || queryParam}"`}
                   {dataSource && dataSource !== "error" && (
                     <span className={`badge ${dataSource === "live" ? "badge-live" : "badge-cached"}`} style={{ marginLeft: '8px', verticalAlign: 'middle' }}>
                       {dataSource === "live" ? "LIVE" : "CACHED"}

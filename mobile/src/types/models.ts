@@ -78,6 +78,7 @@ export interface ProductWithListings extends Product {
   rating?: number;
   store?: string;
   price?: string;
+  isOutlier?: boolean;
 }
 
 export interface ProductCardData {

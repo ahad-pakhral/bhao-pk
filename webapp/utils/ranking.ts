@@ -9,6 +9,7 @@ export interface RankingConfig {
     popularity: number;
     storeReliability: number;
     discountBonus: number;
+    merchantTrust: number;
   };
   storeReliabilityTable: Record<string, number>;
 }
@@ -19,9 +20,10 @@ export const DEFAULT_RANKING_CONFIG: RankingConfig = {
     relevance: 0.50,
     bayesianRating: 0.10,
     priceScore: 0.20,
-    popularity: 0.10,
+    popularity: 0.07, // reduced from 0.10 to accommodate merchant trust
     storeReliability: 0.05,
     discountBonus: 0.05,
+    merchantTrust: 0.03, // new
   },
   storeReliabilityTable: {
     Daraz: 0.85,
@@ -239,6 +241,11 @@ export function rankByRelevance<T extends {
   originalPrice?: string | number;
   inStock?: boolean;
   name?: string;
+  merchantName?: string;
+  merchantRating?: number;
+  merchantTrust?: number;
+  brand?: string;
+  isOutlier?: boolean;
 }>(
   products: T[],
   query: string = "",
@@ -250,19 +257,18 @@ export function rankByRelevance<T extends {
   const totalRating = products.reduce((sum, p) => sum + p.rating, 0);
   const globalAvg = totalRating / products.length;
 
-  // 2. Outlier Filtering for Price Range (IQR Method)
+  // 2. Outlier Filtering for Price Range (Percentile Method)
   const validPrices = products.map(p => parsePrice(p.price)).filter(p => p > 0).sort((a, b) => a - b);
   let minPrice = 1;
   let maxPrice = 1;
+  let lowerBound = 0;
+  let upperBound = Infinity;
 
   if (validPrices.length > 0) {
     if (validPrices.length > 3) {
-      const q1 = validPrices[Math.floor(validPrices.length * 0.25)];
-      const q3 = validPrices[Math.floor(validPrices.length * 0.75)];
-      const iqr = q3 - q1;
-
-      const lowerBound = q1 - 1.5 * iqr;
-      const upperBound = q3 + 1.5 * iqr;
+      // 5th and 95th percentiles
+      lowerBound = validPrices[Math.floor(validPrices.length * 0.05)];
+      upperBound = validPrices[Math.floor(validPrices.length * 0.95)];
 
       const filteredPrices = validPrices.filter(p => p >= lowerBound && p <= upperBound);
       minPrice = filteredPrices.length > 0 ? Math.min(...filteredPrices) : validPrices[0];
@@ -270,6 +276,8 @@ export function rankByRelevance<T extends {
     } else {
       minPrice = validPrices[0];
       maxPrice = validPrices[validPrices.length - 1];
+      lowerBound = minPrice;
+      upperBound = maxPrice;
     }
   }
 
@@ -286,21 +294,36 @@ export function rankByRelevance<T extends {
     const currentPrice = parsePrice(product.price);
 
     const relevance = calculateRelevance(product.name || "", query);
+    const isOutlier = currentPrice < lowerBound || currentPrice > upperBound;
 
     // Hard elimination: if relevance is 0, product doesn't match the query at all
     if (relevance === 0) {
-      return { product, score: 0 };
+      return { product: { ...product, isOutlier }, score: 0 };
     }
 
     // Extra penalty: product name contains generic comparison phrases
     const nameLower = (product.name || "").toLowerCase();
     const isGenericMention = GENERIC_IN_DESCRIPTION.some(phrase => nameLower.includes(phrase));
     if (isGenericMention) {
-      return { product, score: relevance * 0.02 };
+      return { product: { ...product, isOutlier }, score: relevance * 0.02 };
     }
 
-    const bayesian = (config.confidenceThreshold * globalAvg + product.reviewsCount * product.rating) /
-      (config.confidenceThreshold + product.reviewsCount);
+    // Merchant Trust Blend
+    let ratingVal = product.rating;
+    let reviewsVal = product.reviewsCount;
+    const merchantRating = product.merchantRating || 4.2;
+    const merchantTrust = product.merchantTrust || 0.70;
+
+    if (reviewsVal === 0) {
+      ratingVal = merchantRating;
+      reviewsVal = 5 * merchantTrust;
+    } else {
+      ratingVal = (product.rating * reviewsVal + merchantRating * 3) / (reviewsVal + 3);
+      reviewsVal = reviewsVal + 3 * merchantTrust;
+    }
+
+    const bayesian = (config.confidenceThreshold * globalAvg + reviewsVal * ratingVal) /
+      (config.confidenceThreshold + reviewsVal);
     const normalizedBayesian = Math.max(0, Math.min(1, (bayesian - 1) / 4));
 
     let priceScore = 0;
@@ -331,7 +354,8 @@ export function rankByRelevance<T extends {
       config.weights.priceScore * priceScore +
       config.weights.popularity * popularity +
       config.weights.storeReliability * storeReliability +
-      config.weights.discountBonus * discountBonus;
+      config.weights.discountBonus * discountBonus +
+      config.weights.merchantTrust * merchantTrust;
 
     // Stock Penalization
     if (product.inStock === false) {
@@ -349,7 +373,7 @@ export function rankByRelevance<T extends {
       score *= 0.03; // 97% penalty — accessories sink to the bottom
     }
 
-    return { product, score };
+    return { product: { ...product, isOutlier }, score };
   });
 
   scored.sort((a, b) => b.score - a.score);

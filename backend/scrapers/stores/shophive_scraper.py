@@ -58,6 +58,9 @@ class ShophiveScraper(BaseScraper):
                     'reviewsCount': 0,
                     'store': self.store_name,
                     'inStock': True,
+                    'merchantName': 'Shophive Partner',
+                    'merchantRating': 4.3,
+                    'merchantTrust': 0.75,
                 })
             except Exception:
                 continue

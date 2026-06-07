@@ -9,6 +9,120 @@
 
 ## Changelog
 
+### [2026-06-08 01:42] — Upgrade Gemini model to gemini-3.1-flash-lite and fix query parser fallback (Fix)
+
+**What changed:**
+- `backend/src/services/ai.service.ts` — Switched Gemini model from the deprecated/unsupported `gemini-1.5-flash` to `gemini-3.1-flash-lite` on the standard `v1` endpoint.
+- `backend/src/services/ai.service.ts` — Rewrote `fallbackQueryParser()` to scan for contrast transitions and brand overlaps (with misspelled word cleanup support), preventing fallback pollution like `"llike apple am llow casio will work"`.
+
+**Why:**
+- The old `gemini-1.5-flash` model identifier returned `404 Not Found` for this API version in the 2026 environment, which forced query interpretation to always fall back.
+- The previous regex-based `fallbackQueryParser` only checked the first matched contrast transition word (which resulted in matching "but am" instead of "so casio"), causing it to fall through and output messy query tokens.
+
+**Technical details:**
+- Uses the `gemini-3.1-flash-lite` model which works seamlessly under the user's quota.
+- The new fallback query parser uses a word-token based loop to identify contrast-brand pairings (e.g. "so" followed by "casio") and maps them to a matched brand/implicit category.
+
+**Side effects:**
+- None.
+
+**Gotchas / Lessons learned:**
+- Predefined model identifiers change over time; query the model list first to ensure chosen models match active server endpoints. Simple Regex scans on queries can match false transitions; word-token checking provides semantic robustness.
+
+**Testing:**
+- Verified query interpretation with the query *"I llike apple but am on llow budget so casio will work"* returns *"casio watch"* successfully via the API.
+- Verified backend compiled successfully.
+
+**Related skills updated:**
+- None.
+
+### [2026-06-08 01:35] — Restrict local brand fallback classifier, update UI brand lists, and add Gemini key (Fix)
+
+**What changed:**
+- `backend/src/services/ai.service.ts` — Disabled first-word brand parsing fallback in `fallbackBrandDetector()`, defaulting to `"Generic"` instead.
+- `backend/src/services/ranking.service.ts` — Updated local `fallbackBrandDetector()` to match `ai.service.ts` (disabled first-word fallback, returns `"Generic"` instead of `"Other"`).
+- `webapp/app/search/page.tsx` — Filtered out `"Generic"` and `"Other"` brand values from the derived unique brand lists displayed in the filter sidebar.
+- `mobile/src/screens/SearchScreen.tsx` — Synced mobile UI to filter out `"Generic"` and `"Other"` brand names from the filter checkboxes.
+- `backend/.env` — Created file containing the user's provided `GEMINI_API_KEY`.
+
+**Why:**
+- Prevent the local brand classifier fallback from turning arbitrary first words of product titles (like "Soft", "Silicone", "Universal", "Premium", etc. for iPhone accessories) into fake brand filters.
+- Set up the user's newly provided Gemini API key for smart brand extraction and interpretation.
+
+**Technical details:**
+- Brand list scans are now strictly comparative against the predefined common brands list, preventing arbitrary first word mapping.
+- Restarting the backend server clears all active in-memory cached brand maps.
+
+**Side effects:**
+- None.
+
+**Gotchas / Lessons learned:**
+- A generic first-word parsing fallback can pollute the brand category space when matching products that are accessories (e.g. "Silicone Case for iPhone" parsed as "Silicone" brand). Filtering out "Generic"/"Other" on both backend classification and frontend aggregation keeps lists clean.
+
+**Testing:**
+- Verified all workspaces (`backend`, `webapp`, `mobile`) build successfully.
+- Verified backend server successfully auto-restarted and is running on port 3001.
+
+**Related skills updated:**
+- None.
+
+### [2026-06-07 19:20] — Fix Telemart Scraper indentation bug (Fix)
+
+**What changed:**
+- `backend/scrapers/stores/telemart_scraper.py` — Fixed syntax indentation error on line 80 (`image = hit.get(...)` had extra leading spaces).
+
+**Why:**
+- The indentation error prevented any Python scrapers from starting (due to syntax compilation error on startup imports), causing all search and trending queries to return empty results.
+
+**Technical details:**
+- Aligned indentation to 16 spaces (matching surrounding block structure).
+
+**Side effects:**
+- None.
+
+**Gotchas / Lessons learned:**
+- Syntax and indentation errors in one Python scraper can block the entire import chain in python script setups. Proactively testing python execution catches these bugs.
+
+**Testing:**
+- Ran the python search runner script directly and verified it returned Daraz products successfully.
+- Verified `/api/search/trending` now returns 80 products successfully.
+- Verified `POST /api/search` with `"iPhone"` now returns 93 products successfully.
+
+**Related skills updated:**
+- None.
+
+### [2026-06-07 19:10] — Real-time brand filtering, price outlier toggle, AI banner, and local start (Feature)
+
+**What changed:**
+- `webapp/store/searchStore.ts` — Added `lastInterpretedQuery` support to client-side Zustand search cache.
+- `webapp/app/search/page.tsx` — Normalized products to include `brand` and `isOutlier`. Integrated dynamic brand checkboxes, price outliers hide/show toggle, sticky sidebar, and AI query interpretation banner.
+- `mobile/src/types/models.ts` — Added `isOutlier?: boolean` to `ProductWithListings`.
+- `mobile/src/types/api.ts` — Added `brands?: string[]` and `hideOutliers?: boolean` to `SearchFilters`.
+- `mobile/src/hooks/useSearch.ts` — Updated search logic to handle brand filtering, outlier filtering, and defaulted `hideOutliers` to true.
+- `mobile/src/screens/SearchScreen.tsx` — Updated normalization for brand/outlier properties, added brand/outlier checkboxes to filters modal, and rendered styled AI query interpretation banner.
+- `backend/src/services/supabase.service.ts` — Added fallback credentials and global WebSocket class mock to allow Express server to startup and degrade gracefully on Node 20.
+
+**Why:**
+- Complete the frontends UI and hooks wiring for the new brand extraction, percentile outliers, and AI search query features.
+- Address a Node.js 20 crash in the backend Supabase setup when credentials are not configured.
+
+**Technical details:**
+- Global `WebSocket` mock on Node < 22 prevents the Supabase realtime connection driver from crashing when instantiating the client.
+- Dynamic brand filters are aggregated dynamically on the fly from the current search results and sorted alphabetically.
+
+**Side effects:**
+- None.
+
+**Gotchas / Lessons learned:**
+- Supabase realtime library assumes WebSocket presence in JS environment. Stubbing it with an empty class is a clean way to keep REST client initializations from crashing.
+
+**Testing:**
+- Ran type compilation checks (`npx tsc --noEmit` and production builds) which completed with zero errors on backend, webapp, and mobile workspaces.
+- Successfully verified backend health check and started development servers locally.
+
+**Related skills updated:**
+- None.
+
 ### [2026-04-28 19:00] — Smart Alerts system detailed breakdown added to defense prep (Docs)
 
 **What changed:**

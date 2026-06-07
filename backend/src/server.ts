@@ -9,6 +9,7 @@ import { historyRoutes } from './routes/history.routes';
 import { adminRoutes } from './routes/admin.routes';
 import { recentRoutes } from './routes/recent.routes';
 import { startAlertChecker } from './services/alert-checker.service';
+import { initClassifierService } from './services/classifier.service';
 
 dotenv.config();
 
@@ -63,6 +64,9 @@ app.listen(PORT, () => {
 
   // Start periodic alert checker (every 30 minutes)
   startAlertChecker();
+
+  // Initialize Python query classifier microservice
+  initClassifierService();
 });
 
 export default app;

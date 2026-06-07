@@ -312,4 +312,30 @@ export const db = {
 
     return { before: beforeIso, limit, events: page, nextCursor };
   },
+
+  // ==========================================
+  // Brand Rules
+  // ==========================================
+  getBrandRules: async () => {
+    const { data, error } = await supabaseAdmin
+      .from('brand_rules')
+      .select('keyword,brand');
+    if (error) {
+      console.error('[DB] Failed to fetch brand rules:', error.message);
+      return [];
+    }
+    return data || [];
+  },
+
+  insertBrandRules: async (rules: Array<{ keyword: string; brand: string }>) => {
+    if (rules.length === 0) return;
+    const { data, error } = await supabaseAdmin
+      .from('brand_rules')
+      .upsert(rules, { onConflict: 'keyword' });
+    if (error) {
+      console.error('[DB] Failed to upsert brand rules:', error.message);
+    }
+    return data;
+  },
 };
+

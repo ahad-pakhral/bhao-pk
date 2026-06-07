@@ -7,7 +7,7 @@ import { rankByRelevance } from '../utils/ranking';
 
 export const useSearch = (allProducts: ProductWithListings[], initialQuery: string = '') => {
   const [query, setQuery] = useState(initialQuery);
-  const [filters, setFilters] = useState<SearchFilters>({ stores: [] });
+  const [filters, setFilters] = useState<SearchFilters>({ stores: [], hideOutliers: true });
   const [sort, setSort] = useState<SortOption>('relevance');
   const [results, setResults] = useState<ProductWithListings[]>(allProducts);
 
@@ -38,6 +38,18 @@ export const useSearch = (allProducts: ProductWithListings[], initialQuery: stri
       filtered = filtered.filter((product) =>
         filters.stores!.includes(product.store || '')
       );
+    }
+
+    // Filter by brands
+    if (filters.brands && filters.brands.length > 0) {
+      filtered = filtered.filter((product) =>
+        product.brand && filters.brands!.includes(product.brand)
+      );
+    }
+
+    // Filter by outliers
+    if (filters.hideOutliers) {
+      filtered = filtered.filter((product) => !product.isOutlier);
     }
 
     // Filter by price range
@@ -105,7 +117,7 @@ export const useSearch = (allProducts: ProductWithListings[], initialQuery: stri
   };
 
   const clearFilters = () => {
-    setFilters({});
+    setFilters({ stores: [], hideOutliers: true });
   };
 
   return {

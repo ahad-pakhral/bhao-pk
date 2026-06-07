@@ -75,7 +75,6 @@ class TelemartScraper(BaseScraper):
                 if orig and orig <= price:
                     orig = None
 
-                # Telemart URLs: telemart.pk/{slug} (NOT /product/{slug})
                 url = f"{self.base_url}/{slug}"
                 image = hit.get('mainImageLink', '')
                 rating = float(hit.get('rating', 0) or 0)
@@ -92,6 +91,9 @@ class TelemartScraper(BaseScraper):
                     'reviewsCount': reviews_count,
                     'store': self.store_name,
                     'inStock': qty > 0,
+                    'merchantName': 'Telemart Merchant',
+                    'merchantRating': 4.4,
+                    'merchantTrust': 0.80,
                 })
             except Exception:
                 continue

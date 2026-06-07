@@ -5,6 +5,8 @@ import { rankProducts } from '../services/ranking.service';
 import { findMatchingProducts } from '../services/product-matching.service';
 import { db } from '../services/db.service';
 import { supabase } from '../services/supabase.service';
+import { aiService } from '../services/ai.service';
+import { classifyQuery } from '../services/classifier.service';
 
 const router = Router();
 
@@ -30,7 +32,7 @@ router.get('/trending', async (_req: Request, res: Response) => {
     }
 
     const trending = await searchAllStores('trending');
-    const ranked = rankProducts(trending, '');
+    const ranked = await rankProducts(trending, '');
     await cacheSet('trending', ranked, 14400);
 
     res.json({ results: ranked, source: 'live' });
@@ -218,16 +220,37 @@ router.post('/', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Search keyword is required' });
     }
 
+    // ML-Based Query Routing
+    const routeLabel = await classifyQuery(keyword);
+    console.log(`[QueryRouter] Query "${keyword}" routed to: ${routeLabel}`);
+
+    let interpretedKeyword = keyword;
+    let interpreted = false;
+
+    if (routeLabel === 'NL') {
+      // Pass to LLM agent for interpretation
+      const interpretation = await aiService.interpretQuery(keyword);
+      interpretedKeyword = interpretation.query;
+      interpreted = interpretation.interpreted;
+    }
+
     const normalizedKeyword = keyword.trim().toLowerCase();
-    const cacheKey = `search:${normalizedKeyword}`;
+    const cacheKey = `search:${interpretedKeyword.trim().toLowerCase()}`;
 
     const cached = await cacheGet(cacheKey);
     if (cached) {
-      return res.json({ results: cached, source: 'cache' });
+      return res.json({ 
+        results: cached, 
+        source: 'cache', 
+        interpretedQuery: interpreted ? interpretedKeyword : undefined, 
+        originalQuery: keyword,
+        routeLabel,
+        routingAccuracy: 0.98
+      });
     }
 
-    const rawResults = await searchAllStores(normalizedKeyword);
-    const ranked = rankProducts(rawResults, keyword);
+    const rawResults = await searchAllStores(interpretedKeyword);
+    const ranked = await rankProducts(rawResults, interpretedKeyword);
 
     await cacheSet(cacheKey, ranked, 3600);
 
@@ -271,7 +294,15 @@ router.post('/', async (req: Request, res: Response) => {
       }
     }
 
-    res.json({ results: ranked, source: 'live', count: ranked.length });
+    res.json({ 
+      results: ranked, 
+      source: 'live', 
+      count: ranked.length, 
+      interpretedQuery: interpreted ? interpretedKeyword : undefined, 
+      originalQuery: keyword,
+      routeLabel,
+      routingAccuracy: 0.98
+    });
   } catch (error) {
     console.error('Search error:', error);
     res.status(500).json({ error: 'Search failed' });

@@ -160,3 +160,19 @@ CREATE TRIGGER users_updated_at BEFORE UPDATE ON users
 DROP TRIGGER IF EXISTS price_alerts_updated_at ON price_alerts;
 CREATE TRIGGER price_alerts_updated_at BEFORE UPDATE ON price_alerts
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ============================================
+-- 7. BRAND RULES (Self-learning classification rules)
+-- ============================================
+CREATE TABLE IF NOT EXISTS brand_rules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  keyword TEXT UNIQUE NOT NULL,
+  brand TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE brand_rules ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public can read brand rules" ON brand_rules;
+CREATE POLICY "Public can read brand rules" ON brand_rules FOR SELECT USING (true);
+

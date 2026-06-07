@@ -4,9 +4,45 @@ import "./globals.css";
 import Link from "next/link";
 import { Logo } from "../components/Logo";
 import { ToastProvider } from "../components/Toast";
-import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useAuthStore } from "../store/authStore";
+
+function NavbarSearch({ isMobile, closeMenu }: { isMobile?: boolean; closeMenu?: () => void }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const query = searchParams?.get("q") || "";
+  const [searchQuery, setSearchQuery] = useState(query);
+
+  useEffect(() => {
+    setSearchQuery(query);
+  }, [query]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      if (closeMenu) closeMenu();
+    }
+  };
+
+  return (
+    <form onSubmit={handleSearch} className={isMobile ? "mobile-search" : "navbar-search"}>
+      <button type="submit" style={{ background: 'none', border: 'none', padding: 0, margin: 0, display: 'flex', alignItems: 'center', cursor: 'pointer' }} aria-label="Search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+        </svg>
+      </button>
+      <input
+        type="text"
+        placeholder="Compare prices..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className={isMobile ? "mobile-search-input" : "navbar-search-input"}
+      />
+    </form>
+  );
+}
 
 export default function RootLayout({
   children,
@@ -15,7 +51,6 @@ export default function RootLayout({
 }>) {
   const router = useRouter();
   const pathname = usePathname();
-  const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user, isAuthenticated, checkSession, logout } = useAuthStore();
@@ -33,14 +68,6 @@ export default function RootLayout({
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery("");
-    }
-  };
 
   const navItems = [
     { href: "/search", label: "Browse" },
@@ -78,18 +105,16 @@ export default function RootLayout({
               </div>
 
               {/* Center: Search */}
-              <form onSubmit={handleSearch} className="navbar-search">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Compare prices..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="navbar-search-input"
-                />
-              </form>
+              <Suspense fallback={
+                <div className="navbar-search">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                  </svg>
+                  <input type="text" placeholder="Compare prices..." className="navbar-search-input" disabled />
+                </div>
+              }>
+                <NavbarSearch />
+              </Suspense>
 
               {/* Right: Auth */}
               <div className="navbar-right">
@@ -128,18 +153,16 @@ export default function RootLayout({
             {/* Mobile Menu Dropdown */}
             {mobileMenuOpen && (
               <div className="mobile-menu">
-                <form onSubmit={(e) => { handleSearch(e); setMobileMenuOpen(false); }} className="mobile-search">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-                  </svg>
-                  <input
-                    type="text"
-                    placeholder="Compare prices..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="mobile-search-input"
-                  />
-                </form>
+                <Suspense fallback={
+                  <div className="mobile-search">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                    </svg>
+                    <input type="text" placeholder="Compare prices..." className="mobile-search-input" disabled />
+                  </div>
+                }>
+                  <NavbarSearch isMobile={true} closeMenu={() => setMobileMenuOpen(false)} />
+                </Suspense>
                 {navItems.map(item => (
                   <Link
                     key={item.href}

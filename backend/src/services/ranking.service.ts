@@ -1,6 +1,9 @@
 // Server-side ranking — Bayesian average + composite scoring
 // Mirrors the frontend ranking.ts logic for consistency
 
+import { db } from './db.service';
+import { aiService } from './ai.service';
+
 interface ScrapedProduct {
   name: string;
   price: number;
@@ -12,6 +15,30 @@ interface ScrapedProduct {
   store: string;
   inStock: boolean;
   category?: string;
+  merchantName?: string;
+  merchantRating?: number;
+  merchantTrust?: number;
+  brand?: string;
+  isOutlier?: boolean;
+}
+
+interface BrandRule {
+  keyword: string;
+  brand: string;
+}
+
+let brandRulesCache: BrandRule[] = [];
+let brandRulesCacheTimestamp = 0;
+const CACHE_TTL = 1 * 60 * 60 * 1000; // 1 hour
+
+async function loadBrandRules(): Promise<BrandRule[]> {
+  if (brandRulesCache.length > 0 && Date.now() - brandRulesCacheTimestamp < CACHE_TTL) {
+    return brandRulesCache;
+  }
+  const rules = await db.getBrandRules();
+  brandRulesCache = rules as BrandRule[];
+  brandRulesCacheTimestamp = Date.now();
+  return brandRulesCache;
 }
 
 const CONFIDENCE_THRESHOLD = 25;
@@ -22,14 +49,15 @@ const STORE_RELIABILITY: Record<string, number> = {
   Shophive: 0.75,
 };
 
-// Updated Weights to include Relevance
+// Updated Weights to include Relevance and Merchant Trust
 const WEIGHTS = {
   relevance: 0.50,
   priceScore: 0.20,
   bayesianRating: 0.10,
-  popularity: 0.10,
+  popularity: 0.07, // reduced from 0.10 to accommodate merchant trust
   storeReliability: 0.05,
   discountBonus: 0.05,
+  merchantTrust: 0.03, // new
 };
 
 function bayesianAverage(rating: number, reviewCount: number, globalAvg: number): number {
@@ -245,26 +273,148 @@ const GENERIC_IN_DESCRIPTION = [
 ];
 
 
-export function rankProducts(products: ScrapedProduct[], query: string = ""): ScrapedProduct[] {
+function getQueryBrands(query: string, brandRules: BrandRule[]): string[] {
+  const queryLower = query.toLowerCase();
+  const foundBrands = new Set<string>();
+  
+  const commonBrands = [
+    "Apple", "Samsung", "Xiaomi", "Casio", "Infinix", "Tecno", "Realme", "OnePlus",
+    "Vivo", "Oppo", "Lenovo", "HP", "Dell", "Asus", "Acer", "Sony", "Canon", "Nikon",
+    "Seiko", "Citizen", "Rolex", "Huawei", "Google", "Motorola", "Nokia", "LG", "TCL"
+  ];
+  
+  for (const b of commonBrands) {
+    if (queryLower.includes(b.toLowerCase())) {
+      foundBrands.add(b);
+    }
+  }
+
+  for (const rule of brandRules) {
+    const escaped = rule.keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b${escaped}\\b`, 'i');
+    if (regex.test(queryLower)) {
+      foundBrands.add(rule.brand);
+    }
+  }
+  
+  if (queryLower.includes("iphone") || queryLower.includes("ipad") || queryLower.includes("macbook")) {
+    foundBrands.add("Apple");
+  }
+
+  return Array.from(foundBrands);
+}
+
+function fallbackBrandDetector(name: string): string {
+  const commonBrands = [
+    "Apple", "Samsung", "Xiaomi", "Casio", "Infinix", "Tecno", "Realme", "OnePlus",
+    "Vivo", "Oppo", "Lenovo", "HP", "Dell", "Asus", "Acer", "Sony", "Canon", "Nikon",
+    "Seiko", "Citizen", "Rolex", "Huawei", "Google", "Motorola", "Nokia", "LG", "TCL"
+  ];
+  const nameLower = name.toLowerCase();
+  for (const b of commonBrands) {
+    if (nameLower.includes(b.toLowerCase())) {
+      return b;
+    }
+  }
+  return "Generic";
+}
+
+export async function rankProducts(products: ScrapedProduct[], query: string = ""): Promise<ScrapedProduct[]> {
   if (products.length === 0) return [];
+
+  let brandRules: BrandRule[] = [];
+  // 1. Dynamic Brand Classification
+  try {
+    brandRules = await loadBrandRules();
+    
+    // Classify using existing cached rules
+    for (const product of products) {
+      let matchedBrand: string | null = null;
+      const nameLower = product.name.toLowerCase();
+      for (const rule of brandRules) {
+        const escaped = rule.keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`\\b${escaped}\\b`, 'i');
+        if (regex.test(nameLower)) {
+          matchedBrand = rule.brand;
+          break;
+        }
+      }
+      if (matchedBrand) {
+        product.brand = matchedBrand;
+      }
+    }
+
+    // Identify unclassified products
+    const unclassified = products.filter(p => !p.brand);
+    if (unclassified.length > 0) {
+      // Instantly assign fallback brand detector so search returns immediately
+      for (const p of unclassified) {
+        p.brand = fallbackBrandDetector(p.name);
+      }
+
+      // Perform AI brand extraction and DB caching in the background
+      (async () => {
+        try {
+          console.log(`[Ranking-Background] Performing AI brand extraction for ${unclassified.length} products...`);
+          const mappedBrands = await aiService.extractBrands(
+            unclassified.map((p, i) => ({ id: i.toString(), name: p.name }))
+          );
+          
+          const newRulesToSave: Array<{ keyword: string; brand: string }> = [];
+          for (let i = 0; i < unclassified.length; i++) {
+            const extracted = mappedBrands[i.toString()];
+            if (extracted && extracted !== 'Generic') {
+              const kw = extracted.toLowerCase().trim();
+              if (kw && !brandRules.some(r => r.keyword === kw)) {
+                const newRule = { keyword: kw, brand: extracted };
+                newRulesToSave.push(newRule);
+                brandRules.push(newRule); // update local cache list
+              }
+            }
+          }
+
+          if (newRulesToSave.length > 0) {
+            await db.insertBrandRules(newRulesToSave);
+            console.log(`[Ranking-Background] Cached ${newRulesToSave.length} new brand rules to DB:`, newRulesToSave.map(r => r.brand));
+          }
+        } catch (bgErr) {
+          console.error('[Ranking-Background] Async brand extraction failed:', bgErr);
+        }
+      })();
+    }
+  } catch (e) {
+    console.error('[Ranking] Brand rules loading failed, falling back to local detection:', e);
+    for (const p of products) {
+      if (!p.brand) p.brand = fallbackBrandDetector(p.name);
+    }
+  }
+
+  // Detect if the query specifies exactly one brand
+  let singleQueryBrand: string | null = null;
+  if (query) {
+    const queryBrands = getQueryBrands(query, brandRules);
+    if (queryBrands.length === 1) {
+      singleQueryBrand = queryBrands[0];
+      console.log(`[Ranking] Detected single brand in query: "${singleQueryBrand}"`);
+    }
+  }
 
   // Compute global averages
   const totalRating = products.reduce((sum, p) => sum + p.rating, 0);
   const globalAvg = totalRating / products.length;
 
-  // 2. Outlier Filtering for Price Range (IQR Method)
+  // 2. Outlier Filtering for Price Range (Percentile Method)
   const validPrices = products.map(p => p.price).filter(p => p > 0).sort((a, b) => a - b);
   let minPrice = 1;
   let maxPrice = 1;
+  let lowerBound = 0;
+  let upperBound = Infinity;
 
   if (validPrices.length > 0) {
     if (validPrices.length > 3) {
-      const q1 = validPrices[Math.floor(validPrices.length * 0.25)];
-      const q3 = validPrices[Math.floor(validPrices.length * 0.75)];
-      const iqr = q3 - q1;
-
-      const lowerBound = q1 - 1.5 * iqr;
-      const upperBound = q3 + 1.5 * iqr;
+      // 5th and 95th percentiles
+      lowerBound = validPrices[Math.floor(validPrices.length * 0.05)];
+      upperBound = validPrices[Math.floor(validPrices.length * 0.95)];
 
       const filteredPrices = validPrices.filter(p => p >= lowerBound && p <= upperBound);
       minPrice = filteredPrices.length > 0 ? Math.min(...filteredPrices) : validPrices[0];
@@ -272,6 +422,8 @@ export function rankProducts(products: ScrapedProduct[], query: string = ""): Sc
     } else {
       minPrice = validPrices[0];
       maxPrice = validPrices[validPrices.length - 1];
+      lowerBound = minPrice;
+      upperBound = maxPrice;
     }
   }
 
@@ -284,22 +436,45 @@ export function rankProducts(products: ScrapedProduct[], query: string = ""): Sc
 
   // Score each product
   const scored = products.map((product) => {
-
     const relevance = calculateRelevance(product.name, query);
 
     // Hard elimination: if relevance is 0, product doesn't match the query at all
     if (relevance === 0) {
-      return { ...product, _score: 0 };
+      return { ...product, _score: 0, isOutlier: product.price < lowerBound || product.price > upperBound };
+    }
+
+    // Hard brand mismatch elimination:
+    // If the query specified exactly one brand (e.g. "Apple")
+    // and the product brand is a known competitor brand (e.g. "Samsung", "Infinix")
+    // then eliminate the product.
+    if (singleQueryBrand && product.brand && product.brand !== "Generic" && product.brand !== "Unknown") {
+      if (product.brand.toLowerCase() !== singleQueryBrand.toLowerCase()) {
+        return { ...product, _score: 0, isOutlier: product.price < lowerBound || product.price > upperBound };
+      }
     }
 
     // Extra penalty: product name contains generic comparison phrases
     const nameLower = product.name.toLowerCase();
     const isGenericMention = GENERIC_IN_DESCRIPTION.some(phrase => nameLower.includes(phrase));
     if (isGenericMention) {
-      return { ...product, _score: relevance * 0.02 };
+      return { ...product, _score: relevance * 0.02, isOutlier: product.price < lowerBound || product.price > upperBound };
     }
 
-    const bayesian = bayesianAverage(product.rating, product.reviewsCount, globalAvg);
+    // Merchant Trust Blend
+    let ratingVal = product.rating;
+    let reviewsVal = product.reviewsCount;
+    const merchantRating = product.merchantRating || 4.2;
+    const merchantTrust = product.merchantTrust || 0.70;
+
+    if (reviewsVal === 0) {
+      ratingVal = merchantRating;
+      reviewsVal = 5 * merchantTrust;
+    } else {
+      ratingVal = (product.rating * reviewsVal + merchantRating * 3) / (reviewsVal + 3);
+      reviewsVal = reviewsVal + 3 * merchantTrust;
+    }
+
+    const bayesian = bayesianAverage(ratingVal, reviewsVal, globalAvg);
     const normalizedBayesian = Math.max(0, Math.min(1, (bayesian - 1) / 4));
 
     let priceScore = 0;
@@ -330,7 +505,8 @@ export function rankProducts(products: ScrapedProduct[], query: string = ""): Sc
       WEIGHTS.priceScore * priceScore +
       WEIGHTS.popularity * popularity +
       WEIGHTS.storeReliability * storeReliability +
-      WEIGHTS.discountBonus * discountBonus;
+      WEIGHTS.discountBonus * discountBonus +
+      WEIGHTS.merchantTrust * merchantTrust;
 
     // Stock Penalization
     if (product.inStock === false) {
@@ -348,11 +524,16 @@ export function rankProducts(products: ScrapedProduct[], query: string = ""): Sc
       score *= 0.03; // 97% penalty — accessories sink to the bottom
     }
 
-    return { ...product, _score: score };
+    const isOutlier = product.price < lowerBound || product.price > upperBound;
+
+    return { ...product, _score: score, isOutlier };
   });
 
-  scored.sort((a, b) => b._score - a._score);
+  // Filter out completely irrelevant/mismatched products (score <= 0)
+  const filteredScored = scored.filter(p => p._score > 0);
+
+  filteredScored.sort((a, b) => b._score - a._score);
 
   // Strip internal score before returning
-  return scored.map(({ _score, ...product }) => product);
+  return filteredScored.map(({ _score, ...product }) => product);
 }

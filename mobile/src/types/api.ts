@@ -47,6 +47,8 @@ export interface SearchFilters {
   minPrice?: number;
   maxPrice?: number;
   category?: string;
+  brands?: string[];
+  hideOutliers?: boolean;
 }
 
 export type SortOption = 'relevance' | 'price_asc' | 'price_desc' | 'rating';

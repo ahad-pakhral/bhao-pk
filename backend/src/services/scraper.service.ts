@@ -16,7 +16,13 @@ export interface ScrapedProduct {
   store: string;
   inStock: boolean;
   category?: string;
+  merchantName?: string;
+  merchantRating?: number;
+  merchantTrust?: number;
+  brand?: string;
+  isOutlier?: boolean;
 }
+
 
 export interface ProductDetail {
   price: number;

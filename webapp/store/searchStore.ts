@@ -4,10 +4,11 @@ import { SearchProduct } from '../app/search/page';
 interface SearchState {
     lastQuery: string;
     lastResults: SearchProduct[];
+    lastInterpretedQuery: string | null;
     lastFetchTime: number;
     recentlyViewed: SearchProduct[];
     trendingProducts: SearchProduct[];
-    setSearchResults: (query: string, results: SearchProduct[]) => void;
+    setSearchResults: (query: string, results: SearchProduct[], interpretedQuery?: string | null) => void;
     setTrendingProducts: (products: SearchProduct[]) => void;
     clearResults: () => void;
     getProductById: (id: string) => SearchProduct | undefined;
@@ -17,15 +18,16 @@ interface SearchState {
 export const useSearchStore = create<SearchState>((set, get) => ({
     lastQuery: '',
     lastResults: [],
+    lastInterpretedQuery: null,
     lastFetchTime: 0,
     recentlyViewed: [],
     trendingProducts: [],
-    setSearchResults: (query, results) =>
-        set({ lastQuery: query, lastResults: results, lastFetchTime: Date.now() }),
+    setSearchResults: (query, results, interpretedQuery = null) =>
+        set({ lastQuery: query, lastResults: results, lastInterpretedQuery: interpretedQuery, lastFetchTime: Date.now() }),
     setTrendingProducts: (products) =>
         set({ trendingProducts: products }),
     clearResults: () =>
-        set({ lastQuery: '', lastResults: [], lastFetchTime: 0 }),
+        set({ lastQuery: '', lastResults: [], lastInterpretedQuery: null, lastFetchTime: 0 }),
     getProductById: (id) => {
         const decoded = decodeURIComponent(id);
         // Search in lastResults (search page products)

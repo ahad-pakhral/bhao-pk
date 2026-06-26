@@ -11,7 +11,7 @@ from utils.price_parser import parse_price
 class ShophiveScraper(BaseScraper):
     store_name = 'Shophive'
     base_url = 'https://www.shophive.com'
-    search_url_template = 'https://www.shophive.com/catalogsearch/result/?q={keyword}'
+    search_url_template = 'https://www.shophive.com/catalogsearch/result/?q={keyword}&p={page}'
     rate_limit_seconds = 2.0
 
     def parse_search_results(self, html: str) -> list:

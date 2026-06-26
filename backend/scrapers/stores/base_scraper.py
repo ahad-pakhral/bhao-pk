@@ -72,9 +72,9 @@ class BaseScraper(ABC):
 
         return ''
 
-    def search(self, keyword: str) -> list:
+    def search(self, keyword: str, page: int = 1) -> list:
         """Search store for keyword, return list of product dicts."""
-        url = self.search_url_template.format(keyword=quote(keyword))
+        url = self.search_url_template.format(keyword=quote(keyword), page=page)
         html = self.fetch(url)
         return self.parse_search_results(html)
 

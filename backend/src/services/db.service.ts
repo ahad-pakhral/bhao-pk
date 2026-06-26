@@ -96,6 +96,29 @@ export const db = {
       .from('search_history')
       .insert({ user_id: userId, query }),
 
+  logSearchTrainingData: async (data: {
+    rawQuery: string;
+    queryType: string;
+    interpretedQuery?: string | null;
+    userId?: string | null;
+  }) => {
+    try {
+      const { error } = await supabaseAdmin
+        .from('search_training_data')
+        .insert({
+          raw_query: data.rawQuery,
+          query_type: data.queryType,
+          interpreted_query: data.interpretedQuery || null,
+          user_id: data.userId || null,
+        });
+      if (error) {
+        console.warn('[DB] Failed to insert search training data:', error.message);
+      }
+    } catch (e) {
+      console.warn('[DB] Error logging search training data:', (e as any)?.message || e);
+    }
+  },
+
   getSearchHistory: (userId: string) =>
     supabaseAdmin
       .from('search_history')

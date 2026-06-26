@@ -521,7 +521,7 @@ export async function rankProducts(products: ScrapedProduct[], query: string = "
     const isAccessory = ACCESSORY_KEYWORDS.some(kw => nameLower.includes(kw));
     const isPrefixedAcc = isPrefixAccessory(nameLower, normalizedQuery);
     if (!queryWantsAccessory && (isAccessory || isPrefixedAcc)) {
-      score *= 0.03; // 97% penalty — accessories sink to the bottom
+      return { ...product, _score: 0, isOutlier: product.price < lowerBound || product.price > upperBound };
     }
 
     const isOutlier = product.price < lowerBound || product.price > upperBound;

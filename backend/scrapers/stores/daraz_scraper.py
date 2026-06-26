@@ -12,13 +12,13 @@ from utils.price_parser import parse_price
 class DarazScraper(BaseScraper):
     store_name = 'Daraz'
     base_url = 'https://www.daraz.pk'
-    search_url_template = 'https://www.daraz.pk/catalog/?ajax=true&q={keyword}'
+    search_url_template = 'https://www.daraz.pk/catalog/?ajax=true&q={keyword}&page={page}'
     rate_limit_seconds = 2.5
 
-    def search(self, keyword: str) -> list:
+    def search(self, keyword: str, page: int = 1) -> list:
         """Override search to use JSON API directly."""
         from urllib.parse import quote
-        url = self.search_url_template.format(keyword=quote(keyword))
+        url = self.search_url_template.format(keyword=quote(keyword), page=page)
         self.rate_limiter.wait()
 
         try:

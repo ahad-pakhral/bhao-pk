@@ -36,6 +36,7 @@ def main():
     parser.add_argument('--store', type=str, required=True, choices=SCRAPERS.keys())
     parser.add_argument('--url', type=str, help='Product URL (for single product scraping)')
     parser.add_argument('--mode', type=str, default='search', choices=['search', 'product'])
+    parser.add_argument('--page', type=int, default=1, help='Page number (default: 1)')
     args = parser.parse_args()
 
     scraper_class = SCRAPERS[args.store]
@@ -46,7 +47,7 @@ def main():
             result = scraper.scrape_product_page(args.url)
             print(json.dumps(result, ensure_ascii=False))
         elif args.keyword:
-            results = scraper.search(args.keyword)
+            results = scraper.search(args.keyword, page=args.page)
             print(json.dumps(results, ensure_ascii=False))
         else:
             print(json.dumps([]))

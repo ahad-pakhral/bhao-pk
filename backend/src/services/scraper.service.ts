@@ -44,12 +44,13 @@ const PYTHON_BIN = fs.existsSync(VENV_PYTHON) ? VENV_PYTHON : 'python3';
 const STORES = ['daraz', 'shophive', 'telemart'];
 const SCRAPER_TIMEOUT = 30000;
 
-function scrapeStore(keyword: string, store: string): Promise<ScrapedProduct[]> {
+function scrapeStore(keyword: string, store: string, page: number = 1): Promise<ScrapedProduct[]> {
   return new Promise((resolve) => {
     const proc = spawn(PYTHON_BIN, [
       path.join(SCRAPERS_DIR, 'run_search.py'),
       '--keyword', keyword,
       '--store', store,
+      '--page', String(page),
     ], {
       timeout: SCRAPER_TIMEOUT,
       env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
@@ -83,9 +84,9 @@ function scrapeStore(keyword: string, store: string): Promise<ScrapedProduct[]> 
   });
 }
 
-export async function searchAllStores(keyword: string): Promise<ScrapedProduct[]> {
+export async function searchAllStores(keyword: string, page: number = 1): Promise<ScrapedProduct[]> {
   const results = await Promise.allSettled(
-    STORES.map(store => scrapeStore(keyword, store))
+    STORES.map(store => scrapeStore(keyword, store, page))
   );
 
   const allProducts: ScrapedProduct[] = [];

@@ -6,6 +6,7 @@ interface SearchState {
     lastResults: SearchProduct[];
     lastInterpretedQuery: string | null;
     lastFetchTime: number;
+    resultsCache: Record<string, { results: SearchProduct[]; interpretedQuery: string | null; fetchTime: number }>;
     recentlyViewed: SearchProduct[];
     trendingProducts: SearchProduct[];
     setSearchResults: (query: string, results: SearchProduct[], interpretedQuery?: string | null) => void;
@@ -20,19 +21,38 @@ export const useSearchStore = create<SearchState>((set, get) => ({
     lastResults: [],
     lastInterpretedQuery: null,
     lastFetchTime: 0,
+    resultsCache: {},
     recentlyViewed: [],
     trendingProducts: [],
     setSearchResults: (query, results, interpretedQuery = null) =>
-        set({ lastQuery: query, lastResults: results, lastInterpretedQuery: interpretedQuery, lastFetchTime: Date.now() }),
+        set((state) => ({
+            lastQuery: query,
+            lastResults: results,
+            lastInterpretedQuery: interpretedQuery,
+            lastFetchTime: Date.now(),
+            resultsCache: {
+                ...state.resultsCache,
+                [query]: {
+                    results,
+                    interpretedQuery,
+                    fetchTime: Date.now()
+                }
+            }
+        })),
     setTrendingProducts: (products) =>
         set({ trendingProducts: products }),
     clearResults: () =>
-        set({ lastQuery: '', lastResults: [], lastInterpretedQuery: null, lastFetchTime: 0 }),
+        set({ lastQuery: '', lastResults: [], lastInterpretedQuery: null, lastFetchTime: 0, resultsCache: {} }),
     getProductById: (id) => {
         const decoded = decodeURIComponent(id);
         // Search in lastResults (search page products)
         const fromResults = get().lastResults.find(p => String(p.id) === String(id));
         if (fromResults) return fromResults;
+        // Search in resultsCache map
+        for (const key of Object.keys(get().resultsCache)) {
+            const fromCache = get().resultsCache[key].results.find(p => String(p.id) === String(id));
+            if (fromCache) return fromCache;
+        }
         // Search in recentlyViewed
         const fromRecent = get().recentlyViewed.find(p => String(p.id) === String(id) || p.url === decoded);
         if (fromRecent) return fromRecent;

@@ -214,10 +214,28 @@ router.get('/:id', async (req: Request, res: Response) => {
 // POST /api/search — main search endpoint
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { keyword } = req.body;
+    const { keyword, page: rawPage } = req.body;
+    const page = typeof rawPage === 'number' ? Math.max(1, rawPage) : 1;
 
     if (!keyword || keyword.trim().length === 0) {
       return res.status(400).json({ error: 'Search keyword is required' });
+    }
+
+    const normalizedKeyword = keyword.trim().toLowerCase();
+
+    // Resolve user ID if authenticated
+    let userId: string | null = null;
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const { data: { user } } = await supabase.auth.getUser(token);
+        if (user) {
+          userId = user.id;
+        }
+      } catch {
+        // Non-critical
+      }
     }
 
     // ML-Based Query Routing
@@ -228,20 +246,60 @@ router.post('/', async (req: Request, res: Response) => {
     let interpreted = false;
 
     if (routeLabel === 'NL') {
-      // Pass to LLM agent for interpretation
-      const interpretation = await aiService.interpretQuery(keyword);
-      interpretedKeyword = interpretation.query;
-      interpreted = interpretation.interpreted;
+      const interpCacheKey = `interpret:${normalizedKeyword}`;
+      const cachedInterp = await cacheGet(interpCacheKey);
+      
+      if (cachedInterp && typeof cachedInterp === 'object' && 'query' in cachedInterp) {
+        interpretedKeyword = (cachedInterp as any).query;
+        interpreted = (cachedInterp as any).interpreted;
+        console.log(`[QueryRouter] Found cached interpretation for "${keyword}": "${interpretedKeyword}"`);
+      } else {
+        // Pass to LLM agent for interpretation
+        const interpretation = await aiService.interpretQuery(keyword);
+        interpretedKeyword = interpretation.query;
+        interpreted = interpretation.interpreted;
+        
+        // Cache the interpretation for 24 hours
+        await cacheSet(interpCacheKey, interpretation, 86400);
+      }
     }
 
-    const normalizedKeyword = keyword.trim().toLowerCase();
-    const cacheKey = `search:${interpretedKeyword.trim().toLowerCase()}`;
+    const cacheKey = `search:${interpretedKeyword.trim().toLowerCase()}:p${page}`;
+
+    // Helper to log searches to user history + training logs
+    const logSearchQuery = async () => {
+      if (userId) {
+        try {
+          await db.logSearch(userId, normalizedKeyword);
+        } catch (e) {
+          console.warn('[DB] Failed to log user search history:', e);
+        }
+      }
+      await db.logSearchTrainingData({
+        rawQuery: keyword,
+        queryType: routeLabel,
+        interpretedQuery: routeLabel === 'NL' ? interpretedKeyword : null,
+        userId,
+      });
+    };
 
     const cached = await cacheGet(cacheKey);
     if (cached) {
+      // Re-populate the product details cache for individual items so that the product detail page works on refresh
+      if (Array.isArray(cached)) {
+        for (const product of cached) {
+          const idx = cached.indexOf(product);
+          await cacheSet(`product:scraped-${idx}`, product, 3600);
+        }
+      }
+
+      // Perform background logging (non-blocking)
+      logSearchQuery().catch(err => console.error('[Logging] Error:', err));
+
       return res.json({ 
         results: cached, 
         source: 'cache', 
+        page,
         interpretedQuery: interpreted ? interpretedKeyword : undefined, 
         originalQuery: keyword,
         routeLabel,
@@ -249,7 +307,7 @@ router.post('/', async (req: Request, res: Response) => {
       });
     }
 
-    const rawResults = await searchAllStores(interpretedKeyword);
+    const rawResults = await searchAllStores(interpretedKeyword, page);
     const ranked = await rankProducts(rawResults, interpretedKeyword);
 
     await cacheSet(cacheKey, ranked, 3600);
@@ -281,23 +339,14 @@ router.post('/', async (req: Request, res: Response) => {
       console.warn('[Price History] Failed to record search snapshots:', (e as any)?.message || e);
     }
 
-    const authHeader = req.headers.authorization;
-    if (authHeader) {
-      try {
-        const token = authHeader.split(' ')[1];
-        const { data: { user } } = await supabase.auth.getUser(token);
-        if (user) {
-          await db.logSearch(user.id, normalizedKeyword);
-        }
-      } catch {
-        // Non-critical
-      }
-    }
+    // Perform background logging (non-blocking)
+    logSearchQuery().catch(err => console.error('[Logging] Error:', err));
 
     res.json({ 
       results: ranked, 
       source: 'live', 
       count: ranked.length, 
+      page,
       interpretedQuery: interpreted ? interpretedKeyword : undefined, 
       originalQuery: keyword,
       routeLabel,

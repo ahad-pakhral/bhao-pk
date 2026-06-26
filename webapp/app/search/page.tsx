@@ -67,6 +67,7 @@ function SearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryParam = searchParams?.get("q") || "";
+  const pageParam = parseInt(searchParams?.get("page") || "1", 10) || 1;
 
   const [sort, setSort] = useState("Relevance");
   const [selectedStores, setSelectedStores] = useState<string[]>([]);
@@ -86,19 +87,22 @@ function SearchContent() {
   const { showToast } = useToast();
 
   // Fetch from backend API
-  const fetchFromAPI = useCallback(async (keyword: string) => {
+  const fetchFromAPI = useCallback(async (keyword: string, page: number = 1) => {
     if (!keyword.trim()) {
       setLiveProducts([]);
       setDataSource(null);
       return;
     }
 
+    const cacheKey = `${keyword}:p${page}`;
+
     // Check frontend cache to prevent re-scraping on back navigation
-    const { lastQuery, lastResults, lastInterpretedQuery, lastFetchTime } = useSearchStore.getState();
-    if (lastQuery === keyword && lastResults.length > 0 && Date.now() - lastFetchTime < 30 * 60 * 1000) {
-      console.log("[Search] Using frontend cache for:", keyword);
-      setLiveProducts(lastResults);
-      setInterpretedQuery(lastInterpretedQuery);
+    const { resultsCache } = useSearchStore.getState();
+    const cachedPage = resultsCache[cacheKey];
+    if (cachedPage && cachedPage.results.length > 0 && Date.now() - cachedPage.fetchTime < 30 * 60 * 1000) {
+      console.log("[Search] Using frontend cache map for:", cacheKey);
+      setLiveProducts(cachedPage.results);
+      setInterpretedQuery(cachedPage.interpretedQuery);
       setDataSource("cache");
       return;
     }
@@ -115,7 +119,7 @@ function SearchContent() {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ keyword }),
+        body: JSON.stringify({ keyword, page }),
       });
 
       if (!res.ok) throw new Error(`API error: ${res.status}`);
@@ -125,7 +129,7 @@ function SearchContent() {
       // Log classification details to browser console
       if (data.routeLabel) {
         console.log(
-          `%c[QueryRouter]%c Routed query "${keyword}" to %c${data.routeLabel}%c (Accuracy: ${(data.routingAccuracy * 100).toFixed(0)}%)`,
+          `%c[QueryRouter]%c Routed query "${keyword}" (page ${page}) to %c${data.routeLabel}%c (Accuracy: ${(data.routingAccuracy * 100).toFixed(0)}%)`,
           "color: #6366f1; font-weight: bold;",
           "color: inherit;",
           `color: ${data.routeLabel === 'NL' ? '#f43f5e' : '#10b981'}; font-weight: bold;`,
@@ -151,7 +155,7 @@ function SearchContent() {
       setInterpretedQuery(finalInterpreted);
 
       // Save results to frontend cache
-      setSearchResults(keyword, normalized, finalInterpreted);
+      setSearchResults(cacheKey, normalized, finalInterpreted);
     } catch (err) {
       console.warn("[Search] Backend unavailable:", err);
       setLiveProducts([]);
@@ -163,8 +167,10 @@ function SearchContent() {
   }, []);
 
   useEffect(() => {
-    fetchFromAPI(queryParam);
-  }, [queryParam, fetchFromAPI]);
+    setSelectedBrands([]);
+    setSelectedStores([]);
+    fetchFromAPI(queryParam, pageParam);
+  }, [queryParam, pageParam, fetchFromAPI]);
 
   const toggleStore = (store: string) => {
     setSelectedStores(prev =>
@@ -485,6 +491,66 @@ function SearchContent() {
               </div>
             )}
           </div>
+
+          {/* Pagination Controls */}
+          {queryParam && dataSource !== "error" && (liveProducts.length > 0 || pageParam > 1) && (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '16px',
+              marginTop: '40px',
+              paddingTop: '20px',
+              borderTop: '1px solid var(--border-light)'
+            }}>
+              <button
+                className="btn btn-secondary"
+                disabled={pageParam <= 1 || isLoading}
+                onClick={() => {
+                  const newPage = pageParam - 1;
+                  router.push(`/search?q=${encodeURIComponent(queryParam)}&page=${newPage}`);
+                }}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  cursor: pageParam <= 1 || isLoading ? 'not-allowed' : 'pointer',
+                  opacity: pageParam <= 1 || isLoading ? 0.5 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                &larr; Previous Page
+              </button>
+
+              <span style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text-secondary)' }}>
+                Page {pageParam}
+              </span>
+
+              <button
+                className="btn btn-secondary"
+                disabled={liveProducts.length < 15 || isLoading}
+                onClick={() => {
+                  const newPage = pageParam + 1;
+                  router.push(`/search?q=${encodeURIComponent(queryParam)}&page=${newPage}`);
+                }}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  cursor: liveProducts.length < 15 || isLoading ? 'not-allowed' : 'pointer',
+                  opacity: liveProducts.length < 15 || isLoading ? 0.5 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Next Page &rarr;
+              </button>
+            </div>
+          )}
+
         </div>
       </div>
     </div>

@@ -176,3 +176,19 @@ ALTER TABLE brand_rules ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Public can read brand rules" ON brand_rules;
 CREATE POLICY "Public can read brand rules" ON brand_rules FOR SELECT USING (true);
 
+-- ============================================
+-- 8. SEARCH TRAINING DATA (AI model training logs)
+-- ============================================
+CREATE TABLE IF NOT EXISTS search_training_data (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  raw_query TEXT NOT NULL,
+  query_type VARCHAR(10) NOT NULL, -- 'KW' or 'NL'
+  interpreted_query TEXT,          -- Null if KW, or interpreted keywords if NL
+  user_id UUID,                    -- Nullable for guest searches
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Enable RLS for training logs
+ALTER TABLE search_training_data ENABLE ROW LEVEL SECURITY;
+
+

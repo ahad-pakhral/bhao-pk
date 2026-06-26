@@ -30,7 +30,7 @@ class TelemartScraper(BaseScraper):
     search_url_template = ''  # Not used — Algolia handles search
     rate_limit_seconds = 1.0
 
-    def search(self, keyword: str) -> list:
+    def search(self, keyword: str, page: int = 1) -> list:
         """Override base search to use Algolia API instead of HTML scraping."""
         self.rate_limiter.wait()
         try:
@@ -44,6 +44,7 @@ class TelemartScraper(BaseScraper):
                 json={
                     'query': keyword,
                     'hitsPerPage': 40,
+                    'page': page - 1, # Algolia is 0-indexed
                 },
                 timeout=10,
                 verify=False,  # Old Python SSL may not support Algolia's TLS

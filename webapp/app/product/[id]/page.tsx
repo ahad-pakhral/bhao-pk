@@ -150,6 +150,8 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
               const product = {
                 ...p,
                 id: params.id,
+                url: p.url || queryUrl,
+                store: p.store || queryStore,
                 priceValue: p.price || 0,
                 image: p.imageUrl || p.image || "",
                 price: typeof p.price === "number" ? `Rs. ${p.price.toLocaleString()}` : String(p.price),
@@ -400,9 +402,9 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
         <span style={{ color: "var(--text-secondary)" }}>{product.name.slice(0, 40)}{product.name.length > 40 ? "..." : ""}</span>
       </div>
 
-      <div style={{ display: "flex", gap: "60px", marginBottom: "80px" }}>
+      <div className="product-layout">
         {/* Product Image */}
-        <div style={{ flex: "0 0 440px" }}>
+        <div className="product-image-col">
           <div style={{ aspectRatio: "1/1", background: "#0a0a0a", borderRadius: "20px", display: "flex", alignItems: "center", justifyContent: "center", position: "sticky", top: "100px", overflow: "hidden", border: "1px solid var(--border-light)" }}>
             {product.image ? (
               <img src={product.image} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: "40px" }} referrerPolicy="no-referrer" />
@@ -418,7 +420,7 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
         </div>
 
         {/* Product Info */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="product-info-col">
           {/* Store badge + rating */}
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px", flexWrap: "wrap" }}>
             <span style={{

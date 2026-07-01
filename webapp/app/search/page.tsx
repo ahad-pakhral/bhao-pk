@@ -242,19 +242,10 @@ function SearchContent() {
   }, [liveProducts]);
 
   return (
-    <div style={{ padding: '20px 40px', maxWidth: '100%' }}>
-      <div style={{ display: 'flex', gap: '40px' }}>
+    <div className="container" style={{ maxWidth: '100%' }}>
+      <div className="search-layout">
         {/* Filters Sidebar */}
-        <aside style={{
-          width: '280px',
-          flexShrink: 0,
-          position: 'sticky',
-          top: '24px',
-          alignSelf: 'flex-start',
-          maxHeight: 'calc(100vh - 48px)',
-          overflowY: 'auto',
-          paddingRight: '8px'
-        }}>
+        <aside className="search-sidebar">
           <div className="section-title"><h3>Filters</h3></div>
 
           {/* Store Filter */}
@@ -332,7 +323,7 @@ function SearchContent() {
         </aside>
 
         {/* Results Area */}
-        <div style={{ flex: 1 }}>
+        <div className="search-main">
           <div style={{ marginBottom: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>

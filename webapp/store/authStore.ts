@@ -30,6 +30,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     logout: async () => {
         await supabase.auth.signOut();
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('sb-token');
+        }
         set({ user: null, token: null, isAuthenticated: false, isLoading: false });
     },
 
@@ -50,6 +53,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         
         if (res.ok) {
             const { user } = await res.json();
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('sb-token', data.session.access_token);
+            }
             set({ 
                 user, 
                 token: data.session.access_token, 
@@ -58,6 +64,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             });
         } else {
             // Fallback if profile doesn't exist yet but auth does
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('sb-token', data.session.access_token);
+            }
             set({ 
                 user: { id: data.user.id, email: data.user.email!, name: '', role: 'USER' }, 
                 token: data.session.access_token, 
@@ -81,6 +90,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         // Supabase register might return session if email confirmation is off
         if (data.session) {
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('sb-token', data.session.access_token);
+            }
             set({ 
                 user: data.user, 
                 token: data.session.access_token, 
@@ -99,6 +111,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             const { data: { session } } = await supabase.auth.getSession();
 
             if (!session) {
+                if (typeof window !== 'undefined') {
+                    localStorage.removeItem('sb-token');
+                }
                 set({ user: null, token: null, isAuthenticated: false, isLoading: false });
                 return;
             }
@@ -110,6 +125,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
             if (res.ok) {
                 const { user } = await res.json();
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('sb-token', session.access_token);
+                }
                 set({
                     user,
                     token: session.access_token,
@@ -118,6 +136,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 });
             } else {
                 // If backend check fails, assume session is invalid
+                if (typeof window !== 'undefined') {
+                    localStorage.removeItem('sb-token');
+                }
                 set({ user: null, token: null, isAuthenticated: false, isLoading: false });
             }
         } catch (err) {

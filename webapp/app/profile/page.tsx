@@ -39,8 +39,8 @@ const menuItems = [
 export default function ProfilePage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: authLoading, logout } = useAuthStore();
-  const { wishlist } = useWishlist();
-  const { alerts } = useSmartAlerts();
+  const { wishlist, loading: wishlistLoading } = useWishlist();
+  const { alerts, loading: alertsLoading } = useSmartAlerts();
   const [stats, setStats] = useState<{ wishlistCount: number; activeAlertsCount: number; searchesCount: number } | null>(null);
 
   // Fetch real stats
@@ -100,9 +100,9 @@ export default function ProfilePage() {
 
   return (
     <div className="container">
-      <div style={{ display: 'flex', gap: '40px', alignItems: 'flex-start' }}>
+      <div className="profile-layout">
         {/* User Sidebar */}
-        <div style={{ width: '300px', flexShrink: 0 }}>
+        <div className="profile-sidebar">
           <div className="card" style={{ textAlign: 'center', padding: '40px 20px' }}>
             <div style={{ width: '100px', height: '100px', background: 'var(--bg-surface)', borderRadius: '50%', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--border-light)' }}>
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -144,7 +144,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Profile Content */}
-        <div style={{ flex: 1 }}>
+        <div className="profile-content">
           <div className="section-title"><h3>Quick Access</h3></div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0', marginBottom: '40px' }}>
             {menuItems.map((item, index) => (
@@ -178,7 +178,22 @@ export default function ProfilePage() {
 
           <div className="section-title"><h3>Your Wishlist</h3></div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '60px' }}>
-            {wishlist.length === 0 ? (
+            {wishlistLoading ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {[1, 2].map(i => (
+                  <div key={i} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: 0.5, pointerEvents: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
+                      <div style={{ width: '60px', height: '60px', borderRadius: '8px', background: 'var(--border-light)' }}></div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ height: '16px', width: '50%', background: 'var(--border-light)', borderRadius: '4px', marginBottom: '8px' }}></div>
+                        <div style={{ height: '12px', width: '20%', background: 'var(--border-light)', borderRadius: '4px' }}></div>
+                      </div>
+                    </div>
+                    <div style={{ height: '30px', width: '60px', background: 'var(--border-light)', borderRadius: '4px' }}></div>
+                  </div>
+                ))}
+              </div>
+            ) : wishlist.length === 0 ? (
               <div className="card" style={{ padding: '40px', textAlign: 'center' }}>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>Your wishlist is empty. Start tracking products you love!</p>
                 <Link href="/search" className="btn btn-primary" style={{ textDecoration: 'none' }}>Discover Products</Link>
@@ -207,7 +222,19 @@ export default function ProfilePage() {
           </div>
 
           <div className="section-title"><h3>Price Alerts</h3></div>
-          {alerts.length === 0 ? (
+          {alertsLoading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[1, 2, 3].map(i => (
+                <div key={i} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', opacity: 0.5, pointerEvents: 'none' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ height: '16px', width: '60%', background: 'var(--border-light)', borderRadius: '4px', marginBottom: '8px' }}></div>
+                    <div style={{ height: '12px', width: '30%', background: 'var(--border-light)', borderRadius: '4px' }}></div>
+                  </div>
+                  <div style={{ height: '22px', width: '70px', background: 'var(--border-light)', borderRadius: '4px' }}></div>
+                </div>
+              ))}
+            </div>
+          ) : alerts.length === 0 ? (
             <div className="card" style={{ padding: '40px', textAlign: 'center' }}>
               <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>No alerts set. Create a price alert to get notified when prices drop!</p>
               <Link href="/search" className="btn btn-primary" style={{ textDecoration: 'none' }}>Discover More Products</Link>

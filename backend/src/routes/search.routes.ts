@@ -76,7 +76,14 @@ router.get('/product', async (req: Request, res: Response) => {
     } catch (e) {
       console.warn('[Price History] Failed to record cached product snapshot:', (e as any)?.message || e);
     }
-    return res.json({ product: cached, source: 'cache' });
+    return res.json({
+      product: {
+        ...(cached as any),
+        url: urlStr,
+        store: storeKey,
+      },
+      source: 'cache'
+    });
   }
 
   const detail = await scrapeProductDetail(urlStr, storeKey);
@@ -100,8 +107,14 @@ router.get('/product', async (req: Request, res: Response) => {
     console.warn('[Price History] Failed to record product snapshot:', (e as any)?.message || e);
   }
 
-  await cacheSet(cacheKey, detail, 3600); // 1 hour TTL
-  res.json({ product: detail, source: 'live' });
+  const responseProduct = {
+    ...detail,
+    url: urlStr,
+    store: storeKey,
+  };
+
+  await cacheSet(cacheKey, responseProduct, 3600); // 1 hour TTL
+  res.json({ product: responseProduct, source: 'live' });
   } catch (error) {
     console.error('Product detail error:', error);
     res.status(500).json({ error: 'Failed to fetch product details' });

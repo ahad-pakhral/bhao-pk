@@ -20,10 +20,10 @@ function buildBhaoProductLink(productUrl: string, store: string): string {
 }
 
 function assertEmailConfigured() {
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = process.env.BREVO_API_KEY || process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM;
   if (!apiKey || !from) {
-    throw new Error('Email provider not configured (missing RESEND_API_KEY and/or EMAIL_FROM)');
+    throw new Error('Email provider not configured (missing BREVO_API_KEY/RESEND_API_KEY and/or EMAIL_FROM)');
   }
   return { apiKey, from };
 }
@@ -34,7 +34,7 @@ function formatMoney(n: number | undefined): string {
 }
 
 /**
- * Send a price-drop / target-reached email via Resend.
+ * Send a price-drop / target-reached email via Brevo or Resend.
  *
  * Contract:
  * - If env vars are missing, throws a clear error (caller must NOT mark notified).
@@ -65,23 +65,49 @@ export async function sendPriceDropEmail(to: string, data: PriceDropEmailPayload
     </div>
   `.trim();
 
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from,
-      to: [to],
-      subject,
-      html,
-    }),
-  });
+  if (process.env.BREVO_API_KEY) {
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': apiKey,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        sender: {
+          name: 'Bhao.pk',
+          email: from,
+        },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+      }),
+    });
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw new Error(`Email send failed (${res.status}): ${body || res.statusText}`);
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      throw new Error(`Brevo Email send failed (${res.status}): ${body || res.statusText}`);
+    }
+  } else {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from,
+        to: [to],
+        subject,
+        html,
+      }),
+    });
+
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      throw new Error(`Resend Email send failed (${res.status}): ${body || res.statusText}`);
+    }
   }
 }
+
 

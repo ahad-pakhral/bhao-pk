@@ -72,7 +72,7 @@ function ProductCard({ product, index }: { product: TrendingProduct; index: numb
           </div>
           <div className="product-store" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#666', fontFamily: 'var(--font-mono)' }}>
             <span>{product.store}</span>
-            {product.rating > 0 ? <span style={{ color: '#FFB800' }}>★ {product.rating}</span> : null}
+            {product.rating > 0 ? <span style={{ color: '#FFB800' }}>★ {Number(product.rating).toFixed(1)}</span> : null}
           </div>
         </div>
       </Link>
@@ -240,9 +240,8 @@ export default function Home() {
 
   return (
     <div className="container">
-      {/* Hero Section */}
-      <section style={{ textAlign: 'center', padding: '100px 0 60px', marginBottom: '40px' }}>
-        <h1 style={{ fontSize: '72px', lineHeight: '0.9', marginBottom: '20px', letterSpacing: '-0.03em' }}>
+      <section className="hero-section">
+        <h1 className="hero-title">
           INTELLIGENT PRICE<br />
           DISCOVERY
         </h1>

@@ -124,6 +124,11 @@ export function scrapeProductDetail(url: string, store: string): Promise<Product
       if (code === 0 && stdout.trim()) {
         try {
           const data: ProductDetail = JSON.parse(stdout);
+          if (!data.name || !data.price || data.price <= 0) {
+            console.error(`Scraped product detail is invalid or empty (${store}):`, data);
+            resolve(null);
+            return;
+          }
           data.store = data.store || store;
           resolve(data);
         } catch (e) {

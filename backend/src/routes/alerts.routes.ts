@@ -3,6 +3,10 @@ import { requireAuth } from '../middleware/auth.middleware';
 import { db } from '../services/db.service';
 import { scrapeProductDetail } from '../services/scraper.service';
 import { cacheGet, cacheSet } from '../services/cache.service';
+import { sendPriceDropEmail } from '../services/email.service';
+import { supabaseAdmin } from '../services/supabase.service';
+
+
 
 function snakeToCamel(obj: any): Record<string, any> {
   if (!obj || typeof obj !== 'object') return {};
@@ -104,6 +108,48 @@ router.post('/', async (req, res: Response) => {
       return res.status(500).json({ error: 'Failed to create alert (no row returned)' });
     }
 
+    // Evaluate the target price immediately in the background so the user gets notified right away if met
+    if (productUrl) {
+      const storeName = detectStore(productUrl);
+      if (storeName) {
+        (async () => {
+          try {
+            const scraped = await scrapeProductDetail(productUrl, storeName);
+            const currentPrice = scraped ? scraped.price : 0;
+            const targetNum = Number(targetPrice);
+
+            if (scraped && currentPrice > 0 && currentPrice <= targetNum) {
+              console.log(`[Alerts API] Immediate trigger met for alert ${alert.id} (Rs. ${currentPrice} <= Rs. ${targetNum})`);
+              
+              // Fetch user profile email
+              const { data: userProfile } = await db.findUser(userId);
+              const email = (userProfile as any)?.email;
+
+              if (email) {
+                await sendPriceDropEmail(email, {
+                  productName: scraped.name || 'Tracked product',
+                  productUrl: productUrl,
+                  newPrice: currentPrice,
+                  targetPrice: targetNum,
+                  store: storeName,
+                });
+
+                await db.updateAlert(alert.id, {
+                  is_notified: true,
+                  notified_at: new Date().toISOString(),
+                  last_notified_price: currentPrice,
+                });
+
+                console.log(`[Alerts API] Immediate email sent + alert marked notified: ${alert.id}`);
+              }
+            }
+          } catch (e: any) {
+            console.warn(`[Alerts API] Immediate alert check failed for alert ${alert.id}:`, e?.message || e);
+          }
+        })();
+      }
+    }
+
     res.status(201).json({ alert: snakeToCamel(alert) });
   } catch (error) {
     console.error('Create alert error:', error);
@@ -134,36 +180,99 @@ router.get('/enriched', async (req, res: Response) => {
           return { ...alert, product: null };
         }
 
-        // Check cache first (1hr TTL)
+        // Check cache first (24hr TTL for alert enrichment)
         const cacheKey = `alert-enrich:${alert.productUrl}`;
         const cached = await cacheGet(cacheKey);
         if (cached) {
           return { ...alert, product: cached };
         }
 
-        // Cache miss — scrape live data
-        const store = detectStore(alert.productUrl);
-        if (!store) {
+        const storeName = detectStore(alert.productUrl);
+        if (!storeName) {
           return { ...alert, product: null };
         }
 
+        // Cache miss — perform fast DB lookup
+        let dbProduct: any = null;
         try {
-          const product = await scrapeProductDetail(alert.productUrl, store);
-          if (product) {
-            const productData = {
-              name: product.name,
-              imageUrl: product.imageUrl,
-              price: product.price,
-              store: product.store || store,
+          // Check recently viewed
+          const { data: recent } = await supabaseAdmin
+            .from('recently_viewed')
+            .select('name, image_url, store')
+            .eq('user_id', userId)
+            .eq('product_url', alert.productUrl)
+            .maybeSingle();
+
+          if (recent) {
+            dbProduct = {
+              name: recent.name,
+              imageUrl: recent.image_url,
+              store: recent.store || storeName,
+              price: alert.lastNotifiedPrice || alert.last_notified_price || 0,
             };
-            await cacheSet(cacheKey, productData, 3600);
-            return { ...alert, product: productData };
+          } else {
+            // Check wishlist items
+            const { data: wish } = await supabaseAdmin
+              .from('wishlist_items')
+              .select('name, image_url, store, price')
+              .eq('user_id', userId)
+              .eq('product_url', alert.productUrl)
+              .maybeSingle();
+
+            if (wish) {
+              dbProduct = {
+                name: wish.name,
+                imageUrl: wish.image_url,
+                store: wish.store || storeName,
+                price: wish.price || alert.lastNotifiedPrice || alert.last_notified_price || 0,
+              };
+            }
           }
-        } catch (err) {
-          console.error(`Failed to enrich alert ${alert.id}:`, err);
+
+          if (dbProduct) {
+            // Retrieve latest recorded price from history
+            const { data: latestHistory } = await supabaseAdmin
+              .from('price_history')
+              .select('price')
+              .eq('product_url', alert.productUrl)
+              .order('day', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            if (latestHistory && latestHistory.price) {
+              dbProduct.price = latestHistory.price;
+            }
+          }
+        } catch (e) {
+          console.warn('[Alerts Enrichment] Database fallback lookup failed:', e);
         }
 
-        return { ...alert, product: null };
+        const responseProduct = dbProduct || {
+          name: alert.keyword || 'Tracked Product',
+          imageUrl: '',
+          price: alert.lastNotifiedPrice || alert.last_notified_price || 0,
+          store: storeName,
+        };
+
+        // Fire background scrape to populate/update the cache asynchronously
+        (async () => {
+          try {
+            const product = await scrapeProductDetail(alert.productUrl!, storeName);
+            if (product) {
+              const productData = {
+                name: product.name,
+                imageUrl: product.imageUrl,
+                price: product.price,
+                store: product.store || storeName,
+              };
+              await cacheSet(cacheKey, productData, 86400); // Cache for 24 hours
+              console.log(`[Alerts Enrichment] Background scrape populated cache for ${alert.productUrl}`);
+            }
+          } catch (err: any) {
+            console.warn(`[Alerts Enrichment] Background scrape failed for ${alert.productUrl}:`, err?.message || err);
+          }
+        })();
+
+        return { ...alert, product: responseProduct };
       })
     );
 

@@ -18,7 +18,7 @@ RUN python3 -m venv /app/scrapers/.venv \
     && /app/scrapers/.venv/bin/pip install --no-cache-dir -r scrapers/requirements.txt
 
 # Install Node.js dependencies and build TypeScript
-RUN npm ci && npx tsc && npm prune --omit=dev
+RUN npm install --no-audit --no-fund && npx tsc && npm prune --omit=dev
 
 # Expose port (Railway sets PORT env var automatically)
 EXPOSE ${PORT:-3001}

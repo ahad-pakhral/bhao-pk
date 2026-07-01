@@ -6,7 +6,7 @@ import json
 import urllib.parse
 
 # Load model once at startup (singleton pattern)
-MODEL_PATH = os.path.normpath(os.path.join(os.path.dirname(__file__), "../query_router_model.joblib"))
+MODEL_PATH = os.path.normpath(os.path.join(os.path.dirname(__file__), "query_router_model.joblib"))
 print(f"Loading classifier model from {MODEL_PATH}...", flush=True)
 
 try:

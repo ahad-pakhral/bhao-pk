@@ -30,9 +30,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const colors = {
-    success: { bg: "#0a1f0a", border: "#00FF88", text: "#00FF88" },
-    error: { bg: "#1f0a0a", border: "#FF4444", text: "#FF4444" },
-    info: { bg: "#0a0a1f", border: "#6D5ACF", text: "#6D5ACF" },
+    success: { accent: "var(--success)" },
+    error: { accent: "var(--danger)" },
+    info: { accent: "var(--accent)" },
   };
 
   return (
@@ -45,21 +45,21 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <div
               key={toast.id}
               style={{
-                background: c.bg,
-                border: `1px solid ${c.border}`,
-                borderLeft: `4px solid ${c.border}`,
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                borderLeft: `3px solid ${c.accent}`,
                 padding: "12px 20px",
-                borderRadius: "8px",
-                color: c.text,
+                borderRadius: "var(--r-md)",
+                color: "var(--text)",
                 fontSize: "13px",
-                fontFamily: "var(--font-mono)",
-                boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
-                animation: "toastIn 0.3s ease",
+                fontFamily: "var(--font-sans)",
+                boxShadow: "var(--shadow-lg)",
+                animation: "toastIn 0.22s var(--ease)",
                 minWidth: "250px",
               }}
             >
-              {toast.type === "success" && <span style={{ marginRight: "8px" }}>&#10003;</span>}
-              {toast.type === "error" && <span style={{ marginRight: "8px" }}>&#10007;</span>}
+              {toast.type === "success" && <span style={{ marginRight: "8px", color: c.accent }}>&#10003;</span>}
+              {toast.type === "error" && <span style={{ marginRight: "8px", color: c.accent }}>&#10007;</span>}
               {toast.message}
             </div>
           );
@@ -67,7 +67,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       </div>
       <style>{`
         @keyframes toastIn {
-          from { opacity: 0; transform: translateY(12px) scale(0.95); }
+          from { opacity: 0; transform: translateY(8px) scale(0.98); }
           to { opacity: 1; transform: translateY(0) scale(1); }
         }
       `}</style>

@@ -119,7 +119,7 @@ export default function ResetPasswordPage() {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>New Password</label>
+            <label>New password</label>
             <div style={{ position: 'relative' }}>
               <input
                 type={showPassword ? "text" : "password"}
@@ -141,7 +141,7 @@ export default function ResetPasswordPage() {
             {password.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
                 {passwordValidation.rules.map((rule) => (
-                  <div key={rule.label} style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px', color: rule.met ? '#22c55e' : 'var(--text-muted)' }}>
+                  <div key={rule.label} style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px', color: rule.met ? 'var(--success)' : 'var(--text-muted)' }}>
                     <span>{rule.met ? '✓' : '○'}</span> {rule.label}
                   </div>
                 ))}
@@ -150,7 +150,7 @@ export default function ResetPasswordPage() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Confirm New Password</label>
+            <label>Confirm new password</label>
             <input
               type="password"
               placeholder="••••••••"

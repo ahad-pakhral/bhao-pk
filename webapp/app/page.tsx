@@ -47,32 +47,32 @@ function ProductCard({ product, index }: { product: TrendingProduct; index: numb
 
   return (
     <div style={{ position: 'relative' }}>
-      <Link href={productHref} className="card product-card" style={{ background: '#121212', border: '1px solid #222', textDecoration: 'none', color: 'inherit' }}>
-        <div className="product-image" style={{ height: '240px', background: '#1a1a1a', marginBottom: '16px', position: 'relative', overflow: 'hidden' }}>
+      <Link href={productHref} className="card product-card" style={{ textDecoration: 'none', color: 'inherit' }}>
+        <div className="product-image" style={{ height: '220px', marginBottom: '14px', position: 'relative', overflow: 'hidden' }}>
           {img ? (
             <img src={img} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#444', fontSize: '12px' }}>No Image</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-3)', fontSize: '12px' }}>No image</div>
           )}
           {origNum > 0 && priceNum < origNum && (
-            <span className="badge badge-hot" style={{ position: 'absolute', top: '12px', left: '12px' }}>
+            <span className="badge badge-hot" style={{ position: 'absolute', top: '10px', left: '10px' }}>
               -{Math.round((1 - priceNum / origNum) * 100)}%
             </span>
           )}
         </div>
-        <div className="product-info" style={{ padding: '0 4px' }}>
-          <div className="product-title" style={{ fontSize: '16px', marginBottom: '4px' }}>{product.name}</div>
-          <div className="product-price" style={{ color: 'var(--accent-primary)', fontSize: '18px', marginBottom: '8px' }}>
+        <div className="product-info" style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div className="product-title">{product.name}</div>
+          <div className="product-price tabular" style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
             {formatPrice(priceNum)}
             {origNum > 0 && origNum > priceNum && (
-              <span style={{ color: '#666', fontSize: '13px', textDecoration: 'line-through', marginLeft: '8px' }}>
+              <span style={{ color: 'var(--text-3)', fontSize: '13px', fontWeight: 500, textDecoration: 'line-through' }}>
                 {formatPrice(origNum)}
               </span>
             )}
           </div>
-          <div className="product-store" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#666', fontFamily: 'var(--font-mono)' }}>
+          <div className="product-store">
             <span>{product.store}</span>
-            {product.rating > 0 ? <span style={{ color: '#FFB800' }}>★ {Number(product.rating).toFixed(1)}</span> : null}
+            {product.rating > 0 ? <span style={{ color: 'var(--star)', fontWeight: 600 }}>★ {Number(product.rating).toFixed(1)}</span> : null}
           </div>
         </div>
       </Link>
@@ -89,13 +89,16 @@ function ProductCard({ product, index }: { product: TrendingProduct; index: numb
           else if (result === 'removed') showToast("Removed from wishlist", "error");
           else if (result === 'error') showToast("Failed to add to wishlist", "error");
         }}
+        aria-label={inWl ? 'Remove from wishlist' : 'Add to wishlist'}
         style={{
-          position: 'absolute', top: '12px', right: '12px', zIndex: 2,
-          background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%',
-          width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+          position: 'absolute', top: '20px', right: '20px', zIndex: 2,
+          background: 'color-mix(in srgb, var(--surface) 82%, transparent)',
+          backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+          border: '1px solid var(--border)', borderRadius: '999px',
+          width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
         }}
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill={inWl ? '#FF4444' : 'none'} stroke={inWl ? '#FF4444' : '#fff'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill={inWl ? 'var(--danger)' : 'none'} stroke={inWl ? 'var(--danger)' : 'var(--text-2)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
         </svg>
       </button>
@@ -105,12 +108,12 @@ function ProductCard({ product, index }: { product: TrendingProduct; index: numb
 
 function SkeletonCard() {
   return (
-    <div className="card product-card" style={{ background: '#121212', border: '1px solid #222' }}>
-      <div style={{ height: '240px', background: '#1a1a1a' }} />
-      <div style={{ padding: '0 4px' }}>
-        <div style={{ height: '20px', background: '#222', borderRadius: '4px', marginBottom: '8px', width: '80%' }} />
-        <div style={{ height: '24px', background: '#222', borderRadius: '4px', marginBottom: '8px', width: '50%' }} />
-        <div style={{ height: '14px', background: '#1a1a1a', borderRadius: '4px', width: '60%' }} />
+    <div className="card product-card">
+      <div className="skeleton" style={{ height: '220px', marginBottom: '14px' }} />
+      <div style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div className="skeleton" style={{ height: '16px', width: '85%' }} />
+        <div className="skeleton" style={{ height: '20px', width: '45%' }} />
+        <div className="skeleton" style={{ height: '12px', width: '60%' }} />
       </div>
     </div>
   );
@@ -240,35 +243,38 @@ export default function Home() {
 
   return (
     <div className="container">
-      <section className="hero-section">
+      <section className="hero-section rise-in">
+        <p className="eyebrow" style={{ marginBottom: '20px' }}>Price comparison for Pakistan</p>
         <h1 className="hero-title">
-          INTELLIGENT PRICE<br />
-          DISCOVERY
+          Find the best price,<br />
+          before you buy.
         </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '16px', marginBottom: '48px', fontFamily: 'var(--font-mono)' }}>
-          Track prices. Compare deals. Save money.
+        <p style={{ color: 'var(--text-2)', fontSize: '17px', marginBottom: '40px', maxWidth: '460px', marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.5 }}>
+          Search any product or paste a link. We compare live prices across Pakistani stores so you always pay less.
         </p>
 
-        <div style={{ maxWidth: '600px', margin: '0 auto', position: 'relative' }} className="search-bar-wrapper">
+        <div style={{ maxWidth: '620px', margin: '0 auto', position: 'relative' }} className="search-bar-wrapper">
           <div style={{
             position: 'relative',
-            background: '#0A0A0A',
-            border: '1px solid #333',
-            borderRadius: '12px',
-            padding: '8px',
+            background: 'var(--surface)',
+            border: '1px solid var(--border-strong)',
+            borderRadius: 'var(--r-pill)',
+            padding: '7px 7px 7px 8px',
             display: 'flex',
             alignItems: 'center',
+            gap: '4px',
+            boxShadow: 'var(--shadow-md)',
           }}>
-            <div style={{ padding: '0 16px', color: '#666' }}>
+            <div style={{ padding: '0 10px 0 12px', color: 'var(--text-3)', display: 'flex' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
             </div>
             <input
               type="text"
-              placeholder="Search product name or paste URL..."
+              placeholder="Search a product..."
               className="input-field"
               style={{
-                background: 'transparent', border: 'none', height: '48px',
-                fontSize: '15px', padding: '0', color: '#fff', fontFamily: 'var(--font-body)'
+                background: 'transparent', border: 'none', height: '48px', minHeight: '48px',
+                fontSize: '15px', padding: '0', color: 'var(--text)', boxShadow: 'none'
               }}
               value={search}
               onChange={(e) => {
@@ -279,17 +285,17 @@ export default function Home() {
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
-            <button className="btn btn-primary" style={{ padding: '8px 24px', height: '40px', fontSize: '12px' }} onClick={handleSearch}>
-              SEARCH
+            <button className="btn btn-primary" style={{ borderRadius: 'var(--r-pill)', padding: '0 24px', height: '46px', flexShrink: 0 }} onClick={handleSearch}>
+              Search
             </button>
           </div>
 
           {showSuggestions && filteredSuggestions.length > 0 && (
             <div style={{
-              position: 'absolute', top: '100%', left: 0, right: 0,
-              background: 'var(--bg-surface)', border: '1px solid var(--border-light)',
-              borderRadius: '0 0 12px 12px', borderTop: 'none', marginTop: '-12px', paddingTop: '12px',
-              zIndex: 10, textAlign: 'left', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+              position: 'absolute', top: 'calc(100% + 8px)', left: 0, right: 0,
+              background: 'var(--surface)', border: '1px solid var(--border)',
+              borderRadius: 'var(--r-lg)', padding: '6px',
+              zIndex: 10, textAlign: 'left', overflow: 'hidden', boxShadow: 'var(--shadow-lg)'
             }}>
               {filteredSuggestions.map((product, i) => (
                 <Link
@@ -300,18 +306,18 @@ export default function Home() {
                       : `/product/trending-${i}`
                   }
                   style={{
-                    display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 20px',
-                    cursor: 'pointer', borderBottom: '1px solid #1a1a1a', textDecoration: 'none', color: 'inherit'
+                    display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 14px',
+                    borderRadius: 'var(--r-md)', cursor: 'pointer', textDecoration: 'none', color: 'inherit'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-surface-hover)'}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface-2)'}
                   onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#666' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-3)', flexShrink: 0 }}>
                     <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
                   </svg>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '14px', marginBottom: '2px' }}>{product.name}</div>
-                    <div style={{ fontSize: '12px', color: '#666' }}>{product.store} &bull; {formatPrice(product.price)}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '14px', marginBottom: '2px', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{product.name}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-3)' }}>{product.store} &bull; {formatPrice(product.price)}</div>
                   </div>
                 </Link>
               ))}
@@ -322,8 +328,8 @@ export default function Home() {
 
       {/* Trending Section */}
       <section style={{ marginBottom: '80px' }}>
-        <div className="section-title" style={{ marginBottom: '24px' }}>
-          <h3 style={{ fontSize: '13px', color: '#666', letterSpacing: '0.1em' }}>TRENDING NOW</h3>
+        <div className="section-title">
+          <h3>Trending now</h3>
         </div>
         {trendingLoading ? (
           <div className="product-grid">{[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}</div>

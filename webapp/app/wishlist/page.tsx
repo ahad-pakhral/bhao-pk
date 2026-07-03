@@ -52,7 +52,7 @@ function WishlistContent() {
         {wishlist.map((item) => (
           <div key={item.id} className="card" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '20px', flex: 1 }}>
-              <div style={{ width: '100px', height: '100px', background: '#1a1a1a', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
+              <div style={{ width: '100px', height: '100px', background: 'var(--surface-2)', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
                 <img src={item.imageUrl || '/images/iphone-15-pro.png'} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
               <div style={{ flex: 1 }}>

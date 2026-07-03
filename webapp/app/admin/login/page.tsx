@@ -37,16 +37,16 @@ export default function AdminLoginPage() {
 
   return (
     <div className="container" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="card" style={{ width: '100%', maxWidth: '400px', padding: '40px', borderTop: '4px solid var(--accent-secondary)' }}>
+      <div className="card" style={{ width: '100%', maxWidth: '400px', padding: '40px', borderTop: '3px solid var(--accent)' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{ color: 'var(--accent-secondary)', fontSize: '24px', fontWeight: '900', marginBottom: '16px', fontFamily: 'var(--font-mono)' }}>ADMIN_CORE</div>
-          <h2 style={{ fontSize: '24px', marginBottom: '8px' }}>System Access</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Authorized personnel only. All access is logged.</p>
+          <div className="eyebrow" style={{ marginBottom: '16px' }}>Admin Core</div>
+          <h2 style={{ marginBottom: '8px' }}>System Access</h2>
+          <p style={{ color: 'var(--text-3)', fontSize: '14px' }}>Authorized personnel only. All access is logged.</p>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Email</label>
+            <label className="eyebrow">Email</label>
             <input
               type="email"
               placeholder="admin@bhao.pk"
@@ -73,7 +73,7 @@ export default function AdminLoginPage() {
             type="submit"
             className="btn"
             disabled={submitting}
-            style={{ background: 'var(--accent-secondary)', color: '#fff', height: '48px', marginTop: '12px', border: 'none', cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.7 : 1 }}
+            style={{ background: 'var(--accent)', color: 'var(--on-accent)', height: '48px', marginTop: '12px', border: 'none', cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.7 : 1 }}
           >
             {submitting ? 'Initializing...' : 'Initialize Session'}
           </button>

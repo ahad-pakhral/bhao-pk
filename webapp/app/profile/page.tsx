@@ -82,7 +82,7 @@ export default function ProfilePage() {
   if (authLoading || !user) {
     return (
       <div className="container" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: 'var(--text-muted)' }}>Loading profile...</div>
+        <div style={{ color: 'var(--text-3)' }}>Loading profile...</div>
       </div>
     );
   }
@@ -103,41 +103,41 @@ export default function ProfilePage() {
       <div className="profile-layout">
         {/* User Sidebar */}
         <div className="profile-sidebar">
-          <div className="card" style={{ textAlign: 'center', padding: '40px 20px' }}>
-            <div style={{ width: '100px', height: '100px', background: 'var(--bg-surface)', borderRadius: '50%', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--border-light)' }}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <div className="card" style={{ textAlign: 'center', padding: '40px 24px' }}>
+            <div style={{ width: '100px', height: '100px', background: 'var(--surface-2)', borderRadius: 'var(--r-pill)', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border)' }}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
                 <circle cx="12" cy="7" r="4"/>
               </svg>
             </div>
             <h3 style={{ fontSize: '20px', marginBottom: '4px' }}>{displayName}</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '24px' }}>{user.email}</p>
-            <Link href="/settings" className="btn btn-secondary" style={{ width: '100%', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
-              Edit Profile
+            <p style={{ color: 'var(--text-3)', fontSize: '14px', marginBottom: '24px' }}>{user.email}</p>
+            <Link href="/settings" className="btn btn-secondary btn-block" style={{ textDecoration: 'none' }}>
+              Edit profile
             </Link>
             <button
-              className="btn btn-secondary"
-              style={{ width: '100%', fontSize: '12px', marginTop: '12px', color: '#FF4444', borderColor: 'rgba(255, 68, 68, 0.2)' }}
+              className="btn btn-danger btn-block"
+              style={{ marginTop: '12px' }}
               onClick={handleLogout}
             >
-              Sign Out
+              Sign out
             </button>
 
             {/* Stats */}
-            <div style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-              <div style={{ background: 'var(--bg-surface)', padding: '16px 12px', borderRadius: '8px', textAlign: 'center' }}>
-                <div style={{ fontSize: '24px', color: 'var(--accent-primary)', fontWeight: '700', fontFamily: 'var(--font-mono)' }}>{displayStats.wishlistCount}</div>
-                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '6px', letterSpacing: '0.5px' }}>TRACKED</div>
+            <div className="stats-grid">
+              <div className="stats-box">
+                <div className="tabular" style={{ fontSize: '24px', color: 'var(--text)', fontWeight: '700' }}>{displayStats.wishlistCount}</div>
+                <div className="eyebrow">Tracked</div>
               </div>
-              <div style={{ background: 'var(--bg-surface)', padding: '16px 12px', borderRadius: '8px', textAlign: 'center' }}>
-                <div style={{ fontSize: '24px', color: 'var(--accent-primary)', fontWeight: '700', fontFamily: 'var(--font-mono)' }}>{displayStats.activeAlertsCount}</div>
-                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '6px', letterSpacing: '0.5px' }}>ALERTS</div>
+              <div className="stats-box">
+                <div className="tabular" style={{ fontSize: '24px', color: 'var(--text)', fontWeight: '700' }}>{displayStats.activeAlertsCount}</div>
+                <div className="eyebrow">Alerts</div>
               </div>
-              <div style={{ background: 'var(--bg-surface)', padding: '16px 12px', borderRadius: '8px', textAlign: 'center' }}>
-                <div style={{ fontSize: displayStats.searchesCount >= 1000 ? '20px' : '24px', color: 'var(--accent-primary)', fontWeight: '700', fontFamily: 'var(--font-mono)' }}>
+              <div className="stats-box">
+                <div className="tabular" style={{ fontSize: displayStats.searchesCount >= 1000 ? '20px' : '24px', color: 'var(--text)', fontWeight: '700' }}>
                   {displayStats.searchesCount >= 1000 ? `${(displayStats.searchesCount / 1000).toFixed(1)}k` : displayStats.searchesCount}
                 </div>
-                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '6px', letterSpacing: '0.5px' }}>SEARCHES</div>
+                <div className="eyebrow">Searches</div>
               </div>
             </div>
           </div>
@@ -156,20 +156,20 @@ export default function ProfilePage() {
                   alignItems: 'center',
                   padding: '16px 20px',
                   cursor: 'pointer',
-                  borderRadius: index === 0 ? '8px 8px 0 0' : index === menuItems.length - 1 ? '0 0 8px 8px' : '0',
+                  borderRadius: index === 0 ? 'var(--r-lg) var(--r-lg) 0 0' : index === menuItems.length - 1 ? '0 0 var(--r-lg) var(--r-lg)' : '0',
                   marginBottom: '0',
-                  borderBottom: index < menuItems.length - 1 ? '1px solid var(--border-light)' : 'none'
+                  borderBottom: index < menuItems.length - 1 ? '1px solid var(--border)' : 'none'
                 }}
                 onClick={() => handleMenuClick(item.action)}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-surface-hover)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'var(--bg-surface)'}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface-2)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'var(--surface)'}
               >
-                <div style={{ marginRight: '16px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>{item.icon}</div>
+                <div style={{ marginRight: '16px', color: 'var(--text-3)', display: 'flex', alignItems: 'center' }}>{item.icon}</div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '15px', marginBottom: '2px' }}>{item.title}</div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{getSubtitle(item)}</div>
+                  <div style={{ fontSize: '15px', fontWeight: 500, marginBottom: '2px', color: 'var(--text)' }}>{item.title}</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-3)' }}>{getSubtitle(item)}</div>
                 </div>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#666' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-3)' }}>
                   <polyline points="9 18 15 12 9 6"></polyline>
                 </svg>
               </div>
@@ -181,31 +181,32 @@ export default function ProfilePage() {
             {wishlistLoading ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {[1, 2].map(i => (
-                  <div key={i} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: 0.5, pointerEvents: 'none' }}>
+                  <div key={i} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: 0.6, pointerEvents: 'none' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
-                      <div style={{ width: '60px', height: '60px', borderRadius: '8px', background: 'var(--border-light)' }}></div>
+                      <div className="skeleton" style={{ width: '60px', height: '60px', borderRadius: 'var(--r-md)' }}></div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ height: '16px', width: '50%', background: 'var(--border-light)', borderRadius: '4px', marginBottom: '8px' }}></div>
-                        <div style={{ height: '12px', width: '20%', background: 'var(--border-light)', borderRadius: '4px' }}></div>
+                        <div className="skeleton" style={{ height: '16px', width: '50%', marginBottom: '8px' }}></div>
+                        <div className="skeleton" style={{ height: '12px', width: '20%' }}></div>
                       </div>
                     </div>
-                    <div style={{ height: '30px', width: '60px', background: 'var(--border-light)', borderRadius: '4px' }}></div>
+                    <div className="skeleton" style={{ height: '30px', width: '60px' }}></div>
                   </div>
                 ))}
               </div>
             ) : wishlist.length === 0 ? (
-              <div className="card" style={{ padding: '40px', textAlign: 'center' }}>
-                <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>Your wishlist is empty. Start tracking products you love!</p>
-                <Link href="/search" className="btn btn-primary" style={{ textDecoration: 'none' }}>Discover Products</Link>
+              <div className="card" style={{ padding: '48px 40px', textAlign: 'center' }}>
+                <h4 style={{ marginBottom: '8px' }}>Nothing saved yet</h4>
+                <p style={{ color: 'var(--text-3)', marginBottom: '24px' }}>Track products you love and we&apos;ll keep an eye on their prices for you.</p>
+                <Link href="/search" className="btn btn-primary" style={{ textDecoration: 'none' }}>Browse products</Link>
               </div>
             ) : (
               wishlist.slice(0, 5).map(item => (
                 <div key={item.id} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                     {item.imageUrl ? (
-                      <img src={item.imageUrl} alt={item.name} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', background: '#1a1a1a' }} />
+                      <img src={item.imageUrl} alt={item.name} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', background: 'var(--surface-2)' }} />
                     ) : (
-                      <div style={{ width: '60px', height: '60px', borderRadius: '8px', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#444', fontSize: '11px' }}>No img</div>
+                      <div style={{ width: '60px', height: '60px', borderRadius: '8px', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)', fontSize: '11px' }}>No img</div>
                     )}
                     <div>
                       <h4 style={{ fontSize: '16px', marginBottom: '4px' }}>{item.name}</h4>

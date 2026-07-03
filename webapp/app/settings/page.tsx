@@ -160,7 +160,7 @@ export default function SettingsPage() {
               <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Email cannot be changed</p>
             </div>
             {saveStatus && (
-              <div style={{ fontSize: '13px', color: saveStatus.includes('success') ? '#22c55e' : '#FF4444' }}>{saveStatus}</div>
+              <div style={{ fontSize: '13px', color: saveStatus.includes('success') ? 'var(--success)' : 'var(--danger)' }}>{saveStatus}</div>
             )}
             <button className="btn btn-primary" onClick={handleSaveProfile}>Save Changes</button>
           </div>
@@ -226,7 +226,7 @@ export default function SettingsPage() {
               <button className="btn btn-secondary" style={{ justifyContent: 'flex-start' }} onClick={handleClearHistory}>
                 Clear Search History
               </button>
-              {clearStatus && <p style={{ fontSize: '12px', color: clearStatus.includes('cleared') ? '#22c55e' : '#FF4444', marginLeft: '16px', marginTop: '4px' }}>{clearStatus}</p>}
+              {clearStatus && <p style={{ fontSize: '12px', color: clearStatus.includes('cleared') ? 'var(--success)' : 'var(--danger)', marginLeft: '16px', marginTop: '4px' }}>{clearStatus}</p>}
             </div>
             <button className="btn btn-secondary" style={{ justifyContent: 'flex-start' }} onClick={handleDownloadData}>
               Download My Data

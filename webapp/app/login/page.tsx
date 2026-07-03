@@ -32,22 +32,22 @@ export default function LoginPage() {
 
   return (
     <div className="container" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="card" style={{ width: '100%', maxWidth: '400px', padding: '40px' }}>
+      <div className="card" style={{ width: '100%', maxWidth: '420px', padding: '40px', borderRadius: 'var(--r-lg)' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}><Logo size="lg" /></div>
-          <h2 style={{ fontSize: '32px', marginBottom: '8px' }}>Welcome Back</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Enter your credentials to access your account</p>
+          <h2 style={{ marginBottom: '8px' }}>Welcome back</h2>
+          <p style={{ color: 'var(--text-2)', fontSize: '14px' }}>Enter your credentials to access your account</p>
         </div>
 
         {error && (
-          <div style={{ padding: '12px', marginBottom: '20px', borderRadius: '8px', background: 'rgba(255, 68, 68, 0.1)', color: 'var(--accent-alert)', fontSize: '14px', border: '1px solid rgba(255, 68, 68, 0.2)' }}>
+          <div style={{ padding: '12px 14px', marginBottom: '20px', borderRadius: 'var(--r-md)', background: 'var(--danger-soft)', color: 'var(--danger)', fontSize: '14px', border: '1px solid var(--danger)' }}>
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email Address</label>
+            <label>Email address</label>
             <input
               type="email"
               placeholder="name@example.com"
@@ -60,8 +60,8 @@ export default function LoginPage() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Password</label>
-              <Link href="/forgot-password" style={{ fontSize: '12px', color: 'var(--accent-primary)', textDecoration: 'none' }}>Forgot?</Link>
+              <label>Password</label>
+              <Link href="/forgot-password" style={{ fontSize: '13px', color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>Forgot?</Link>
             </div>
             <div style={{ position: 'relative' }}>
               <input
@@ -76,24 +76,24 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '16px', padding: 0 }}
+                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', fontSize: '16px', padding: 0 }}
               >
                 {showPassword ? '🙈' : '👁'}
               </button>
             </div>
           </div>
 
-          <button disabled={isLoading} type="submit" className="btn btn-primary" style={{ height: '48px', marginTop: '12px', opacity: isLoading ? 0.7 : 1 }}>
-            {isLoading ? "Logging in..." : "Login to Account"}
+          <button disabled={isLoading} type="submit" className="btn btn-primary btn-block btn-lg" style={{ marginTop: '12px' }}>
+            {isLoading ? "Logging in..." : "Login to account"}
           </button>
         </form>
 
-        <Link href="/" className="btn btn-secondary" style={{ height: '48px', marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
-          Continue as Guest
+        <Link href="/" className="btn btn-secondary btn-block btn-lg" style={{ marginTop: '12px' }}>
+          Continue as guest
         </Link>
 
-        <div style={{ textAlign: 'center', marginTop: '32px', fontSize: '14px', color: 'var(--text-muted)' }}>
-          Don't have an account? <Link href="/signup" style={{ color: 'var(--text-main)', textDecoration: 'none', fontWeight: '700' }}>Sign Up</Link>
+        <div style={{ textAlign: 'center', marginTop: '32px', fontSize: '14px', color: 'var(--text-2)' }}>
+          Don't have an account? <Link href="/signup" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}>Sign up</Link>
         </div>
       </div>
     </div>

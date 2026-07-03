@@ -41,14 +41,14 @@ export default function ForgotPasswordPage() {
   if (sent) {
     return (
       <div className="container" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div className="card" style={{ width: '100%', maxWidth: '400px', padding: '40px', textAlign: 'center' }}>
+        <div className="card" style={{ width: '100%', maxWidth: '420px', padding: '40px', borderRadius: 'var(--r-lg)', textAlign: 'center' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}><Logo size="lg" /></div>
-          <h2 style={{ fontSize: '28px', marginBottom: '12px' }}>Check Your Email</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px' }}>
-            If an account exists for <strong>{email}</strong>, you will receive a password reset link shortly.
+          <h2 style={{ marginBottom: '12px' }}>Check your email</h2>
+          <p style={{ color: 'var(--text-2)', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px' }}>
+            If an account exists for <strong style={{ color: 'var(--text)' }}>{email}</strong>, you will receive a password reset link shortly.
           </p>
-          <Link href="/login" className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '48px', textDecoration: 'none' }}>
-            Back to Login
+          <Link href="/login" className="btn btn-primary btn-block btn-lg">
+            Back to login
           </Link>
         </div>
       </div>
@@ -57,22 +57,22 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="container" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="card" style={{ width: '100%', maxWidth: '400px', padding: '40px' }}>
+      <div className="card" style={{ width: '100%', maxWidth: '420px', padding: '40px', borderRadius: 'var(--r-lg)' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}><Logo size="lg" /></div>
-          <h2 style={{ fontSize: '28px', marginBottom: '8px' }}>Forgot Password</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Enter your email and we&apos;ll send you a reset link</p>
+          <h2 style={{ marginBottom: '8px' }}>Forgot password</h2>
+          <p style={{ color: 'var(--text-2)', fontSize: '14px' }}>Enter your email and we&apos;ll send you a reset link</p>
         </div>
 
         {error && (
-          <div style={{ padding: '12px', marginBottom: '20px', borderRadius: '8px', background: 'rgba(255, 68, 68, 0.1)', color: 'var(--accent-alert)', fontSize: '14px', border: '1px solid rgba(255, 68, 68, 0.2)' }}>
+          <div style={{ padding: '12px 14px', marginBottom: '20px', borderRadius: 'var(--r-md)', background: 'var(--danger-soft)', color: 'var(--danger)', fontSize: '14px', border: '1px solid var(--danger)' }}>
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email Address</label>
+            <label>Email address</label>
             <input
               type="email"
               placeholder="name@example.com"
@@ -83,13 +83,13 @@ export default function ForgotPasswordPage() {
             />
           </div>
 
-          <button disabled={isLoading} type="submit" className="btn btn-primary" style={{ height: '48px', marginTop: '12px', opacity: isLoading ? 0.7 : 1 }}>
-            {isLoading ? "Sending..." : "Send Reset Link"}
+          <button disabled={isLoading} type="submit" className="btn btn-primary btn-block btn-lg" style={{ marginTop: '12px' }}>
+            {isLoading ? "Sending..." : "Send reset link"}
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: 'var(--text-muted)' }}>
-          Remember your password? <Link href="/login" style={{ color: 'var(--text-main)', textDecoration: 'none', fontWeight: '700' }}>Login</Link>
+        <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: 'var(--text-2)' }}>
+          Remember your password? <Link href="/login" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}>Login</Link>
         </div>
       </div>
     </div>

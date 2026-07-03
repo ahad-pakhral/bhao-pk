@@ -4,6 +4,7 @@ import "./globals.css";
 import Link from "next/link";
 import { Logo } from "../components/Logo";
 import { ToastProvider } from "../components/Toast";
+import { ThemeToggle } from "../components/ThemeToggle";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useAuthStore } from "../store/authStore";
@@ -29,7 +30,7 @@ function NavbarSearch({ isMobile, closeMenu }: { isMobile?: boolean; closeMenu?:
   return (
     <form onSubmit={handleSearch} className={isMobile ? "mobile-search" : "navbar-search"}>
       <button type="submit" style={{ background: 'none', border: 'none', padding: 0, margin: 0, display: 'flex', alignItems: 'center', cursor: 'pointer' }} aria-label="Search">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: 'var(--text-3)' }} strokeLinecap="round" strokeLinejoin="round">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
         </svg>
       </button>
@@ -80,6 +81,19 @@ export default function RootLayout({
       <head>
         <title>BHAO.PK | Intelligent Price Discovery</title>
         <meta name="description" content="Track prices. Compare deals. Save money." />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+        {/* No-FOUC theme init: applies the persisted / system theme before first paint */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('bhao-theme');if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();`,
+          }}
+        />
       </head>
       <body>
         <ToastProvider>
@@ -107,7 +121,7 @@ export default function RootLayout({
               {/* Center: Search */}
               <Suspense fallback={
                 <div className="navbar-search">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: 'var(--text-3)' }} strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
                   </svg>
                   <input type="text" placeholder="Compare prices..." className="navbar-search-input" disabled />
@@ -118,6 +132,7 @@ export default function RootLayout({
 
               {/* Right: Auth */}
               <div className="navbar-right">
+                <ThemeToggle />
                 {isAuthenticated ? (
                   <>
                     <Link href="/profile" className="nav-profile-btn">
@@ -155,7 +170,7 @@ export default function RootLayout({
               <div className="mobile-menu">
                 <Suspense fallback={
                   <div className="mobile-search">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: 'var(--text-3)' }} strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
                     </svg>
                     <input type="text" placeholder="Compare prices..." className="mobile-search-input" disabled />

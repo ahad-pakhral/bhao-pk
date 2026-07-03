@@ -78,6 +78,7 @@ function SearchContent() {
   const [liveProducts, setLiveProducts] = useState<SearchProduct[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [dataSource, setDataSource] = useState<"live" | "cache" | "error" | null>(null);
+  const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [interpretedQuery, setInterpretedQuery] = useState<string | null>(null);
 
@@ -245,81 +246,88 @@ function SearchContent() {
     <div className="container" style={{ maxWidth: '100%' }}>
       <div className="search-layout">
         {/* Filters Sidebar */}
-        <aside className="search-sidebar">
-          <div className="section-title"><h3>Filters</h3></div>
-
-          {/* Store Filter */}
-          <div style={{ marginBottom: '32px' }}>
-            <h5 style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Store</h5>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {(availableStores.length > 0 ? availableStores : stores.slice(0, 3)).map(store => (
-                <label key={store} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={selectedStores.includes(store)}
-                    onChange={() => toggleStore(store)}
-                  /> {store}
-                </label>
-              ))}
-            </div>
+        <aside className={`search-sidebar ${isFiltersExpanded ? 'expanded' : 'collapsed'}`}>
+          <div className="section-title mobile-filter-header" onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}>
+            <h3>Filters</h3>
+            <button className="mobile-filter-toggle-btn">
+              {isFiltersExpanded ? 'Hide' : 'Show'}
+            </button>
           </div>
 
-          {/* Brand Filter */}
-          {availableBrands.length > 0 && (
+          <div className="filter-content-wrapper">
+            {/* Store Filter */}
             <div style={{ marginBottom: '32px' }}>
-              <h5 style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Brand</h5>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '200px', overflowY: 'auto', paddingRight: '8px' }}>
-                {availableBrands.map(brand => (
-                  <label key={brand} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer' }}>
+              <h5 style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Store</h5>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {(availableStores.length > 0 ? availableStores : stores.slice(0, 3)).map(store => (
+                  <label key={store} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer' }}>
                     <input
                       type="checkbox"
-                      checked={selectedBrands.includes(brand)}
-                      onChange={() => {
-                        setSelectedBrands(prev =>
-                          prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]
-                        );
-                      }}
-                    /> {brand}
+                      checked={selectedStores.includes(store)}
+                      onChange={() => toggleStore(store)}
+                    /> {store}
                   </label>
                 ))}
               </div>
             </div>
-          )}
 
-          {/* Price Options & Range */}
-          <div style={{ marginBottom: '32px' }}>
-            <h5 style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Price Options</h5>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer' }}>
+            {/* Brand Filter */}
+            {availableBrands.length > 0 && (
+              <div style={{ marginBottom: '32px' }}>
+                <h5 style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Brand</h5>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '200px', overflowY: 'auto', paddingRight: '8px' }}>
+                  {availableBrands.map(brand => (
+                    <label key={brand} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedBrands.includes(brand)}
+                        onChange={() => {
+                          setSelectedBrands(prev =>
+                            prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]
+                          );
+                        }}
+                      /> {brand}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Price Options & Range */}
+            <div style={{ marginBottom: '32px' }}>
+              <h5 style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Price Options</h5>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={hideOutliers}
+                    onChange={(e) => setHideOutliers(e.target.checked)}
+                  /> Hide Price Outliers
+                </label>
+              </div>
+              <h5 style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Price Range</h5>
+              <div style={{ display: 'flex', gap: '8px' }}>
                 <input
-                  type="checkbox"
-                  checked={hideOutliers}
-                  onChange={(e) => setHideOutliers(e.target.checked)}
-                /> Hide Price Outliers
-              </label>
+                  type="number"
+                  placeholder="Min"
+                  className="input-field"
+                  style={{ padding: '8px' }}
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                />
+                <input
+                  type="number"
+                  placeholder="Max"
+                  className="input-field"
+                  style={{ padding: '8px' }}
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                />
+              </div>
             </div>
-            <h5 style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Price Range</h5>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <input
-                type="number"
-                placeholder="Min"
-                className="input-field"
-                style={{ padding: '8px' }}
-                value={minPrice}
-                onChange={(e) => setMinPrice(e.target.value)}
-              />
-              <input
-                type="number"
-                placeholder="Max"
-                className="input-field"
-                style={{ padding: '8px' }}
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(e.target.value)}
-              />
-            </div>
-          </div>
 
-          <button className="btn btn-secondary" style={{ width: '100%' }} onClick={clearAll}>Clear All</button>
+            <button className="btn btn-secondary" style={{ width: '100%' }} onClick={clearAll}>Clear All</button>
+          </div>
         </aside>
 
         {/* Results Area */}
@@ -341,21 +349,25 @@ function SearchContent() {
                 </p>
               </div>
               <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                <div style={{ display: 'flex', background: 'var(--bg-surface)', borderRadius: '8px', padding: '4px' }}>
+                <div style={{ display: 'flex', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', padding: '3px', gap: '2px' }}>
                   <button
                     onClick={() => setViewMode('grid')}
+                    aria-label="Grid view"
                     style={{
-                      background: viewMode === 'grid' ? 'var(--border-light)' : 'transparent',
-                      border: 'none', padding: '8px', borderRadius: '4px', cursor: 'pointer', color: viewMode === 'grid' ? '#fff' : '#666'
+                      background: viewMode === 'grid' ? 'var(--surface)' : 'transparent',
+                      boxShadow: viewMode === 'grid' ? 'var(--shadow-sm)' : 'none',
+                      border: 'none', padding: '8px', borderRadius: 'var(--r-sm)', cursor: 'pointer', color: viewMode === 'grid' ? 'var(--text)' : 'var(--text-3)', display: 'flex'
                     }}
                   >
                     <LayoutGrid size={18} />
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
+                    aria-label="List view"
                     style={{
-                      background: viewMode === 'list' ? 'var(--border-light)' : 'transparent',
-                      border: 'none', padding: '8px', borderRadius: '4px', cursor: 'pointer', color: viewMode === 'list' ? '#fff' : '#666'
+                      background: viewMode === 'list' ? 'var(--surface)' : 'transparent',
+                      boxShadow: viewMode === 'list' ? 'var(--shadow-sm)' : 'none',
+                      border: 'none', padding: '8px', borderRadius: 'var(--r-sm)', cursor: 'pointer', color: viewMode === 'list' ? 'var(--text)' : 'var(--text-3)', display: 'flex'
                     }}
                   >
                     <ListIcon size={18} />
@@ -363,7 +375,7 @@ function SearchContent() {
                 </div>
                 <select
                   className="input-field"
-                  style={{ width: '200px', background: 'var(--bg-surface)' }}
+                  style={{ width: '190px', minHeight: 'auto', padding: '10px 12px' }}
                   value={sort}
                   onChange={(e) => setSort(e.target.value)}
                 >
@@ -379,17 +391,16 @@ function SearchContent() {
           <div style={{ display: viewMode === 'grid' ? 'grid' : 'flex', gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(280px, 1fr))' : 'none', flexDirection: 'column', gap: '16px' }}>
             {isLoading && results.length === 0 && (
               Array.from({ length: 8 }).map((_, idx) => (
-                <div key={`skeleton-${idx}`} className="card" style={{ display: 'flex', gap: '24px', flexDirection: viewMode === 'grid' ? 'column' : 'row', height: viewMode === 'grid' ? '100%' : 'auto' }}>
-                  <div style={{
+                <div key={`skeleton-${idx}`} className="card" style={{ display: 'flex', gap: '20px', flexDirection: viewMode === 'grid' ? 'column' : 'row', height: viewMode === 'grid' ? '100%' : 'auto' }}>
+                  <div className="skeleton" style={{
                     width: viewMode === 'grid' ? '100%' : '140px',
-                    height: viewMode === 'grid' ? '240px' : '140px',
-                    background: '#222', borderRadius: '8px', flexShrink: 0,
-                    animation: 'pulse 1.5s infinite'
+                    height: viewMode === 'grid' ? '220px' : '140px',
+                    flexShrink: 0,
                   }}></div>
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px', justifyContent: 'center' }}>
-                    <div style={{ height: '24px', background: '#222', borderRadius: '4px', width: '80%', animation: 'pulse 1.5s infinite' }}></div>
-                    <div style={{ height: '20px', background: '#222', borderRadius: '4px', width: '40%', animation: 'pulse 1.5s infinite' }}></div>
-                    <div style={{ height: '12px', background: '#222', borderRadius: '4px', width: '60%', animation: 'pulse 1.5s infinite', marginTop: 'auto' }}></div>
+                    <div className="skeleton" style={{ height: '18px', width: '80%' }}></div>
+                    <div className="skeleton" style={{ height: '20px', width: '40%' }}></div>
+                    <div className="skeleton" style={{ height: '12px', width: '60%', marginTop: 'auto' }}></div>
                   </div>
                 </div>
               ))
@@ -397,12 +408,12 @@ function SearchContent() {
 
             {results.map((item, idx) => (
               <Link href={item.url ? `/product/${item.id}?url=${encodeURIComponent(item.url)}&store=${encodeURIComponent(item.store)}` : `/product/${item.id}`} key={`${item.store}-${item.id}-${idx}`} className="card" style={{ display: 'flex', flexDirection: viewMode === 'grid' ? 'column' : 'row', gap: '24px', textDecoration: 'none', color: 'inherit', position: 'relative' }}>
-                <div style={{ width: viewMode === 'grid' ? '100%' : '140px', height: viewMode === 'grid' ? '240px' : '140px', background: '#1a1a1a', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+                <div style={{ width: viewMode === 'grid' ? '100%' : '140px', height: viewMode === 'grid' ? '220px' : '140px', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
                   <img
                     src={item.image}
                     alt={item.name}
                     referrerPolicy="no-referrer"
-                    style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '12px' }}
+                    style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '14px' }}
                     onError={(e) => { (e.target as HTMLImageElement).src = '/images/iphone-15-pro.png'; }}
                   />
                   {item.badge && <span className="badge badge-best" style={{ position: 'absolute', top: '8px', left: '8px' }}>{item.badge}</span>}
@@ -423,18 +434,21 @@ function SearchContent() {
                     else if (result === 'error') showToast("Failed to add to wishlist", "error");
                     else if (result === 'auth_required') showToast("Please login to save to your wishlist", "info");
                   }}
+                  aria-label={item.url && isInWishlist(item.url) ? 'Remove from wishlist' : 'Add to wishlist'}
                   style={{
                     position: 'absolute', top: '12px', right: '12px', zIndex: 2,
-                    background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%',
-                    width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                    background: 'color-mix(in srgb, var(--surface) 82%, transparent)',
+                    backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+                    border: '1px solid var(--border)', borderRadius: '999px',
+                    width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
                   }}
                 >
                   <svg
                     width="18"
                     height="18"
                     viewBox="0 0 24 24"
-                    fill={item.url && isInWishlist(item.url) ? '#FF4444' : 'none'}
-                    stroke={item.url && isInWishlist(item.url) ? '#FF4444' : '#fff'}
+                    fill={item.url && isInWishlist(item.url) ? 'var(--danger)' : 'none'}
+                    stroke={item.url && isInWishlist(item.url) ? 'var(--danger)' : 'var(--text-2)'}
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"

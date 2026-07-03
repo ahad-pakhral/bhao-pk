@@ -12,33 +12,22 @@ export default function NotFound() {
       padding: '2rem',
       textAlign: 'center'
     }}>
-      <div style={{
-        fontSize: '6rem',
-        fontWeight: 'bold',
-        color: 'var(--accent-primary)',
-        marginBottom: '1rem'
-      }}>
-        404
+      <div style={{ marginBottom: '8px' }}>
+        <span className="eyebrow">Error 404</span>
       </div>
-      <h1 style={{ color: 'var(--text-main)', marginBottom: '1rem', fontSize: '2rem' }}>
-        Page Not Found
-      </h1>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', maxWidth: '500px' }}>
-        The page you're looking for doesn't exist or has been moved.
-      </p>
-      <Link href="/" style={{
-        backgroundColor: 'var(--accent-primary)',
-        color: 'var(--bg-core)',
-        padding: '1rem 2rem',
-        borderRadius: '8px',
-        textDecoration: 'none',
-        fontWeight: 'bold',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem'
+      <h1 style={{
+        fontSize: 'clamp(56px, 12vw, 96px)',
+        lineHeight: '1',
+        marginBottom: '20px'
       }}>
-        <Home size={20} />
-        GO HOME
+        Page not found
+      </h1>
+      <p style={{ color: 'var(--text-2)', marginBottom: '36px', maxWidth: '46ch', fontSize: '16px', lineHeight: '1.7' }}>
+        The page you&apos;re looking for doesn&apos;t exist or has been moved.
+      </p>
+      <Link href="/" className="btn btn-primary btn-lg">
+        <Home size={18} />
+        Back home
       </Link>
     </div>
   );

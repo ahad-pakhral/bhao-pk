@@ -16,7 +16,7 @@ export const PriceHistoryChart: React.FC<PriceHistoryChartProps> = ({ data }) =>
   const chartRef = useRef<HTMLDivElement>(null);
 
   if (!data || data.length === 0) {
-    return <div style={{ color: '#666', padding: '20px', textAlign: 'center' }}>No price history available</div>;
+    return <div style={{ color: 'var(--text-3)', padding: '20px', textAlign: 'center' }}>No price history available</div>;
   }
 
   const maxPrice = Math.max(...data.map(d => d.price));
@@ -56,7 +56,7 @@ export const PriceHistoryChart: React.FC<PriceHistoryChartProps> = ({ data }) =>
                 width: singleBar ? '120px' : undefined,
                 flex: singleBar ? undefined : 1,
                 height: `${height}px`,
-                background: isHovered ? 'var(--accent-primary)' : '#333',
+                background: isHovered ? 'var(--accent)' : 'var(--accent-soft)',
                 transition: 'all 0.2s ease',
                 borderRadius: '4px 4px 0 0',
                 minWidth: singleBar ? '120px' : '8px',
@@ -74,13 +74,14 @@ export const PriceHistoryChart: React.FC<PriceHistoryChartProps> = ({ data }) =>
               left: singleBar ? '50%' : `${(hoveredIndex / data.length) * 100 + 50 / data.length}%`,
               top: '0',
               transform: 'translateX(-50%)',
-              background: 'var(--bg-surface)',
-              border: '1px solid var(--accent-primary)',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              boxShadow: 'var(--shadow-md)',
               padding: '6px 10px',
-              borderRadius: '6px',
-              fontFamily: 'var(--font-mono)',
+              borderRadius: 'var(--r-sm)',
+              fontFamily: 'var(--font-sans)',
               fontSize: '11px',
-              color: 'var(--accent-primary)',
+              color: 'var(--text)',
               pointerEvents: 'none',
               whiteSpace: 'nowrap',
               zIndex: 10,
@@ -99,12 +100,13 @@ export const PriceHistoryChart: React.FC<PriceHistoryChartProps> = ({ data }) =>
         gap: '12px',
         marginTop: '16px',
         padding: '12px 16px',
-        background: 'rgba(255,255,255,0.02)',
-        borderRadius: '8px',
+        background: 'var(--surface-2)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--r-sm)',
       }}>
         <div>
-          <div style={{ fontSize: '10px', color: '#555', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Current Price</div>
-          <div style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-3)', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Current Price</div>
+          <div style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--accent)', fontFamily: 'var(--font-sans)' }}>
             Rs. {data[data.length - 1].price.toLocaleString()}
           </div>
         </div>

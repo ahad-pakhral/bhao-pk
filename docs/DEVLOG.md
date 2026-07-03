@@ -9,6 +9,32 @@
 
 ## Changelog
 
+### [2026-07-03] — Finish frontend overhaul: kill neon leftovers, fix light-mode hex bugs (Polish)
+
+**What changed:**
+- `webapp/components/Logo.tsx` — Logo mark was still acid-lime `#C5F608` (shown in the navbar on every page); switched fill to `var(--accent)` so it adapts per theme. `.PK` grey `#666` → `var(--text-3)`. Wordmark weight `900` → `600` (Fraunces only loads 400/500/600, so 900 rendered as faux-bold).
+- `webapp/app/wishlist/page.tsx`, `webapp/app/profile/page.tsx` — Product image wells were hardcoded `#1a1a1a` (a black box on the warm light theme) → `var(--surface-2)`; "No img" text `#444` → `var(--text-3)`.
+- `webapp/app/alerts/page.tsx` — Image well `var(--bg-secondary, #1a1a2e)` (undefined token → dark-navy fallback) → `var(--surface-2)`; store badge indigo `rgba(99,102,241,0.1)` + `--accent-primary` → `var(--accent-soft)` + `var(--accent)`; "TARGET REACHED" chip (`#fff` on filled green) → soft `var(--success)`/`var(--success-soft)` and sentence-case "Target reached".
+- `webapp/app/settings/page.tsx`, `webapp/app/reset-password/page.tsx` — Status/validation colors `#22c55e`/`#FF4444` → `var(--success)`/`var(--danger)`.
+- `webapp/app/admin/login/page.tsx` — Submit button `var(--accent-secondary)` + `#fff` → `var(--accent)` + `var(--on-accent)`.
+- `webapp/app/history/page.tsx` — SVG stroke colors `#666`/`#444` → `var(--text-3)`.
+- `webapp/app/reset-password/page.tsx` — UPPERCASE letter-spaced form labels → bare sentence-case `<label>` to match the converted login/signup/forgot-password flow.
+
+**Why:**
+- These pages (wishlist, alerts, settings, history, reset-password, admin/login) were the surfaces not yet touched in the overhaul. They rendered acceptably in dark mode via the legacy token aliases in `globals.css`, but carried hardcoded dark hex that broke as black/navy boxes under the new warm light theme, plus the lime logo mark that contradicted the whole redesign.
+
+**Technical details:**
+- No backend/API/data code touched — strictly presentational token migration.
+- Verified with `npx tsc --noEmit` (clean) and `npm run build` (all 19 routes compile and prerender).
+- Final grep sweep confirms zero neon (`CCFF00`/`C5F608`/`00FF88`) and zero light-mode-breaking hex remain in JSX/CSS.
+
+**Side effects:**
+- None functional. Copy tweak only: "TARGET REACHED" → "Target reached".
+
+**Gotchas / Lessons learned:**
+- The migration kept old token names as aliases (`--bg-core: var(--bg)`), so old-styled pages *look* fine in dark mode — but hardcoded hex (not tokens) is where light-mode regressions hide. Grep for raw hex, not just old token names.
+- Google Fonts only serves the weights you request; inline `fontWeight` beyond the loaded set silently becomes a synthetic faux-bold.
+
 ### [2026-06-08 01:42] — Upgrade Gemini model to gemini-3.1-flash-lite and fix query parser fallback (Fix)
 
 **What changed:**

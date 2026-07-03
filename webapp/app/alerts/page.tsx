@@ -76,7 +76,7 @@ function AlertCard({ alert, onRemove }: {
                 height: '100px',
                 minWidth: '100px',
                 borderRadius: '8px',
-                backgroundColor: 'var(--bg-secondary, #1a1a2e)',
+                backgroundColor: 'var(--surface-2)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -118,8 +118,8 @@ function AlertCard({ alert, onRemove }: {
                         display: 'inline-block',
                         fontSize: '11px',
                         fontWeight: '600',
-                        color: 'var(--accent-primary)',
-                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        color: 'var(--accent)',
+                        backgroundColor: 'var(--accent-soft)',
                         padding: '2px 8px',
                         borderRadius: '4px',
                         marginBottom: '6px',
@@ -146,12 +146,12 @@ function AlertCard({ alert, onRemove }: {
                         <span style={{
                             fontSize: '11px',
                             fontWeight: '600',
-                            color: '#fff',
-                            backgroundColor: 'var(--accent-success)',
+                            color: 'var(--success)',
+                            backgroundColor: 'var(--success-soft)',
                             padding: '2px 8px',
                             borderRadius: '4px',
                         }}>
-                            TARGET REACHED
+                            Target reached
                         </span>
                     )}
                 </div>

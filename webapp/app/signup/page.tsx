@@ -50,16 +50,16 @@ export default function SignupPage() {
   if (emailSent) {
     return (
       <div className="container" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div className="card" style={{ width: '100%', maxWidth: '400px', padding: '40px', textAlign: 'center' }}>
+        <div className="card" style={{ width: '100%', maxWidth: '420px', padding: '40px', borderRadius: 'var(--r-lg)', textAlign: 'center' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}><Logo size="lg" /></div>
-          <h2 style={{ fontSize: '28px', marginBottom: '12px' }}>Check Your Email</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px' }}>
-            We sent a verification link to <strong>{email}</strong>. Click the link to activate your account.
+          <h2 style={{ marginBottom: '12px' }}>Check your email</h2>
+          <p style={{ color: 'var(--text-2)', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px' }}>
+            We sent a verification link to <strong style={{ color: 'var(--text)' }}>{email}</strong>. Click the link to activate your account.
           </p>
-          <Link href="/login" className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '48px', textDecoration: 'none' }}>
-            Go to Login
+          <Link href="/login" className="btn btn-primary btn-block btn-lg">
+            Go to login
           </Link>
-          <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '16px' }}>
+          <p style={{ color: 'var(--text-3)', fontSize: '13px', marginTop: '16px' }}>
             Didn&apos;t receive it? Check your spam folder.
           </p>
         </div>
@@ -69,22 +69,22 @@ export default function SignupPage() {
 
   return (
     <div className="container" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="card" style={{ width: '100%', maxWidth: '400px', padding: '40px' }}>
+      <div className="card" style={{ width: '100%', maxWidth: '420px', padding: '40px', borderRadius: 'var(--r-lg)' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}><Logo size="lg" /></div>
-          <h2 style={{ fontSize: '32px', marginBottom: '8px' }}>Create Account</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Join BHAO.PK to track prices and save money</p>
+          <h2 style={{ marginBottom: '8px' }}>Create account</h2>
+          <p style={{ color: 'var(--text-2)', fontSize: '14px' }}>Join Bhao.pk to track prices and save money</p>
         </div>
 
         {error && (
-          <div style={{ padding: '12px', marginBottom: '20px', borderRadius: '8px', background: 'rgba(255, 68, 68, 0.1)', color: 'var(--accent-alert)', fontSize: '14px', border: '1px solid rgba(255, 68, 68, 0.2)' }}>
+          <div style={{ padding: '12px 14px', marginBottom: '20px', borderRadius: 'var(--r-md)', background: 'var(--danger-soft)', color: 'var(--danger)', fontSize: '14px', border: '1px solid var(--danger)' }}>
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Full Name</label>
+            <label>Full name</label>
             <input
               type="text"
               placeholder="John Doe"
@@ -96,7 +96,7 @@ export default function SignupPage() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email Address</label>
+            <label>Email address</label>
             <input
               type="email"
               placeholder="name@example.com"
@@ -108,7 +108,7 @@ export default function SignupPage() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Password</label>
+            <label>Password</label>
             <div style={{ position: 'relative' }}>
               <input
                 type={showPassword ? "text" : "password"}
@@ -122,7 +122,7 @@ export default function SignupPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '16px', padding: 0 }}
+                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', fontSize: '16px', padding: 0 }}
               >
                 {showPassword ? '🙈' : '👁'}
               </button>
@@ -130,7 +130,7 @@ export default function SignupPage() {
             {password.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
                 {passwordValidation.rules.map((rule) => (
-                  <div key={rule.label} style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px', color: rule.met ? '#22c55e' : 'var(--text-muted)' }}>
+                  <div key={rule.label} style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px', color: rule.met ? 'var(--success)' : 'var(--text-3)' }}>
                     <span>{rule.met ? '✓' : '○'}</span> {rule.label}
                   </div>
                 ))}
@@ -139,7 +139,7 @@ export default function SignupPage() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Confirm Password</label>
+            <label>Confirm password</label>
             <div style={{ position: 'relative' }}>
               <input
                 type={showConfirm ? "text" : "password"}
@@ -148,39 +148,39 @@ export default function SignupPage() {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                style={{ width: '100%', paddingRight: '40px', ...(confirmPassword && confirmPassword !== password ? { borderColor: 'var(--accent-alert)' } : {}) }}
+                style={{ width: '100%', paddingRight: '40px', ...(confirmPassword && confirmPassword !== password ? { borderColor: 'var(--danger)' } : {}) }}
               />
               <button
                 type="button"
                 onClick={() => setShowConfirm(!showConfirm)}
-                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '16px', padding: 0 }}
+                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', fontSize: '16px', padding: 0 }}
               >
                 {showConfirm ? '🙈' : '👁'}
               </button>
             </div>
             {confirmPassword && confirmPassword !== password && (
-              <span style={{ fontSize: '12px', color: 'var(--accent-alert)' }}>Passwords do not match</span>
+              <span style={{ fontSize: '12px', color: 'var(--danger)' }}>Passwords do not match</span>
             )}
           </div>
 
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginTop: '8px' }}>
             <input type="checkbox" id="terms" required style={{ marginTop: '4px' }} />
-            <label htmlFor="terms" style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-              I agree to the <Link href="#" style={{ color: 'var(--text-main)' }}>Terms of Service</Link> and <Link href="#" style={{ color: 'var(--text-main)' }}>Privacy Policy</Link>
+            <label htmlFor="terms" style={{ fontSize: '13px', color: 'var(--text-2)', lineHeight: '1.5' }}>
+              I agree to the <Link href="#" style={{ color: 'var(--accent)' }}>Terms of Service</Link> and <Link href="#" style={{ color: 'var(--accent)' }}>Privacy Policy</Link>
             </label>
           </div>
 
-          <button disabled={isLoading || !passwordValidation.isValid} type="submit" className="btn btn-primary" style={{ height: '48px', marginTop: '12px', opacity: isLoading ? 0.7 : 1 }}>
-            {isLoading ? "Creating Account..." : "Create Account"}
+          <button disabled={isLoading || !passwordValidation.isValid} type="submit" className="btn btn-primary btn-block btn-lg" style={{ marginTop: '12px' }}>
+            {isLoading ? "Creating account..." : "Create account"}
           </button>
         </form>
 
-        <Link href="/" className="btn btn-secondary" style={{ height: '48px', marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
-          Continue as Guest
+        <Link href="/" className="btn btn-secondary btn-block btn-lg" style={{ marginTop: '12px' }}>
+          Continue as guest
         </Link>
 
-        <div style={{ textAlign: 'center', marginTop: '32px', fontSize: '14px', color: 'var(--text-muted)' }}>
-          Already have an account? <Link href="/login" style={{ color: 'var(--text-main)', textDecoration: 'none', fontWeight: '700' }}>Login</Link>
+        <div style={{ textAlign: 'center', marginTop: '32px', fontSize: '14px', color: 'var(--text-2)' }}>
+          Already have an account? <Link href="/login" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}>Login</Link>
         </div>
       </div>
     </div>

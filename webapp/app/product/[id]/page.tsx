@@ -37,39 +37,39 @@ function normalizeStoreKey(store: string | null | undefined): string | null {
 function VendorCard({ product, isBestValue }: { product: any; isBestValue: boolean }) {
   const price = typeof product.price === 'number' ? product.price : parseInt(String(product.price || '0').replace(/[^\d]/g, ''), 10) || 0;
   return (
-    <div className="vendor-card" style={{ position: 'relative', padding: '20px', background: 'var(--bg-surface)', borderRadius: '16px', border: `1px solid ${isBestValue ? 'var(--accent-primary)' : 'var(--border-light)'}`, transition: 'border-color 0.2s' }}>
+    <div className="vendor-card" style={{ position: 'relative', padding: '20px', borderRadius: 'var(--r-lg)', border: `1px solid ${isBestValue ? 'var(--accent)' : 'var(--border)'}`, boxShadow: isBestValue ? 'var(--shadow-md)' : 'none', transition: 'border-color var(--dur-2) var(--ease)' }}>
       {isBestValue && (
-        <span className="badge badge-best" style={{ position: 'absolute', top: '-8px', left: '16px', fontSize: '11px', fontWeight: 700, padding: '4px 10px', letterSpacing: '0.05em' }}>
-          BEST VALUE
+        <span className="badge badge-best" style={{ position: 'absolute', top: '-10px', left: '16px' }}>
+          Best price
         </span>
       )}
       {/* Store badge */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-        <span style={{ fontSize: '11px', fontFamily: 'var(--font-display)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', padding: '3px 8px', borderRadius: '4px', background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border-light)', color: 'var(--text-secondary)' }}>
+        <span style={{ fontSize: '12px', fontWeight: 600, padding: '4px 10px', borderRadius: 'var(--r-pill)', background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text-2)' }}>
           {product.store}
         </span>
         {product.inStock === false && (
-          <span style={{ fontSize: '11px', color: '#FF4444', fontWeight: 600 }}>Out of Stock</span>
+          <span style={{ fontSize: '12px', color: 'var(--danger)', fontWeight: 600 }}>Out of stock</span>
         )}
       </div>
       {/* Product name */}
-      <h4 style={{ fontSize: '14px', lineHeight: '1.4', marginBottom: '12px', color: 'var(--text-main)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+      <h4 style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', fontWeight: 500, lineHeight: '1.45', marginBottom: '14px', color: 'var(--text-2)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
         {product.name}
       </h4>
       {/* Price */}
-      <div className="product-price" style={{ fontSize: '20px', marginBottom: '16px' }}>
+      <div className="product-price tabular" style={{ fontSize: '22px', marginBottom: '14px' }}>
         Rs. {price.toLocaleString('en-PK')}
       </div>
       {/* Rating */}
       {product.rating > 0 && (
-        <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-          {'★'.repeat(Math.round(product.rating))}{'☆'.repeat(5 - Math.round(product.rating))} {product.rating.toFixed(1)} ({product.reviewsCount || 0})
+        <div style={{ fontSize: '13px', color: 'var(--text-3)', marginBottom: '16px' }}>
+          <span style={{ color: 'var(--star)' }}>{'★'.repeat(Math.round(product.rating))}</span><span style={{ color: 'var(--border-strong)' }}>{'★'.repeat(5 - Math.round(product.rating))}</span> {product.rating.toFixed(1)} ({product.reviewsCount || 0})
         </div>
       )}
       {/* Visit store link */}
-      <a href={product.url} target="_blank" rel="noopener noreferrer" className="btn btn-secondary" style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', height: '40px', fontSize: '12px' }}>
+      <a href={product.url} target="_blank" rel="noopener noreferrer" className={`btn ${isBestValue ? 'btn-primary' : 'btn-secondary'} btn-block`} style={{ gap: '8px' }}>
         Visit {product.store}
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
       </a>
     </div>
   );
@@ -78,18 +78,16 @@ function VendorCard({ product, isBestValue }: { product: any; isBestValue: boole
 function StarRating({ rating, count }: { rating: number; count: number }) {
   const stars = [];
   for (let i = 1; i <= 5; i++) {
-    if (i <= Math.floor(rating)) {
-      stars.push(<span key={i} style={{ color: "#FFB800" }}>&#9733;</span>);
-    } else if (i - 0.5 <= rating) {
-      stars.push(<span key={i} style={{ color: "#FFB800" }}>&#9733;</span>);
+    if (i - 0.5 <= rating) {
+      stars.push(<span key={i} style={{ color: "var(--star)" }}>&#9733;</span>);
     } else {
-      stars.push(<span key={i} style={{ color: "#333" }}>&#9733;</span>);
+      stars.push(<span key={i} style={{ color: "var(--border-strong)" }}>&#9733;</span>);
     }
   }
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-      <span style={{ fontSize: "16px", display: "flex", gap: "2px" }}>{stars}</span>
-      <span style={{ color: "var(--text-secondary)", fontSize: "13px" }}>{rating.toFixed(1)} ({count} reviews)</span>
+      <span style={{ fontSize: "15px", display: "flex", gap: "2px" }}>{stars}</span>
+      <span style={{ color: "var(--text-2)", fontSize: "13px" }}>{rating.toFixed(1)} ({count} reviews)</span>
     </div>
   );
 }
@@ -405,14 +403,14 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
       <div className="product-layout">
         {/* Product Image */}
         <div className="product-image-col">
-          <div style={{ aspectRatio: "1/1", background: "#0a0a0a", borderRadius: "20px", display: "flex", alignItems: "center", justifyContent: "center", position: "sticky", top: "100px", overflow: "hidden", border: "1px solid var(--border-light)" }}>
+          <div style={{ aspectRatio: "1/1", background: "var(--surface-2)", borderRadius: "var(--r-xl)", display: "flex", alignItems: "center", justifyContent: "center", position: "sticky", top: "100px", overflow: "hidden", border: "1px solid var(--border)" }}>
             {product.image ? (
               <img src={product.image} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: "40px" }} referrerPolicy="no-referrer" />
             ) : (
-              <div style={{ opacity: 0.1, fontSize: "80px" }}>🛍️</div>
+              <div style={{ color: "var(--text-3)", fontSize: "14px" }}>No image available</div>
             )}
             {hasDiscount && (
-              <span className="badge badge-hot" style={{ position: "absolute", top: "16px", left: "16px", fontSize: "13px", padding: "6px 12px" }}>
+              <span className="badge badge-hot" style={{ position: "absolute", top: "16px", left: "16px" }}>
                 -{discountPct}%
               </span>
             )}
@@ -422,48 +420,45 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
         {/* Product Info */}
         <div className="product-info-col">
           {/* Store badge + rating */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "18px", flexWrap: "wrap" }}>
             <span style={{
-              fontSize: "11px", fontFamily: "var(--font-display)", fontWeight: 700,
-              textTransform: "uppercase", letterSpacing: "0.08em",
-              padding: "4px 10px", borderRadius: "6px",
-              background: "rgba(255,255,255,0.06)", border: "1px solid var(--border-light)",
-              color: "var(--text-secondary)",
+              fontSize: "12px", fontWeight: 600,
+              padding: "5px 12px", borderRadius: "var(--r-pill)",
+              background: "var(--surface-2)", border: "1px solid var(--border)",
+              color: "var(--text-2)",
             }}>
               {product.store}
             </span>
             {product.rating > 0 && <StarRating rating={product.rating} count={product.reviewsCount} />}
             {product.inStock !== false && (
-              <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--accent-success)", fontFamily: "var(--font-display)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                In Stock
-              </span>
+              <span className="badge badge-live">In stock</span>
             )}
           </div>
 
-          <h1 style={{ fontSize: "32px", marginBottom: "20px", lineHeight: "1.25", letterSpacing: "-0.01em" }}>
+          <h1 style={{ fontSize: "clamp(28px, 4vw, 38px)", marginBottom: "22px", lineHeight: "1.12" }}>
             {product.name}
           </h1>
 
-          <div style={{ marginBottom: "32px" }}>
-            <div className="product-price" style={{ fontSize: "36px" }}>
+          <div style={{ marginBottom: "28px" }}>
+            <div className="product-price tabular" style={{ fontSize: "40px", fontWeight: 700, letterSpacing: "-0.02em" }}>
               {product.displayPrice}
             </div>
             {hasDiscount && (
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "8px" }}>
-                <span style={{ fontSize: "16px", color: "#666", textDecoration: "line-through", fontFamily: "var(--font-mono)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "10px" }}>
+                <span style={{ fontSize: "16px", color: "var(--text-3)", textDecoration: "line-through" }}>
                   Rs. {origNum.toLocaleString("en-PK")}
                 </span>
-                <span style={{ fontSize: "13px", color: "#FF0055", fontWeight: 700, fontFamily: "var(--font-display)" }}>
+                <span className="badge badge-live" style={{ fontSize: "13px" }}>
                   Save Rs. {(origNum - priceNum).toLocaleString("en-PK")}
                 </span>
               </div>
             )}
           </div>
 
-          <div style={{ display: "flex", gap: "12px", marginBottom: "32px" }}>
+          <div style={{ display: "flex", gap: "12px", marginBottom: "28px", flexWrap: "wrap" }}>
             <button
-              className="btn btn-primary"
-              style={{ flex: 1, height: "52px", fontSize: "13px" }}
+              className="btn btn-primary btn-lg"
+              style={{ flex: "2 1 200px", minHeight: "52px" }}
               onClick={() => {
                 if (product.url) window.open(product.url, "_blank");
                 else showToast("Store URL not available", "info");
@@ -472,34 +467,35 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
               Buy on {product.store}
             </button>
             <button
-              className="btn btn-secondary"
-              style={{ flex: 1, height: "52px", border: "1px solid var(--border-light)" }}
+              className="btn btn-secondary btn-lg"
+              style={{ flex: "1 1 140px", minHeight: "52px" }}
               onClick={() => setShowAlertModal(true)}
             >
-              Price Alert
+              Track price
             </button>
             <button
               onClick={handleToggleWishlist}
               title={inWl ? "Remove from wishlist" : "Add to wishlist"}
+              aria-label={inWl ? "Remove from wishlist" : "Add to wishlist"}
               style={{
-                height: "52px", width: "52px",
-                border: inWl ? "1px solid #FF4444" : "1px solid var(--border-light)",
-                borderRadius: "12px",
-                background: inWl ? "rgba(255,68,68,0.08)" : "transparent",
+                minHeight: "52px", width: "52px",
+                border: inWl ? "1px solid var(--danger)" : "1px solid var(--border-strong)",
+                borderRadius: "var(--r-md)",
+                background: inWl ? "var(--danger-soft)" : "var(--surface)",
                 cursor: "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                transition: "all 0.2s",
+                transition: "all var(--dur-1) var(--ease)",
               }}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill={inWl ? "#FF4444" : "none"} stroke={inWl ? "#FF4444" : "var(--text-secondary)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill={inWl ? "var(--danger)" : "none"} stroke={inWl ? "var(--danger)" : "var(--text-2)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
               </svg>
             </button>
           </div>
 
           {/* Price History */}
-          <div style={{ padding: "24px", background: "var(--bg-surface)", borderRadius: "16px", border: "1px solid var(--border-light)" }}>
-            <h4 style={{ marginBottom: "16px", fontSize: "12px", color: "var(--text-muted)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Price History</h4>
+          <div style={{ padding: "24px", background: "var(--surface)", borderRadius: "var(--r-lg)", border: "1px solid var(--border)" }}>
+            <h4 className="eyebrow" style={{ marginBottom: "16px" }}>Price history</h4>
             <PriceHistoryChart data={priceHistory} />
           </div>
         </div>
@@ -551,11 +547,11 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
       <div className="section-title"><h3>Product Details</h3></div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1px", background: "var(--border-light)", borderRadius: "12px", overflow: "hidden", marginBottom: "60px" }}>
         <DetailRow label="Store" value={product.store} />
-        <DetailRow label="Price" value={product.displayPrice} valueColor="var(--accent-primary)" />
-        {hasDiscount && <DetailRow label="Original Price" value={`Rs. ${origNum.toLocaleString("en-PK")}`} valueStyle={{ textDecoration: "line-through", color: "#666" }} />}
-        {hasDiscount && <DetailRow label="You Save" value={`Rs. ${(origNum - priceNum).toLocaleString("en-PK")} (${discountPct}%)`} valueColor="#FF0055" />}
-        {product.rating > 0 && <DetailRow label="Rating" value={`${product.rating.toFixed(1)} out of 5 (${product.reviewsCount} reviews)`} valueColor="#FFB800" />}
-        <DetailRow label="Availability" value={product.inStock !== false ? "In Stock" : "Out of Stock"} valueColor={product.inStock !== false ? "var(--accent-success)" : "#FF4444"} />
+        <DetailRow label="Price" value={product.displayPrice} valueColor="var(--text)" />
+        {hasDiscount && <DetailRow label="Original Price" value={`Rs. ${origNum.toLocaleString("en-PK")}`} valueStyle={{ textDecoration: "line-through", color: "var(--text-3)" }} />}
+        {hasDiscount && <DetailRow label="You Save" value={`Rs. ${(origNum - priceNum).toLocaleString("en-PK")} (${discountPct}%)`} valueColor="var(--success)" />}
+        {product.rating > 0 && <DetailRow label="Rating" value={`${product.rating.toFixed(1)} out of 5 (${product.reviewsCount} reviews)`} valueColor="var(--star)" />}
+        <DetailRow label="Availability" value={product.inStock !== false ? "In Stock" : "Out of Stock"} valueColor={product.inStock !== false ? "var(--success)" : "var(--danger)"} />
       </div>
 
       {/* Reviews */}
@@ -569,7 +565,7 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
                   <span style={{ fontWeight: "600", fontSize: "14px" }}>{review.author || "Anonymous"}</span>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     {review.rating > 0 && (
-                      <span style={{ color: "#FFB800", fontSize: "13px" }}>
+                      <span style={{ color: "var(--star)", fontSize: "13px" }}>
                         {"★".repeat(Math.round(review.rating))}{"☆".repeat(5 - Math.round(review.rating))}
                       </span>
                     )}
@@ -608,40 +604,41 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
 
       {/* Alert Modal */}
       {showAlertModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}
           onClick={() => { setShowAlertModal(false); setAlertType(null); setTargetPrice(""); setPriceError(""); }}>
-          <div style={{ background: "var(--bg-surface)", borderRadius: "16px", padding: "32px", maxWidth: "440px", width: "90%", border: "1px solid var(--border-light)" }}
+          <div className="rise-in" style={{ background: "var(--surface)", borderRadius: "var(--r-lg)", padding: "28px", maxWidth: "440px", width: "100%", border: "1px solid var(--border)", boxShadow: "var(--shadow-lg)" }}
             onClick={e => e.stopPropagation()}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-              <h3 style={{ fontSize: "18px" }}>Set Price Alert</h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <h3 style={{ fontSize: "20px" }}>Track this price</h3>
               <button onClick={() => { setShowAlertModal(false); setAlertType(null); setTargetPrice(""); setPriceError(""); }}
-                style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", padding: "4px" }}>
+                aria-label="Close"
+                style={{ background: "none", border: "none", color: "var(--text-3)", cursor: "pointer", padding: "4px", display: "flex" }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
             {alertType === null ? (
               <>
-                <p style={{ color: "var(--text-secondary)", marginBottom: "24px", fontSize: "14px" }}>
-                  Get notified when the price drops for this product
+                <p style={{ color: "var(--text-2)", marginBottom: "20px", fontSize: "14px" }}>
+                  We&rsquo;ll let you know when the price moves in your favour.
                 </p>
-                <button onClick={() => handleSetAlert("every")} style={{ width: "100%", padding: "16px", background: "#0a0a0a", border: "1px solid var(--border-light)", borderRadius: "12px", color: "#fff", cursor: "pointer", textAlign: "left", marginBottom: "12px", transition: "border-color 0.2s" }}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = "rgba(204,255,0,0.3)")}
-                  onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--border-light)")}>
-                  <div style={{ fontWeight: "700", marginBottom: "4px", fontFamily: "var(--font-display)", fontSize: "14px" }}>Every Price Change</div>
-                  <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>Get notified whenever the price changes</div>
+                <button onClick={() => handleSetAlert("every")} style={{ width: "100%", padding: "16px", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: "var(--r-md)", color: "var(--text)", cursor: "pointer", textAlign: "left", marginBottom: "12px", transition: "border-color var(--dur-1) var(--ease)" }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--accent)")}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--border)")}>
+                  <div style={{ fontWeight: 600, marginBottom: "4px", fontSize: "15px" }}>Every price change</div>
+                  <div style={{ fontSize: "13px", color: "var(--text-2)" }}>Get notified whenever the price changes</div>
                 </button>
-                <button onClick={() => handleSetAlert("specific")} style={{ width: "100%", padding: "16px", background: "#0a0a0a", border: "1px solid var(--border-light)", borderRadius: "12px", color: "#fff", cursor: "pointer", textAlign: "left", transition: "border-color 0.2s" }}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = "rgba(204,255,0,0.3)")}
-                  onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--border-light)")}>
-                  <div style={{ fontWeight: "700", marginBottom: "4px", fontFamily: "var(--font-display)", fontSize: "14px" }}>Specific Price</div>
-                  <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>Set a target price and get notified when reached</div>
+                <button onClick={() => handleSetAlert("specific")} style={{ width: "100%", padding: "16px", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: "var(--r-md)", color: "var(--text)", cursor: "pointer", textAlign: "left", transition: "border-color var(--dur-1) var(--ease)" }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--accent)")}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--border)")}>
+                  <div style={{ fontWeight: 600, marginBottom: "4px", fontSize: "15px" }}>Specific price</div>
+                  <div style={{ fontSize: "13px", color: "var(--text-2)" }}>Set a target and get notified when it&rsquo;s reached</div>
                 </button>
               </>
             ) : (
               <>
-                <p style={{ color: "var(--text-secondary)", marginBottom: "16px", fontSize: "14px" }}>Enter your target price</p>
-                <input type="number" placeholder="e.g., 300000" className="input-field" value={targetPrice} onChange={(e) => { setTargetPrice(e.target.value); setPriceError(""); }} autoFocus style={{ marginBottom: priceError ? "4px" : "24px" }} />
-                {priceError && <p style={{ color: "#FF4444", fontSize: "12px", marginBottom: "16px" }}>{priceError}</p>}
+                <p style={{ color: "var(--text-2)", marginBottom: "16px", fontSize: "14px" }}>Enter your target price</p>
+                <input type="number" placeholder="e.g. 300000" className="input-field" value={targetPrice} onChange={(e) => { setTargetPrice(e.target.value); setPriceError(""); }} autoFocus style={{ marginBottom: priceError ? "4px" : "24px" }} />
+                {priceError && <p style={{ color: "var(--danger)", fontSize: "13px", marginBottom: "16px" }}>{priceError}</p>}
                 <div style={{ display: "flex", gap: "12px" }}>
                   <button onClick={() => { setAlertType(null); setTargetPrice(""); setPriceError(""); }} className="btn btn-secondary" style={{ flex: 1 }}>Back</button>
                   <button onClick={handleSpecificPriceSubmit} className="btn btn-primary" style={{ flex: 1 }}>Set Alert</button>

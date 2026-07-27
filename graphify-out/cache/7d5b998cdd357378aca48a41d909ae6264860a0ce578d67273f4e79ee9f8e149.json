@@ -1,1 +1,0 @@
-{"nodes": [{"id": "backend_node_modules_resolve_test_faulty_basedir_js", "label": "faulty_basedir.js", "file_type": "code", "source_file": "backend/node_modules/resolve/test/faulty_basedir.js", "source_location": "L1"}], "edges": [], "raw_calls": []}

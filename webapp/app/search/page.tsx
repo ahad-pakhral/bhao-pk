@@ -332,74 +332,72 @@ function SearchContent() {
 
         {/* Results Area */}
         <div className="search-main">
-          <div style={{ marginBottom: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h2 style={{ fontSize: '24px' }}>
-                  Search Results
-                  {isLoading && <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginLeft: '12px' }}>Scraping stores...</span>}
-                </h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
-                  Found {results.length} items{(interpretedQuery || queryParam) && ` for "${interpretedQuery || queryParam}"`}
-                  {dataSource && dataSource !== "error" && (
-                    <span className={`badge ${dataSource === "live" ? "badge-live" : "badge-cached"}`} style={{ marginLeft: '8px', verticalAlign: 'middle' }}>
-                      {dataSource === "live" ? "LIVE" : "CACHED"}
-                    </span>
-                  )}
-                </p>
-              </div>
-              <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                <div style={{ display: 'flex', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', padding: '3px', gap: '2px' }}>
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    aria-label="Grid view"
-                    style={{
-                      background: viewMode === 'grid' ? 'var(--surface)' : 'transparent',
-                      boxShadow: viewMode === 'grid' ? 'var(--shadow-sm)' : 'none',
-                      border: 'none', padding: '8px', borderRadius: 'var(--r-sm)', cursor: 'pointer', color: viewMode === 'grid' ? 'var(--text)' : 'var(--text-3)', display: 'flex'
-                    }}
-                  >
-                    <LayoutGrid size={18} />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    aria-label="List view"
-                    style={{
-                      background: viewMode === 'list' ? 'var(--surface)' : 'transparent',
-                      boxShadow: viewMode === 'list' ? 'var(--shadow-sm)' : 'none',
-                      border: 'none', padding: '8px', borderRadius: 'var(--r-sm)', cursor: 'pointer', color: viewMode === 'list' ? 'var(--text)' : 'var(--text-3)', display: 'flex'
-                    }}
-                  >
-                    <ListIcon size={18} />
-                  </button>
-                </div>
-                <select
-                  className="input-field"
-                  style={{ width: '190px', minHeight: 'auto', padding: '10px 12px' }}
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value)}
+          <div className="search-results-header">
+            <div className="search-results-title-block">
+              <h2 style={{ fontSize: '24px', margin: 0 }}>
+                Search Results
+                {isLoading && <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginLeft: '12px' }}>Scraping stores...</span>}
+              </h2>
+              <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: '4px 0 0 0' }}>
+                Found {results.length} items{(interpretedQuery || queryParam) && ` for "${interpretedQuery || queryParam}"`}
+                {dataSource && dataSource !== "error" && (
+                  <span className={`badge ${dataSource === "live" ? "badge-live" : "badge-cached"}`} style={{ marginLeft: '8px', verticalAlign: 'middle' }}>
+                    {dataSource === "live" ? "LIVE" : "CACHED"}
+                  </span>
+                )}
+              </p>
+            </div>
+            <div className="search-results-controls">
+              <div style={{ display: 'flex', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', padding: '3px', gap: '2px' }}>
+                <button
+                  onClick={() => setViewMode('grid')}
+                  aria-label="Grid view"
+                  style={{
+                    background: viewMode === 'grid' ? 'var(--surface)' : 'transparent',
+                    boxShadow: viewMode === 'grid' ? 'var(--shadow-sm)' : 'none',
+                    border: 'none', padding: '8px', borderRadius: 'var(--r-sm)', cursor: 'pointer', color: viewMode === 'grid' ? 'var(--text)' : 'var(--text-3)', display: 'flex'
+                  }}
                 >
-                  <option>Relevance</option>
-                  <option>Price: Low to High</option>
-                  <option>Price: High to Low</option>
-                  <option>Top Rated</option>
-                </select>
+                  <LayoutGrid size={18} />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  aria-label="List view"
+                  style={{
+                    background: viewMode === 'list' ? 'var(--surface)' : 'transparent',
+                    boxShadow: viewMode === 'list' ? 'var(--shadow-sm)' : 'none',
+                    border: 'none', padding: '8px', borderRadius: 'var(--r-sm)', cursor: 'pointer', color: viewMode === 'list' ? 'var(--text)' : 'var(--text-3)', display: 'flex'
+                  }}
+                >
+                  <ListIcon size={18} />
+                </button>
               </div>
+              <select
+                className="input-field search-sort-select"
+                style={{ width: '190px', minHeight: 'auto', padding: '8px 12px' }}
+                value={sort}
+                onChange={(e) => setSort(e.target.value)}
+              >
+                <option>Relevance</option>
+                <option>Price: Low to High</option>
+                <option>Price: High to Low</option>
+                <option>Top Rated</option>
+              </select>
             </div>
           </div>
 
-          <div style={{ display: viewMode === 'grid' ? 'grid' : 'flex', gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(280px, 1fr))' : 'none', flexDirection: 'column', gap: '16px' }}>
+          <div className={viewMode === 'grid' ? 'product-grid' : 'product-list'}>
             {isLoading && results.length === 0 && (
               Array.from({ length: 8 }).map((_, idx) => (
-                <div key={`skeleton-${idx}`} className="card" style={{ display: 'flex', gap: '20px', flexDirection: viewMode === 'grid' ? 'column' : 'row', height: viewMode === 'grid' ? '100%' : 'auto' }}>
+                <div key={`skeleton-${idx}`} className={`card ${viewMode === 'grid' ? 'product-card' : 'product-list-card'}`} style={{ height: '100%' }}>
                   <div className="skeleton" style={{
-                    width: viewMode === 'grid' ? '100%' : '140px',
-                    height: viewMode === 'grid' ? '220px' : '140px',
-                    flexShrink: 0,
+                    width: viewMode === 'grid' ? '100%' : '110px',
+                    aspectRatio: viewMode === 'grid' ? '1 / 1' : '1 / 1',
+                    borderRadius: 'var(--r-md)', flexShrink: 0
                   }}></div>
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px', justifyContent: 'center' }}>
-                    <div className="skeleton" style={{ height: '18px', width: '80%' }}></div>
-                    <div className="skeleton" style={{ height: '20px', width: '40%' }}></div>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', justifyContent: 'center' }}>
+                    <div className="skeleton" style={{ height: '16px', width: '80%' }}></div>
+                    <div className="skeleton" style={{ height: '18px', width: '40%' }}></div>
                     <div className="skeleton" style={{ height: '12px', width: '60%', marginTop: 'auto' }}></div>
                   </div>
                 </div>
@@ -407,17 +405,22 @@ function SearchContent() {
             )}
 
             {results.map((item, idx) => (
-              <Link href={item.url ? `/product/${item.id}?url=${encodeURIComponent(item.url)}&store=${encodeURIComponent(item.store)}` : `/product/${item.id}`} key={`${item.store}-${item.id}-${idx}`} className="card" style={{ display: 'flex', flexDirection: viewMode === 'grid' ? 'column' : 'row', gap: '24px', textDecoration: 'none', color: 'inherit', position: 'relative' }}>
-                <div style={{ width: viewMode === 'grid' ? '100%' : '140px', height: viewMode === 'grid' ? '220px' : '140px', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+              <Link
+                href={item.url ? `/product/${item.id}?url=${encodeURIComponent(item.url)}&store=${encodeURIComponent(item.store)}` : `/product/${item.id}`}
+                key={`${item.store}-${item.id}-${idx}`}
+                className={`card ${viewMode === 'grid' ? 'product-card' : 'product-list-card'}`}
+                style={{ textDecoration: 'none', color: 'inherit', position: 'relative' }}
+              >
+                <div className={viewMode === 'grid' ? 'product-image' : 'product-list-img-wrapper'} style={{ position: 'relative', overflow: 'hidden' }}>
                   <img
                     src={item.image}
                     alt={item.name}
                     referrerPolicy="no-referrer"
-                    style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '14px' }}
+                    style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '8px' }}
                     onError={(e) => { (e.target as HTMLImageElement).src = '/images/iphone-15-pro.png'; }}
                   />
-                  {item.badge && <span className="badge badge-best" style={{ position: 'absolute', top: '8px', left: '8px' }}>{item.badge}</span>}
-                  {item.priceDrop && <span className="badge badge-hot" style={{ position: 'absolute', top: '8px', right: '8px' }}>{item.priceDrop}</span>}
+                  {item.badge && <span className="badge badge-best" style={{ position: 'absolute', top: '6px', left: '6px', zIndex: 1 }}>{item.badge}</span>}
+                  {item.priceDrop && <span className="badge badge-hot" style={{ position: 'absolute', top: '6px', right: '6px', zIndex: 1 }}>{item.priceDrop}</span>}
                 </div>
 
                 <button
@@ -436,16 +439,16 @@ function SearchContent() {
                   }}
                   aria-label={item.url && isInWishlist(item.url) ? 'Remove from wishlist' : 'Add to wishlist'}
                   style={{
-                    position: 'absolute', top: '12px', right: '12px', zIndex: 2,
-                    background: 'color-mix(in srgb, var(--surface) 82%, transparent)',
+                    position: 'absolute', top: '10px', right: '10px', zIndex: 2,
+                    background: 'color-mix(in srgb, var(--surface) 88%, transparent)',
                     backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
                     border: '1px solid var(--border)', borderRadius: '999px',
-                    width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                    width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
                   }}
                 >
                   <svg
-                    width="18"
-                    height="18"
+                    width="16"
+                    height="16"
                     viewBox="0 0 24 24"
                     fill={item.url && isInWishlist(item.url) ? 'var(--danger)' : 'none'}
                     stroke={item.url && isInWishlist(item.url) ? 'var(--danger)' : 'var(--text-2)'}
@@ -456,20 +459,13 @@ function SearchContent() {
                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                   </svg>
                 </button>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '8px' }}>
-                    <h4 className="product-title" style={{ fontSize: '18px', marginBottom: '6px' }}>{item.name}</h4>
-                    <div className="product-price">{item.price}</div>
-                  </div>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: 'auto' }}>{item.store}</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '12px', color: 'var(--text-muted)', marginTop: '24px' }}>
-                    {item.rating > 0 && <span>&#9733; {item.rating.toFixed(1)} ({item.reviews} reviews)</span>}
-                    {item.inStock !== false && <span style={{ color: 'var(--accent-success)' }}>In Stock</span>}
-                    {item.originalPrice && (
-                      <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)' }}>
-                        {item.originalPrice}
-                      </span>
-                    )}
+
+                <div className="product-info" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <div className="product-title">{item.name}</div>
+                  <div className="product-price tabular" style={{ marginTop: 'auto' }}>{item.price}</div>
+                  <div className="product-store">
+                    <span>{item.store}</span>
+                    {item.rating > 0 ? <span style={{ color: 'var(--star)', fontWeight: 600 }}>★ {item.rating.toFixed(1)} ({item.reviews})</span> : null}
                   </div>
                 </div>
               </Link>

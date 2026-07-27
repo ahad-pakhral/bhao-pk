@@ -46,26 +46,26 @@ function ProductCard({ product, index }: { product: TrendingProduct; index: numb
     : `/product/${productId}`;
 
   return (
-    <div style={{ position: 'relative' }}>
-      <Link href={productHref} className="card product-card" style={{ textDecoration: 'none', color: 'inherit' }}>
-        <div className="product-image" style={{ height: '220px', marginBottom: '14px', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Link href={productHref} className="card product-card" style={{ textDecoration: 'none', color: 'inherit', height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div className="product-image" style={{ width: '100%', aspectRatio: '1 / 1', marginBottom: '10px', position: 'relative', overflow: 'hidden', padding: '10px' }}>
           {img ? (
-            <img src={img} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
+            <img src={img} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} referrerPolicy="no-referrer" />
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-3)', fontSize: '12px' }}>No image</div>
           )}
           {origNum > 0 && priceNum < origNum && (
-            <span className="badge badge-hot" style={{ position: 'absolute', top: '10px', left: '10px' }}>
+            <span className="badge badge-hot" style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 1 }}>
               -{Math.round((1 - priceNum / origNum) * 100)}%
             </span>
           )}
         </div>
-        <div className="product-info" style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <div className="product-info" style={{ padding: '0 2px', display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
           <div className="product-title">{product.name}</div>
-          <div className="product-price tabular" style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
+          <div className="product-price tabular" style={{ display: 'flex', alignItems: 'baseline', gap: '6px', flexWrap: 'wrap', marginTop: 'auto' }}>
             {formatPrice(priceNum)}
             {origNum > 0 && origNum > priceNum && (
-              <span style={{ color: 'var(--text-3)', fontSize: '13px', fontWeight: 500, textDecoration: 'line-through' }}>
+              <span style={{ color: 'var(--text-3)', fontSize: '12px', fontWeight: 500, textDecoration: 'line-through' }}>
                 {formatPrice(origNum)}
               </span>
             )}
@@ -90,15 +90,16 @@ function ProductCard({ product, index }: { product: TrendingProduct; index: numb
           else if (result === 'error') showToast("Failed to add to wishlist", "error");
         }}
         aria-label={inWl ? 'Remove from wishlist' : 'Add to wishlist'}
+        className="product-card-wishlist-btn"
         style={{
-          position: 'absolute', top: '20px', right: '20px', zIndex: 2,
-          background: 'color-mix(in srgb, var(--surface) 82%, transparent)',
+          position: 'absolute', top: '10px', right: '10px', zIndex: 2,
+          background: 'color-mix(in srgb, var(--surface) 88%, transparent)',
           backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
           border: '1px solid var(--border)', borderRadius: '999px',
-          width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+          width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
         }}
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill={inWl ? 'var(--danger)' : 'none'} stroke={inWl ? 'var(--danger)' : 'var(--text-2)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill={inWl ? 'var(--danger)' : 'none'} stroke={inWl ? 'var(--danger)' : 'var(--text-2)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
         </svg>
       </button>
@@ -108,11 +109,11 @@ function ProductCard({ product, index }: { product: TrendingProduct; index: numb
 
 function SkeletonCard() {
   return (
-    <div className="card product-card">
-      <div className="skeleton" style={{ height: '220px', marginBottom: '14px' }} />
-      <div style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+    <div className="card product-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div className="skeleton" style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 'var(--r-md)', marginBottom: '10px' }} />
+      <div style={{ padding: '0 2px', display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
         <div className="skeleton" style={{ height: '16px', width: '85%' }} />
-        <div className="skeleton" style={{ height: '20px', width: '45%' }} />
+        <div className="skeleton" style={{ height: '18px', width: '45%', marginTop: 'auto' }} />
         <div className="skeleton" style={{ height: '12px', width: '60%' }} />
       </div>
     </div>
@@ -133,7 +134,6 @@ export default function Home() {
   const [trendingLoading, setTrendingLoading] = useState(true);
   const [recLoading, setRecLoading] = useState(false);
 
-  // Fetch trending — use localStorage cache with 10-min TTL
   useEffect(() => {
     const toSearchProduct = (p: any, idx: number) => ({
       id: p.url ? encodeURIComponent(p.url) : `trending-${idx}`,
@@ -178,7 +178,6 @@ export default function Home() {
       .catch(() => setTrendingLoading(false));
   }, []);
 
-  // Fetch recommendations from last 3-5 search history keywords
   useEffect(() => {
     if (!isAuthenticated) return;
     const token = localStorage.getItem('sb-token');
@@ -190,45 +189,68 @@ export default function Home() {
       .then(res => res.ok ? res.json() : null)
       .then(async (data) => {
         if (!data?.history?.length) return;
-        // Get unique keywords from last 5 searches
         const keywords = Array.from(new Set(data.history.slice(0, 5).map((h: any) => h.query)));
         if (keywords.length === 0) return;
 
         setRecLoading(true);
-        // Search for the top 2-3 keywords and combine results
         const results: TrendingProduct[] = [];
         const searchPromises = keywords.slice(0, 3).map(kw =>
           fetch(`${API_BASE}/search`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({ keyword: kw }),
-          }).then(res => res.ok ? res.json() : null)
-            .then(d => { if (d?.results) results.push(...d.results.slice(0, 4)); })
-            .catch(() => {})
+            body: JSON.stringify({ query: kw }),
+          })
+            .then(res => res.ok ? res.json() : null)
+            .then(d => d?.results || [])
+            .catch(() => [])
         );
-        await Promise.all(searchPromises);
-        // Deduplicate by name+store
-        const seen = new Set<string>();
-        const unique = results.filter(p => {
-          const key = `${p.name}-${p.store}`;
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        });
-        setRecommendations(unique.slice(0, 8));
+
+        const allResults = await Promise.all(searchPromises);
+        const seenUrls = new Set<string>();
+        for (const list of allResults) {
+          for (const p of list) {
+            if (p.url && !seenUrls.has(p.url)) {
+              seenUrls.add(p.url);
+              results.push({
+                name: p.name,
+                price: p.priceValue || p.price,
+                originalPrice: p.originalPrice,
+                url: p.url,
+                imageUrl: p.image || (p as any).imageUrl,
+                rating: p.rating || 0,
+                reviewsCount: p.reviewsCount || 0,
+                store: p.store,
+                inStock: p.inStock,
+              });
+            }
+          }
+        }
+        setRecommendations(results.slice(0, 8));
         setRecLoading(false);
       })
-      .catch(() => {});
+      .catch(() => setRecLoading(false));
   }, [isAuthenticated]);
 
-  const recentlyViewedProducts = useMemo(() => recentlyViewed.slice(0, 4), [recentlyViewed]);
+  const recentlyViewedProducts = useMemo(() => {
+    return recentlyViewed.slice(0, 8).map(rv => ({
+      name: rv.name,
+      price: rv.priceValue || rv.price || '0',
+      originalPrice: rv.originalPrice,
+      url: rv.url,
+      imageUrl: rv.image || (rv as any).imageUrl,
+      rating: rv.rating || 0,
+      reviewsCount: rv.reviewsCount || 0,
+      store: rv.store || 'Store',
+      inStock: rv.inStock,
+      id: rv.id,
+    }));
+  }, [recentlyViewed]);
 
-  const allForSuggestions = [...trending, ...recentlyViewedProducts];
   const filteredSuggestions = search.trim()
-    ? allForSuggestions.filter(product =>
+    ? trending.filter(product =>
         product.name.toLowerCase().includes(search.toLowerCase()) ||
         product.store.toLowerCase().includes(search.toLowerCase())
       ).slice(0, 5)
@@ -250,7 +272,7 @@ export default function Home() {
           before you buy.
         </h1>
         <p style={{ color: 'var(--text-2)', fontSize: '17px', marginBottom: '40px', maxWidth: '460px', marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.5 }}>
-          Search any product or paste a link. We compare live prices across Pakistani stores so you always pay less.
+          Search any product. We compare live prices across Pakistani stores so you always pay less.
         </p>
 
         <div style={{ maxWidth: '620px', margin: '0 auto', position: 'relative' }} className="search-bar-wrapper">

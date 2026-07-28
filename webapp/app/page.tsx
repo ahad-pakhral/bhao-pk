@@ -181,27 +181,35 @@ export default function Home() {
   useEffect(() => {
     if (!isAuthenticated) return;
     const token = localStorage.getItem('sb-token');
-    if (!token) return;
 
-    fetch(`${API_BASE}/auth/history`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(res => res.ok ? res.json() : null)
-      .then(async (data) => {
-        if (!data?.history?.length) return;
-        const keywords = Array.from(new Set(data.history.slice(0, 5).map((h: any) => h.query)));
-        if (keywords.length === 0) return;
+    setRecLoading(true);
 
-        setRecLoading(true);
-        const results: TrendingProduct[] = [];
-        const searchPromises = keywords.slice(0, 3).map(kw =>
+    const fetchRecs = async () => {
+      let historyKeywords: string[] = [];
+      if (token) {
+        try {
+          const res = await fetch(`${API_BASE}/auth/history`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data?.history?.length) {
+              historyKeywords = Array.from(new Set(data.history.slice(0, 5).map((h: any) => h.query)));
+            }
+          }
+        } catch {}
+      }
+
+      const results: TrendingProduct[] = [];
+      if (historyKeywords.length > 0) {
+        const searchPromises = historyKeywords.slice(0, 3).map(kw =>
           fetch(`${API_BASE}/search`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
             },
-            body: JSON.stringify({ query: kw }),
+            body: JSON.stringify({ keyword: kw }),
           })
             .then(res => res.ok ? res.json() : null)
             .then(d => d?.results || [])
@@ -228,11 +236,19 @@ export default function Home() {
             }
           }
         }
-        setRecommendations(results.slice(0, 8));
-        setRecLoading(false);
-      })
-      .catch(() => setRecLoading(false));
-  }, [isAuthenticated]);
+      }
+
+      // Fallback: If no history recommendations yet, use trending products so logged-in users ALWAYS see recommendations
+      if (results.length === 0 && trending.length > 0) {
+        results.push(...trending.slice(0, 8));
+      }
+
+      setRecommendations(results.slice(0, 8));
+      setRecLoading(false);
+    };
+
+    fetchRecs();
+  }, [isAuthenticated, trending]);
 
   const recentlyViewedProducts = useMemo(() => {
     return recentlyViewed.slice(0, 8).map(rv => ({

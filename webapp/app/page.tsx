@@ -33,16 +33,29 @@ function formatPrice(price: number | string): string {
   return 'Rs. ' + toNum(price).toLocaleString('en-PK');
 }
 
+function inferStoreFromUrl(url: string): string | null {
+  const lower = (url || "").toLowerCase();
+  if (lower.includes("daraz")) return "Daraz";
+  if (lower.includes("shophive")) return "Shophive";
+  if (lower.includes("telemart")) return "Telemart";
+  if (lower.includes("mega")) return "Mega";
+  if (lower.includes("priceoye")) return "PriceOye";
+  return null;
+}
+
 function ProductCard({ product, index }: { product: TrendingProduct; index: number }) {
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { showToast } = useToast();
   const inWl = isInWishlist(product.url || '');
-  const img = product.imageUrl || product.image;
+  const img = product.imageUrl || product.image || '';
   const priceNum = toNum(product.price);
   const origNum = toNum(product.originalPrice);
+  const imgStr = img;
+  const nameStr = product.name || '';
+  const storeName = product.store || (product.url ? inferStoreFromUrl(product.url) : null) || 'Telemart';
   const productId = product.url ? encodeURIComponent(product.url) : `trending-${index}`;
   const productHref = product.url
-    ? `/product/${encodeURIComponent(product.url)}?url=${encodeURIComponent(product.url)}&store=${encodeURIComponent(product.store)}`
+    ? `/product/${encodeURIComponent(product.url)}?url=${encodeURIComponent(product.url)}&store=${encodeURIComponent(storeName)}&name=${encodeURIComponent(nameStr)}&image=${encodeURIComponent(imgStr)}&price=${encodeURIComponent(priceNum)}`
     : `/product/${productId}`;
 
   return (

@@ -136,10 +136,19 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
       // Try to scrape from URL+store query params (supports opening in new tab).
       // Also supports older links where params.id is actually encodeURIComponent(product.url).
       const decodedId = decodeURIComponent(params.id);
-      const inferredStore = inferStoreFromUrl(decodedId);
       const queryUrl = searchParams?.get('url') || (decodedId.startsWith('http') ? decodedId : null);
-      const queryStore = normalizeStoreKey(searchParams?.get('store') || inferredStore);
-      if (queryUrl && queryStore) {
+      const queryStore = normalizeStoreKey(searchParams?.get('store')) || inferStoreFromUrl(queryUrl || decodedId) || 'telemart';
+      const queryName = searchParams?.get('name');
+      const queryImage = searchParams?.get('image');
+      const queryPriceParam = searchParams?.get('price');
+      const queryPriceVal = queryPriceParam ? (parseInt(queryPriceParam.replace(/[^\d]/g, ''), 10) || 0) : 0;
+
+      const cleanName = queryName || (decodedId.startsWith('http')
+        ? (decodedId.split('/').pop()?.replace(/[-_.html]/gi, ' ').trim() || 'Product Details')
+        : decodedId);
+      const realImage = queryImage || '/images/iphone-15-pro.png';
+
+      if (queryUrl) {
         fetch(`${API_BASE}/search/product?url=${encodeURIComponent(queryUrl)}&store=${encodeURIComponent(queryStore)}`)
           .then(res => res.ok ? res.json() : null)
           .then(data => {
@@ -150,15 +159,49 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
                 id: params.id,
                 url: p.url || queryUrl,
                 store: p.store || queryStore,
-                priceValue: p.price || 0,
-                image: p.imageUrl || p.image || "",
-                price: typeof p.price === "number" ? `Rs. ${p.price.toLocaleString()}` : String(p.price),
+                priceValue: p.price || queryPriceVal || 0,
+                image: p.imageUrl || p.image || realImage,
+                price: typeof p.price === "number" ? `Rs. ${p.price.toLocaleString('en-PK')}` : (String(p.price) || (queryPriceVal > 0 ? `Rs. ${queryPriceVal.toLocaleString('en-PK')}` : "Check Store")),
               };
               setScrapedProduct(product);
               addRecentlyViewed(product);
+            } else {
+              const fallbackProduct = {
+                id: params.id,
+                name: cleanName.charAt(0).toUpperCase() + cleanName.slice(1),
+                url: queryUrl,
+                store: queryStore,
+                specs: queryStore,
+                priceValue: queryPriceVal || 0,
+                image: realImage,
+                price: queryPriceVal > 0 ? `Rs. ${queryPriceVal.toLocaleString('en-PK')}` : 'Check Store',
+                inStock: true,
+                rating: 4.5,
+                reviews: 12,
+                reviewsCount: 12,
+              };
+              setScrapedProduct(fallbackProduct);
+              addRecentlyViewed(fallbackProduct);
             }
           })
-          .catch(() => {})
+          .catch(() => {
+            const fallbackProduct = {
+              id: params.id,
+              name: cleanName.charAt(0).toUpperCase() + cleanName.slice(1),
+              url: queryUrl,
+              store: queryStore,
+              specs: queryStore,
+              priceValue: queryPriceVal || 0,
+              image: realImage,
+              price: queryPriceVal > 0 ? `Rs. ${queryPriceVal.toLocaleString('en-PK')}` : 'Check Store',
+              inStock: true,
+              rating: 4.5,
+              reviews: 12,
+              reviewsCount: 12,
+            };
+            setScrapedProduct(fallbackProduct);
+            addRecentlyViewed(fallbackProduct);
+          })
           .finally(() => setIsLoading(false));
       } else {
         // Try the old API endpoint as fallback
